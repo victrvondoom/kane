@@ -1,0 +1,12 @@
+diff --git a/demo-app/pricing.js b/demo-app/pricing.js
+index 912b345..ab13b73 100644
+--- a/demo-app/pricing.js
++++ b/demo-app/pricing.js
+@@ -23,6 +23,6 @@ export function cartTotals(items, couponCode) {
+   });
+   const subtotal = lines.reduce((a, l) => a + l.lineTotal, 0);
+   const discount = calcDiscount(subtotal, couponCode);
+-  const total = subtotal;
++  const total = subtotal - discount;
+   return { lines, subtotal, discount, total, count: lines.reduce((a, l) => a + l.qty, 0) };
+ }

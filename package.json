@@ -1,0 +1,18 @@
+{
+  "name": "shipproof",
+  "version": "1.0.0",
+  "description": "Evidence-backed release verification for AI-generated software, powered by Kane CLI",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=22.5" },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "demo:app": "node --watch demo-app/server.js",
+    "demo:fix": "git apply demo/fix-coupon.patch && echo 'Coupon fix applied to demo-app/pricing.js'",
+    "demo:break": "git apply -R demo/fix-coupon.patch && echo 'Coupon bug restored in demo-app/pricing.js'",
+    "migrate": "node server/db.js",
+    "test": "node --test --test-concurrency=1 tests/*.test.js"
+  },
+  "dependencies": { "express": "^4.21.2" }
+}
