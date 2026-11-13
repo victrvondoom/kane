@@ -13,7 +13,7 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'shipproof-test-'));
 const stateFile = path.join(tmp, 'state.json');
 const setState = (s) => fs.writeFileSync(stateFile, JSON.stringify(s));
 process.env.FAKE_KANE_STATE = stateFile;
-const config = { bin: path.join(here, 'fixtures', 'fake-kane.js'), timeout: 30, maxSteps: 10, headless: true, username: 'ci-user', accessKey: 'SECRETKEY-1234567890', requireEvidence: true, allowPrivateTargets: true };
+const config = { bin: path.join(here, 'fixtures', 'fake-kane.js'), timeout: 30, maxSteps: 10, headless: true, username: 'ci-user', accessKey: 'SECRETKEY-1234567890', requireEvidence: true, allowPrivateTargets: true, acceptFixtureEngine: true };
 process.env.LOG_LEVEL = 'silent';
 
 let server, base, ctx;

@@ -11,6 +11,9 @@ import { criteriaStatus, releaseGate, repairTaskView, explainError } from './gat
 import { createRunner } from './runner.js';
 import { kaneStatus, kaneConfig } from './kane.js';
 import { DEMO_TEMPLATE } from './demo-template.js';
+import { writeVersion, computeDecision, cleanList, CRITICALITY, backfillEvidenceHashes, impactPlan } from './proof.js';
+import { loadKeys } from './keys.js';
+import { registerProofRoutes } from './routes-proof.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CATEGORIES = ['functional', 'visual', 'persistence'];
@@ -35,6 +38,11 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
     return r.url;
   };
   db.run('DELETE FROM sessions WHERE expires_at < ?', now());
+  const keys = loadKeys(dataDir);
+  backfillEvidenceHashes(db, evidenceRoot);
+  let engineVersion = null;
+  kaneStatus(config).then((k) => { engineVersion = k.version; }).catch(() => {});
+  const decide = (p, opts = {}) => computeDecision(db, p, { acceptFixture: config.acceptFixtureEngine, engineVersion, ...opts });
   const app = express();
   app.disable('x-powered-by');
   // Behind a reverse proxy set TRUST_PROXY (e.g. "1") so client IPs and https are detected correctly.
@@ -66,6 +74,9 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
       "default-src 'self'; img-src 'self' data:; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
     next();
   });
+  // The raw body is kept for webhook signature verification (HMAC is computed over the exact bytes).
+  app.use('/api/webhooks', express.json({ limit: '5mb', verify: (req, res, buf) => { req.rawBody = buf; } }));
+  app.use('/api/dossiers/verify', express.json({ limit: '5mb' }));
   app.use(express.json({ limit: '200kb' }));
   // CSRF hardening: state-changing API calls must be JSON (cross-site forms cannot send that) — cookie is SameSite=Lax as well.
   app.use('/api', (req, res, next) => {
@@ -125,9 +136,11 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
 
   // ---------- projects ----------
   const projectSummary = (p) => {
-    const criteria = criteriaStatus(db, p.id);
-    const gate = releaseGate(criteria);
-    const lastRun = db.get('SELECT id, status, trigger, created_at, started_at, finished_at FROM runs WHERE project_id = ? ORDER BY id DESC LIMIT 1', p.id);
+    // One verdict everywhere: the strict gate AND freshness/policy (computeDecision). Totals stay the strict per-criterion counts.
+    const d = decide(p);
+    const gate = { verdict: d.verdict, reasons: d.blocking.map((b) => b.message), totals: d.strictGate.totals, freshness: d.freshness,
+      build: d.build ? { id: d.build.id, shortSha: d.build.shortSha, environment: d.build.environment } : null, policyVersion: d.policy.version };
+    const lastRun = db.get('SELECT * FROM runs WHERE project_id = ? ORDER BY id DESC LIMIT 1', p.id);
     const shareActive = !!p.share_token_hash && (!p.share_expires_at || p.share_expires_at > now());
     return { id: p.id, name: p.name, appUrl: p.app_url, context: p.context, createdAt: p.created_at,
       share: { active: shareActive, expired: !!p.share_token_hash && !shareActive, createdAt: p.share_created_at, expiresAt: p.share_expires_at },
@@ -137,7 +150,9 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
     const c = db.all('SELECT status, COUNT(*) n FROM results WHERE run_id = ? GROUP BY status', r.id);
     const counts = Object.fromEntries(c.map((x) => [x.status, x.n]));
     const durationMs = r.started_at ? (r.finished_at ? Date.parse(r.finished_at) : Date.now()) - Date.parse(r.started_at) : null;
+    const b = r.build_id ? db.get('SELECT id, commit_sha, environment FROM builds WHERE id = ?', r.build_id) : null;
     return { id: r.id, projectId: r.project_id, parentRunId: r.parent_run_id, trigger: r.trigger, status: r.status, note: r.note,
+      build: b ? { id: b.id, shortSha: b.commit_sha.slice(0, 7), commitSha: b.commit_sha, environment: b.environment } : null,
       createdAt: r.created_at, startedAt: r.started_at, finishedAt: r.finished_at, durationMs, counts,
       total: c.reduce((a, x) => a + x.n, 0) };
   };
@@ -163,6 +178,7 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
     const url = await validUrl(req.body.appUrl);
     const context = typeof req.body.context === 'string' ? req.body.context.slice(0, 2000) : '';
     const r = db.run('INSERT INTO projects (user_id, name, app_url, context, created_at) VALUES (?, ?, ?, ?, ?)', req.user.id, name, url, context, now());
+    db.run('INSERT INTO policy_versions (project_id, version, rules, created_at) VALUES (?, 1, ?, ?)', Number(r.lastInsertRowid), '{}', now());
     record(req, 'project.created', { projectId: Number(r.lastInsertRowid), entity: 'project', entityId: Number(r.lastInsertRowid), detail: { name, appUrl: url } });
     res.status(201).json({ project: projectSummary(db.get('SELECT * FROM projects WHERE id = ?', Number(r.lastInsertRowid))) });
   }));
@@ -170,7 +186,8 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
     const p = project(req);
     res.json({
       project: projectSummary(p),
-      criteria: criteriaStatus(db, p.id),
+      criteria: (() => { const d = decide(p); const m = new Map(d.criteria.map((c) => [c.id, c])); return criteriaStatus(db, p.id).map((c) => { const x = m.get(c.id);
+        return { ...c, criticality: x.criticality, areas: x.areas, paths: x.paths, version: x.version, freshness: { state: x.freshness.state, reasons: x.freshness.reasons } }; }); })(),
       requirements: db.all('SELECT id, text, created_at FROM requirements WHERE project_id = ? ORDER BY id', p.id),
       runs: db.all('SELECT * FROM runs WHERE project_id = ? ORDER BY id DESC LIMIT 12', p.id).map(runView),
       runCount: db.get('SELECT COUNT(*) n FROM runs WHERE project_id = ?', p.id).n,
@@ -217,8 +234,12 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
     const text = str(c.text, 600, 'Criterion text');
     const category = CATEGORIES.includes(c.category) ? c.category : categorize(text);
     const seq = db.get('UPDATE projects SET criteria_seq = criteria_seq + 1 WHERE id = ? RETURNING criteria_seq', p.id).criteria_seq;
-    db.run('INSERT INTO criteria (project_id, requirement_id, key, text, category, mandatory, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      p.id, requirementId, formatKey(seq), text, category, c.mandatory === false ? 0 : 1, now(), now());
+    const crit = c.criticality === undefined ? 'medium' : c.criticality;
+    if (!CRITICALITY.includes(crit)) throw bad('Unknown criticality');
+    let areas, paths; try { areas = cleanList(c.areas, 'areas', { len: 60 }) || []; paths = cleanList(c.paths, 'paths', { pattern: true }) || []; } catch (e) { throw bad(e.message); }
+    const r = db.run('INSERT INTO criteria (project_id, requirement_id, key, text, category, mandatory, created_at, updated_at, criticality, areas, paths) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      p.id, requirementId, formatKey(seq), text, category, c.mandatory === false ? 0 : 1, now(), now(), crit, JSON.stringify(areas), JSON.stringify(paths));
+    writeVersion(db, Number(r.lastInsertRowid));
   };
   api.post('/projects/:pid/requirements', auth, h((req, res) => {
     const p = project(req);
@@ -254,7 +275,16 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
     const mandatory = req.body.mandatory !== undefined ? (req.body.mandatory ? 1 : 0) : c.mandatory;
     if (textHash(text) !== textHash(c.text)) guardOpenRepair(c, 'reword');
     if (c.mandatory && !mandatory) guardOpenRepair(c, 'make optional');
-    db.run('UPDATE criteria SET text = ?, category = ?, mandatory = ?, updated_at = ? WHERE id = ?', text, category, mandatory, now(), c.id);
+    const criticality = req.body.criticality !== undefined ? req.body.criticality : c.criticality;
+    if (!CRITICALITY.includes(criticality)) throw bad('Unknown criticality');
+    if (CRITICALITY.indexOf(criticality) < CRITICALITY.indexOf(c.criticality)) guardOpenRepair(c, 'lower the criticality of');
+    let areas, paths; try { areas = cleanList(req.body.areas, 'areas', { len: 60 }); paths = cleanList(req.body.paths, 'paths', { pattern: true }); } catch (e) { throw bad(e.message); }
+    // The row holds the current state; every change is also appended as an immutable version.
+    db.tx(() => {
+      db.run('UPDATE criteria SET text = ?, category = ?, mandatory = ?, updated_at = ?, criticality = ?, areas = ?, paths = ? WHERE id = ?', text, category, mandatory, now(),
+        criticality, areas ? JSON.stringify(areas) : c.areas, paths ? JSON.stringify(paths) : c.paths, c.id);
+      writeVersion(db, c.id);
+    });
     if (text !== c.text || mandatory !== c.mandatory) record(req, 'criterion.updated', { projectId: p.id, entity: 'criterion', entityId: c.id, detail: { key: c.key, textChanged: text !== c.text, mandatory: !!mandatory } });
     res.json({ criteria: criteriaStatus(db, p.id) });
   }));
@@ -286,6 +316,12 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
     } else if (body.mode === 'untested') {
       ids = all.filter((c) => c.status === 'untested').map((c) => c.id); trigger = 'untested';
       if (!ids.length) throw bad('Every criterion already has an execution result');
+    } else if (body.mode === 'plan') {
+      // Change-aware run: only what the impact plan for this build says must be (re)verified.
+      const b = body.buildId ? db.get('SELECT * FROM builds WHERE id = ? AND project_id = ?', Number(body.buildId), p.id) : db.get('SELECT * FROM builds WHERE project_id = ? ORDER BY id DESC LIMIT 1', p.id);
+      if (!b) throw bad('No build is registered for this project');
+      ids = impactPlan(db, p, b, { acceptFixture: config.acceptFixtureEngine, engineVersion }).plan; trigger = 'impact_plan'; body.buildId = b.id;
+      if (!ids.length) throw Object.assign(bad('Nothing to verify: every criterion already has current evidence for this build'), { nothingToVerify: true });
     } else if (Array.isArray(body.criterionIds) && body.criterionIds.length) {
       const allowed = new Set(all.map((c) => c.id));
       ids = body.criterionIds.map(Number).filter((id) => allowed.has(id)); trigger = 'selected';
@@ -295,7 +331,8 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
       ids = all.map((c) => c.id);
       if (!ids.length) throw bad('Add at least one acceptance criterion before starting a verification');
     }
-    return runner.enqueue({ projectId: p.id, criterionIds: ids, trigger, parentRunId: parent, note: typeof body.note === 'string' ? body.note.slice(0, 300) : '' });
+    if (body.buildId != null && !db.get('SELECT 1 FROM builds WHERE id = ? AND project_id = ?', Number(body.buildId), p.id)) throw bad('Unknown build');
+    return runner.enqueue({ projectId: p.id, criterionIds: ids, trigger, parentRunId: parent, note: typeof body.note === 'string' ? body.note.slice(0, 300) : '', buildId: body.buildId != null ? Number(body.buildId) : null });
   };
   // Paginated, filterable history (newest first; `before` is a run-id cursor).
   const listRuns = (where, params, q) => {
@@ -331,7 +368,7 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
     exitCode: r.exit_code, signal: r.signal, kaneStatus: r.kane_status, summary: r.summary, oneLiner: r.one_liner, reason: r.reason,
     finalState: r.final_state ? JSON.parse(r.final_state) : null, failingStep: r.failing_step ? JSON.parse(r.failing_step) : null,
     testUrl: r.test_url, credits: r.credits, startedAt: r.started_at, finishedAt: r.finished_at, durationMs: r.duration_ms,
-    engine: r.engine, isFixture: /fixture/i.test(r.engine || ''),
+    engine: r.engine, isFixture: /fixture/i.test(r.engine || ''), criterionVersionId: r.criterion_version_id, buildId: r.build_id, environment: r.environment, policyVersion: r.policy_version,
     evidence: db.all('SELECT uid id, kind, name, url, mime, size FROM evidence WHERE result_id = ? ORDER BY id', r.id),
     ...(full ? { objective: r.objective, command: r.command, stdout: r.stdout, stderr: r.stderr } : {}),
   });
@@ -429,7 +466,8 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
   // ---------- report ----------
   const buildReport = (p) => {
     const criteria = criteriaStatus(db, p.id);
-    const gate = releaseGate(criteria);
+    const d = decide(p);
+    const gate = { verdict: d.verdict, reasons: d.blocking.map((b) => b.message), totals: d.strictGate.totals, freshness: d.freshness, build: d.build, policyVersion: d.policy.version };
     const runs = db.all('SELECT * FROM runs WHERE project_id = ? ORDER BY id', p.id).map(runView);
     const firstRun = runs[0], lastRun = runs.at(-1);
     return {
@@ -510,7 +548,8 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
   };
   api.get('/agent/gate', agent, h((req, res) => {
     const criteria = criteriaStatus(db, req.project.id);
-    res.json({ project: req.project.name, appUrl: req.project.app_url, gate: releaseGate(criteria),
+    const d = decide(req.project);
+    res.json({ project: req.project.name, appUrl: req.project.app_url, gate: { verdict: d.verdict, reasons: d.blocking.map((b) => b.message), totals: d.strictGate.totals, freshness: d.freshness },
       criteria: criteria.map((c) => ({ key: c.key, text: c.text, status: c.status, mandatory: c.mandatory })), runner: runner.state() });
   }));
   api.get('/agent/repair-tasks', agent, h((req, res) => {
@@ -530,12 +569,13 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
     res.status(202).json({ run: runView(db.get('SELECT * FROM runs WHERE id = ?', id)) });
   }));
 
+  registerProofRoutes(api, { db, runner, config, keys, evidenceRoot, h, auth, agent, project, bad, HttpError, record, decide, startRun, runView, baseUrl, validUrl, getEngineVersion: () => engineVersion });
   api.use((req, res) => res.status(404).json({ error: 'Not found' }));
   app.use('/api', api);
   app.use('/api', (err, req, res, _next) => {
     const status = err.status || (err.type === 'entity.parse.failed' ? 400 : 500);
     if (status === 500) log('error', 'unhandled', { requestId: req.id, path: req.path, error: err.message, stack: err.stack?.split('\n').slice(0, 4).join(' | ') });
-    res.status(status).json({ error: status === 500 ? 'Internal server error' : err.message, requestId: req.id, ...(err.activeRunId ? { activeRunId: err.activeRunId } : {}) });
+    res.status(status).json({ error: status === 500 ? 'Internal server error' : err.message, requestId: req.id, ...(err.activeRunId ? { activeRunId: err.activeRunId } : {}), ...(err.nothingToVerify ? { nothingToVerify: true } : {}) });
   });
 
   app.use(express.static(path.join(ROOT, 'public'), { index: false, maxAge: 0 }));

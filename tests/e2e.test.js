@@ -33,7 +33,7 @@ test('browser journey: create → fail → inspect → real fix → verify → s
   };
   let storeProc = await startStore();
   const { createApp } = await import('../server/app.js');
-  const ctx = createApp({ dataDir: path.join(tmp, 'data'), config: { bin: path.join(here, 'fixtures', 'store-check-kane.js'), timeout: 30, maxSteps: 10, headless: true, username: '', accessKey: '', requireEvidence: true, allowPrivateTargets: true } });
+  const ctx = createApp({ dataDir: path.join(tmp, 'data'), config: { bin: path.join(here, 'fixtures', 'store-check-kane.js'), timeout: 30, maxSteps: 10, headless: true, username: '', accessKey: '', requireEvidence: true, allowPrivateTargets: true, acceptFixtureEngine: true } });
   const server = await new Promise((r) => { const s = ctx.app.listen(0, () => r(s)); });
   const base = `http://127.0.0.1:${server.address().port}`;
   const browser = await chromium.launch();

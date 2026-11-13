@@ -54,6 +54,29 @@ const DATA_STEPS = {
     db.exec('UPDATE repair_tasks SET origin_run_id = (SELECT run_id FROM results WHERE results.id = repair_tasks.source_result_id) WHERE origin_run_id IS NULL');
     db.exec(`UPDATE repair_tasks SET closed_at = updated_at WHERE status = 'verified' AND closed_at IS NULL`);
   },
+  '003_proof_intelligence.sql'(db) {
+    // Give every existing criterion an immutable version history reconstructed from its executions,
+    // so old results keep pointing at the exact text they verified.
+    const sha = (o) => crypto.createHash('sha256').update(JSON.stringify(o)).digest('hex');
+    const ins = db.prepare('INSERT INTO criterion_versions (criterion_id, version, text, text_hash, category, mandatory, criticality, areas, paths, content_hash, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    for (const c of db.prepare('SELECT * FROM criteria').all()) {
+      const seen = new Map(); let n = 0;
+      const add = (text, hash, at) => {
+        if (seen.has(hash)) return seen.get(hash);
+        const id = Number(ins.run(c.id, ++n, text, hash, c.category, c.mandatory, 'medium', '[]', '[]',
+          sha({ areas: [], category: c.category, criticality: 'medium', mandatory: !!c.mandatory, paths: [], textHash: hash }), at).lastInsertRowid);
+        seen.set(hash, id); return id;
+      };
+      for (const r of db.prepare('SELECT id, criterion_text, text_hash, started_at FROM results WHERE criterion_id = ? ORDER BY id').all(c.id))
+        db.prepare('UPDATE results SET criterion_version_id = ? WHERE id = ?').run(add(r.criterion_text, r.text_hash, r.started_at || c.created_at), r.id);
+      const cur = crypto.createHash('sha256').update(String(c.text).replace(/\s+/g, ' ').trim().toLowerCase()).digest('hex').slice(0, 16);
+      // the current text must be the newest version
+      const curId = seen.has(cur) && [...seen.keys()].at(-1) === cur ? seen.get(cur) : (seen.delete(cur), add(c.text, cur, c.updated_at));
+      db.prepare('UPDATE criteria SET version_id = ? WHERE id = ?').run(curId, c.id);
+    }
+    for (const p of db.prepare('SELECT id FROM projects').all())
+      db.prepare('INSERT INTO policy_versions (project_id, version, rules, created_at) VALUES (?, 1, ?, ?)').run(p.id, '{}', new Date().toISOString());
+  },
 };
 
 export const now = () => new Date().toISOString(); // all timestamps: UTC ISO-8601

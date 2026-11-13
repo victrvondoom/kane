@@ -30,17 +30,20 @@ export function createRunner({ db, dataDir, config = kaneConfig() }) {
 
   const activeRunFor = (projectId) => db.get(`SELECT id FROM runs WHERE project_id = ? AND status IN ('queued','running') ORDER BY id LIMIT 1`, projectId)?.id ?? null;
 
-  function enqueue({ projectId, criterionIds, trigger, parentRunId = null, note = '' }) {
+  function enqueue({ projectId, criterionIds, trigger, parentRunId = null, note = '', buildId = null }) {
     if (stopping) throw Object.assign(new Error('Server is shutting down; try again shortly'), { status: 503 });
     const runId = db.tx(() => {
-      const r = db.run('INSERT INTO runs (project_id, parent_run_id, trigger, status, note, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-        projectId, parentRunId, trigger, 'queued', note, now());
+      // Every execution is pinned to the build, criterion version and policy version it ran against.
+      const build = buildId ? db.get('SELECT id, environment FROM builds WHERE id = ? AND project_id = ?', buildId, projectId) : db.get('SELECT id, environment FROM builds WHERE project_id = ? ORDER BY id DESC LIMIT 1', projectId);
+      const policyVersion = db.get('SELECT MAX(version) v FROM policy_versions WHERE project_id = ?', projectId).v || 1;
+      const r = db.run('INSERT INTO runs (project_id, parent_run_id, trigger, status, note, created_at, build_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        projectId, parentRunId, trigger, 'queued', note, now(), build?.id ?? null);
       const id = Number(r.lastInsertRowid);
       for (const cid of criterionIds) {
         const c = db.get('SELECT * FROM criteria WHERE id = ? AND project_id = ? AND archived = 0', cid, projectId);
         if (!c) continue;
-        db.run(`INSERT INTO results (run_id, criterion_id, criterion_key, criterion_text, text_hash, status) VALUES (?, ?, ?, ?, ?, 'queued')`,
-          id, c.id, c.key, c.text, textHash(c.text));
+        db.run(`INSERT INTO results (run_id, criterion_id, criterion_key, criterion_text, text_hash, status, criterion_version_id, build_id, environment, policy_version) VALUES (?, ?, ?, ?, ?, 'queued', ?, ?, ?, ?)`,
+          id, c.id, c.key, c.text, textHash(c.text), c.version_id, build?.id ?? null, build?.environment ?? null, policyVersion);
       }
       return id;
     });
@@ -70,6 +73,9 @@ export function createRunner({ db, dataDir, config = kaneConfig() }) {
     const run = db.get('SELECT * FROM runs WHERE id = ?', runId);
     if (!run || run.status !== 'queued') return;
     const project = db.get('SELECT * FROM projects WHERE id = ?', run.project_id);
+    // A build may carry its own deployment URL (preview/staging); it is subject to the same target policy.
+    const buildUrl = run.build_id ? db.get('SELECT app_url FROM builds WHERE id = ?', run.build_id)?.app_url : null;
+    if (buildUrl) project.app_url = buildUrl;
     const variables = db.all('SELECT key, value, secret FROM project_variables WHERE project_id = ?', project.id);
     db.run(`UPDATE runs SET status = 'running', started_at = ? WHERE id = ?`, now(), runId);
     emit(runId, null, 'system', { level: 'info', message: `Run #${runId} started against ${project.app_url}` });
@@ -125,8 +131,8 @@ export function createRunner({ db, dataDir, config = kaneConfig() }) {
           typeof end.test_url === 'string' ? end.test_url : null, end.session_dir ?? null,
           Number.isFinite(Number(end.credits_consumed)) ? Number(end.credits_consumed) : null,
           outcome.stdout, outcome.stderr, now(), outcome.durationMs, outcome.engine, res.id);
-        for (const f of files) db.run('INSERT INTO evidence (uid, result_id, kind, name, rel_path, mime, size) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          newUid(), res.id, f.kind, f.name, path.join(`result-${res.id}`, f.relPath), f.mime, f.size);
+        for (const f of files) db.run('INSERT INTO evidence (uid, result_id, kind, name, rel_path, mime, size, sha256) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          newUid(), res.id, f.kind, f.name, path.join(`result-${res.id}`, f.relPath), f.mime, f.size, f.sha256);
         if (hasLink)
           db.run(`INSERT INTO evidence (uid, result_id, kind, name, url) VALUES (?, ?, 'test_manager', 'Kane Test Manager test case', ?)`, newUid(), res.id, end.test_url);
         syncRepairTask(db, db.get('SELECT * FROM results WHERE id = ?', res.id), project);

@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 import { createApp } from '../server/app.js';
 import { openDb } from '../server/db.js';
 import { checkTarget, addressClass } from '../server/netpolicy.js';
+import { textHash } from '../server/requirements.js';
 import { classify, versionAtLeast, runKane, MIN_KANE_VERSION } from '../server/kane.js';
 
 process.env.LOG_LEVEL = 'silent';
@@ -23,7 +24,7 @@ const stateFile = path.join(tmp, 'state.json');
 const setState = (s) => fs.writeFileSync(stateFile, JSON.stringify(s));
 process.env.FAKE_KANE_STATE = stateFile;
 const fake = path.join(here, 'fixtures', 'fake-kane.js');
-const baseConfig = { bin: fake, timeout: 30, maxSteps: 10, headless: true, username: '', accessKey: '', requireEvidence: true, allowPrivateTargets: true };
+const baseConfig = { bin: fake, timeout: 30, maxSteps: 10, headless: true, username: '', accessKey: '', requireEvidence: true, allowPrivateTargets: true, acceptFixtureEngine: true };
 
 function client(base) {
   const jar = {};
@@ -62,12 +63,16 @@ test('migrations upgrade a v1 database in place and keep existing data', () => {
     INSERT INTO projects (id,user_id,name,app_url,share_token,created_at) VALUES (1,1,'Legacy','https://example.com/','legacy-plain-token-123456','2026-01-01T00:00:00.000Z');
     INSERT INTO criteria (id,project_id,key,text,created_at,updated_at) VALUES (1,1,'AC-001','Old criterion.','t','t');
     INSERT INTO runs (id,project_id,trigger,status,created_at) VALUES (1,1,'full','completed','t');
-    INSERT INTO results (id,run_id,criterion_id,criterion_key,criterion_text,text_hash,status) VALUES (1,1,1,'AC-001','Old criterion.','h','failed');
+    INSERT INTO results (id,run_id,criterion_id,criterion_key,criterion_text,text_hash,status) VALUES (1,1,1,'AC-001','Old criterion.','${textHash('Old criterion.')}','failed');
     INSERT INTO evidence (id,result_id,kind,name,rel_path) VALUES (1,1,'screenshot','a.png','result-1/a.png');
     INSERT INTO repair_tasks (id,project_id,criterion_id,source_result_id,status,expected,observed,diagnosis,created_at,updated_at) VALUES (1,1,1,1,'open','e','o','d','t','t');`);
   raw.close();
   const db = openDb(dir);
-  assert.deepEqual(db.all('SELECT name FROM _migrations ORDER BY name').map((r) => r.name), ['001_init.sql', '002_hardening.sql']);
+  assert.deepEqual(db.all('SELECT name FROM _migrations ORDER BY name').map((r) => r.name), ['001_init.sql', '002_hardening.sql', '003_proof_intelligence.sql']);
+  const ver = db.get('SELECT * FROM criterion_versions WHERE criterion_id = 1');
+  assert.equal(ver.text, 'Old criterion.'); assert.equal(db.get('SELECT version_id FROM criteria WHERE id = 1').version_id, ver.id);
+  assert.equal(db.get('SELECT criterion_version_id FROM results WHERE id = 1').criterion_version_id, ver.id, 'old executions are linked to the version they verified');
+  assert.equal(db.get('SELECT version FROM policy_versions WHERE project_id = 1').version, 1);
   const p = db.get('SELECT * FROM projects WHERE id = 1');
   assert.equal(p.name, 'Legacy'); assert.equal(p.share_token, null); assert.match(p.share_token_hash, /^[0-9a-f]{64}$/);
   assert.match(db.get('SELECT uid FROM evidence WHERE id = 1').uid, /^[\w-]{16}$/);

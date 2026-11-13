@@ -5,6 +5,7 @@
 import { spawn, execFile } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 
 export function kaneConfig(env = process.env) {
   return {
@@ -18,6 +19,8 @@ export function kaneConfig(env = process.env) {
     requireEvidence: env.REQUIRE_EVIDENCE !== '0',
     // SSRF guard: loopback/private targets are refused unless explicitly allowed (local demo, private staging).
     allowPrivateTargets: env.ALLOW_PRIVATE_TARGETS === '1',
+    // Never set in production: lets a test stand-in engine's passes count toward release decisions.
+    acceptFixtureEngine: env.ACCEPT_FIXTURE_ENGINE === '1',
   };
 }
 
@@ -176,7 +179,7 @@ export function collectEvidence({ outcome, workDir, destDir, maxBytes = 80 * 102
     total += st.size;
     const kind = MIME[ext].startsWith('image/') ? 'screenshot' : MIME[ext].startsWith('video/') ? 'video'
       : ext === '.evidence' ? 'evidence_pack' : 'log';
-    files.push({ kind, name: rel, relPath: rel, mime: MIME[ext], size: st.size });
+    files.push({ kind, name: rel, relPath: rel, mime: MIME[ext], size: st.size, sha256: crypto.createHash('sha256').update(fs.readFileSync(dest)).digest('hex') });
   };
   for (const r of roots) walk(fs.statSync(r).isDirectory() ? r : path.dirname(r), r, 0);
   return files;

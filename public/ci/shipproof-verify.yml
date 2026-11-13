@@ -1,0 +1,52 @@
+# SHIPPROOF release gate for GitHub Actions.
+# Copy to .github/workflows/shipproof-verify.yml in the repository of the application under test.
+#
+# Repository secrets:   SHIPPROOF_API_KEY  – project API key (Project → Settings → Coding-agent access)
+# Repository variables: SHIPPROOF_URL      – base URL of your SHIPPROOF server, e.g. https://shipproof.example.com
+#                       SHIPPROOF_APP_URL  – (optional) URL where THIS commit is deployed; defaults to the project URL
+#
+# The job must run AFTER the commit is deployed to the URL being verified — add `needs: <your deploy job>`.
+name: SHIPPROOF verify
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Resolve commit and changed files
+        id: change
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            SHA="${{ github.event.pull_request.head.sha }}"; BASE="${{ github.event.pull_request.base.sha }}"
+          else
+            SHA="${{ github.sha }}"; BASE="${{ github.event.before }}"
+          fi
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          # If the base commit is unavailable (new branch, force push) no file list is sent and
+          # SHIPPROOF treats the change set as unknown, which re-verifies everything.
+          if git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            git diff --name-only "$BASE" "$SHA" > changed-paths.txt
+            echo "file=changed-paths.txt" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify with SHIPPROOF
+        env:
+          SHIPPROOF_URL: ${{ vars.SHIPPROOF_URL }}
+          SHIPPROOF_API_KEY: ${{ secrets.SHIPPROOF_API_KEY }}
+          COMMIT_SHA: ${{ steps.change.outputs.sha }}
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+          BUILD_ID: ${{ github.run_id }}
+          APP_URL: ${{ vars.SHIPPROOF_APP_URL }}
+          CHANGED_PATHS_FILE: ${{ steps.change.outputs.file }}
+        run: |
+          curl -fsSL "$SHIPPROOF_URL/ci/shipproof-ci.mjs" -o shipproof-ci.mjs
+          node shipproof-ci.mjs
