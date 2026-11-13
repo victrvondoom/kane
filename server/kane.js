@@ -217,9 +217,12 @@ export async function kaneStatus(config = kaneConfig(), { fresh = false } = {}) 
   }
   const version = installed ? (v.out.match(/\d+\.\d+\.\d+[\w.-]*/)?.[0] ?? v.out.trim().split('\n')[0]) : null;
   const compatible = installed && versionAtLeast(version, MIN_KANE_VERSION);
-  if (installed && !compatible) detail = `kane-cli ${version} is older than the minimum supported ${MIN_KANE_VERSION}. Upgrade: npm install -g @testmuai/kane-cli`;
-  const state = !installed ? 'unavailable' : !compatible ? 'incompatible' : auth === 'not_authenticated' ? 'not_authenticated' : 'ready';
-  cached = { at: Date.now(), value: { installed, version, compatible, minVersion: MIN_KANE_VERSION, testedVersion: TESTED_KANE_VERSION, auth, detail, state,
+  if (installed && !compatible && !/fixture/i.test(v.out)) detail = `kane-cli ${version} is older than the minimum supported ${MIN_KANE_VERSION}. Upgrade: npm install -g @testmuai/kane-cli`;
+  // A test stand-in binary identifies itself in its version string; it is surfaced as its own state, never as Kane CLI.
+  const isFixture = installed && /fixture/i.test(v.out);
+  if (isFixture) detail = 'The configured engine binary is a test stand-in, not Kane CLI. Its results are not Kane evidence.';
+  const state = !installed ? 'unavailable' : isFixture ? 'test_fixture' : !compatible ? 'incompatible' : auth === 'not_authenticated' ? 'not_authenticated' : 'ready';
+  cached = { at: Date.now(), value: { installed, version, compatible, minVersion: MIN_KANE_VERSION, testedVersion: TESTED_KANE_VERSION, auth, detail, state, isFixture,
     ready: state === 'ready', timeoutSeconds: config.timeout, headless: config.headless,
     policy: { requireEvidence: !!config.requireEvidence, allowPrivateTargets: !!config.allowPrivateTargets } } };
   return cached.value;

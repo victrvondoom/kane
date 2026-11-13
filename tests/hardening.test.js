@@ -325,3 +325,9 @@ test('demo store: real bug fails, real code fix passes, repair task records the 
     assert.equal((await D.api('POST', `/api/repair-tasks/${task.id}/fix-applied`, {})).status, 409, 'a closed task cannot be re-declared');
   } finally { child.kill(); await D.stop(); }
 });
+
+test('engine status distinguishes a test stand-in from Kane CLI', async () => {
+  const sys = (await A.api('GET', '/api/system?fresh=1')).body.kane;
+  assert.equal(sys.state, 'test_fixture'); assert.equal(sys.isFixture, true); assert.equal(sys.ready, false);
+  assert.ok(!JSON.stringify(sys).match(/access|secret|LT_/i) || !JSON.stringify(sys).includes(process.env.LT_ACCESS_KEY || '\u0000'));
+});

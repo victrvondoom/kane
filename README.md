@@ -25,8 +25,9 @@ product can mark a criterion as verified except a `kane-cli run` that exits `0` 
 
 ### Gate rules (enforced in `server/kane.js` and `server/gate.js`)
 
-- Pass = exit code `0` **and** a `run_end` event **and** a passing status. Anything else is not a pass.
-- Not authenticated, did-not-start, timeout, cancelled, exit/status mismatch → **no evidence** (unverified).
+- Pass = exit code `0` **and** a `run_end` event **and** a passing status **and** at least one collected evidence artifact. Anything else is not a pass.
+- Kane unavailable, not authenticated, network error, did-not-start, timeout, interrupted, exit/status mismatch, pass without evidence → **no evidence** (unverified), each shown as its own state.
+- The latest execution wins: a newer failure or errored re-run replaces an older pass. A user-cancelled check is ignored.
 - A failed mandatory criterion → **release blocked**.
 - Evidence is bound to the criterion text. Edit the text and the criterion goes back to *not tested*.
 - A criterion with an open failure cannot be reworded, made optional or archived.
@@ -74,8 +75,15 @@ docker build -t shipproof .
 docker run -p 4000:4000 -v shipproof-data:/data -e LT_USERNAME=... -e LT_ACCESS_KEY=... shipproof
 ```
 
+Or with Compose (named volume, health check, graceful stop):
+
+```bash
+docker compose up -d --build
+```
+
 Deploy it anywhere that runs a long-lived container with Chrome (Fly.io, Render, Railway, a VM).
 Serverless platforms are not suitable: the engine spawns browser processes that run for minutes.
+Production checklist, backup/restore and rollback: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Demo scenario (3 minutes)
 
@@ -84,6 +92,9 @@ product catalogue, cart, coupon, checkout confirmation, order history. It contai
 bug: coupon `SAVE10` is accepted and the discount line is shown, but the order total does not
 change (`demo-app/pricing.js`). The unit test for the discount maths passes anyway — exactly the
 gap SHIPPROOF exists to close.
+
+The demo store runs on `localhost`, so the server must allow private targets: `ALLOW_PRIVATE_TARGETS=1`
+(already set in `.env.example`; copy it to `.env`).
 
 Terminal 1:
 
@@ -136,18 +147,48 @@ Authorization: Bearer spk_…
 npm test
 ```
 
-23 tests: unit tests for requirement decomposition, outcome classification and the release gate,
-plus integration tests that boot the real HTTP server and SQLite and spawn a child process per
-criterion. In the test-suite only, the Kane binary is swapped for `tests/fixtures/fake-kane.js`
-so outcomes are deterministic; the product itself has no simulated mode.
+43 tests in four files:
+
+- `unit.test.js` — requirement decomposition, outcome classification, release gate.
+- `integration.test.js` — real HTTP server + SQLite + one child process per criterion: auth, isolation,
+  failure → repair → re-verify, share links, agent API.
+- `hardening.test.js` — migration upgrade of a v1 database, target (SSRF) policy, adapter contract
+  (including a captured real `kane-cli 0.10.4` unauthenticated run and a check that the installed CLI
+  still documents every flag the adapter uses), malformed output, crashes, stream resume, pagination,
+  restart recovery, audit trail, and the fail → real code fix → pass loop against the demo store.
+- `e2e.test.js` — the whole journey through the UI in Chromium (skipped if Playwright is absent),
+  including refresh mid-run, a second account, revocation and phone-width layout checks.
+
+**What is and is not real in the tests.** No test uses Kane CLI credentials. Two test-only stand-in
+engines live in `tests/fixtures/`: `fake-kane.js` (scripted outcomes) and `store-check-kane.js`
+(makes real HTTP requests to the demo store and passes or fails on what the store returns). Both
+report a version containing `fixture`; the server then shows the engine state as *test stand-in*, tags
+every such result "Test fixture", and prints a warning on any report that contains one. The product
+has no simulated mode and never falls back to a stand-in.
+
+### Real Kane CLI smoke test
+
+On a machine that is signed in to Kane CLI and can reach TestMu AI:
+
+```bash
+npm run kane:smoke -- https://example.com/ "The page shows the heading \"Example Domain\"."
+```
+
+It runs the same adapter as the server and prints the exit code, the `run_end` event, how SHIPPROOF
+classifies the run, and which evidence files were collected.
 
 ## Security notes
 
+- Target policy: loopback/private application URLs are refused unless `ALLOW_PRIVATE_TARGETS=1`; link-local/metadata addresses always; re-checked at run time.
+- Public report links and agent API keys are stored as SHA-256 hashes, shown once, revocable; links can expire.
+- Evidence files are addressed by random ids and served only to the owning account.
+- Sensitive actions (keys, links, runs, criterion edits, repair declarations) are written to an append-only audit log.
 - Passwords: scrypt. Sessions: random 256-bit token, stored hashed, `HttpOnly` + `SameSite=Lax` cookie.
 - All project, run, evidence and repair-task routes check ownership; cross-tenant access returns 404.
 - CSP without inline script; all user content rendered as text nodes.
 - Kane credentials come from the server environment only; secret variables are write-only and redacted.
-- The server asks Kane CLI to browse whatever URL a signed-in user registers. Run it on a network
-  where that is acceptable, or restrict sign-ups.
+- Residual risks: the target policy checks the registered URL, not redirects or links the browser follows
+  afterwards — run the container in a network segment without access to internal services. Sign-up is
+  open; rate limiting is in-memory per process. This has had no external security review.
 
 More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

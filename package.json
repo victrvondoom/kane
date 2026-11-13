@@ -12,6 +12,8 @@
     "demo:fix": "git apply demo/fix-coupon.patch && echo 'Coupon fix applied to demo-app/pricing.js'",
     "demo:break": "git apply -R demo/fix-coupon.patch && echo 'Coupon bug restored in demo-app/pricing.js'",
     "migrate": "node server/db.js",
+    "backup": "node server/db.js backup",
+    "kane:smoke": "node scripts/kane-smoke.js",
     "test": "node --test --test-concurrency=1 tests/*.test.js"
   },
   "dependencies": { "express": "^4.21.2" }

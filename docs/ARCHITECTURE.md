@@ -23,7 +23,8 @@ SQLite (node:sqlite, WAL) — migrations/001_init.sql
 
 `users`, `sessions`, `projects`, `project_variables`, `requirements`, `criteria`,
 `runs`, `results` (one per criterion per run, with full stdout/stderr and exit code),
-`run_events` (every NDJSON event and stderr chunk), `evidence`, `repair_tasks`.
+`run_events` (every NDJSON event and stderr chunk), `evidence`, `repair_tasks`
+(origin run, fix declaration, verifying run, closing result), `audit_events` (append-only).
 
 Nothing on screen is stored as a status flag. Criterion status, totals and the release verdict
 are recomputed from `results` on every request (`criteriaStatus`, `releaseGate`).
@@ -39,7 +40,17 @@ are recomputed from `results` on every request (`criteriaStatus`, `releaseGate`)
 | exit 3 or watchdog kill | `timeout` |
 | exit code and `run_end.status` disagree | `error / inconsistent` |
 | binary missing | `error / kane_not_installed` |
+| stderr shows a network/DNS/proxy error, no `run_end` | `error / network` |
+| passing run but no evidence artifact collected | `error / no_evidence` |
+| target URL refused by policy (engine not started) | `error / target_blocked` |
+| server stopped mid-check | `error / interrupted` |
 | user cancelled | `cancelled` (ignored by the gate; earlier evidence stands) |
+
+Result lifecycle: `queued → starting` (process spawned) `→ running` (first NDJSON event) `→ passed | failed | error | timeout | cancelled`.
+
+Compatibility: written against the agent-mode contract of kane-cli ≥ 0.8.17 (`stream_start`, `run_end`,
+documented exit codes) and exercised against 0.10.4. All CLI-specific knowledge (flags, event names,
+exit codes, evidence locations) is confined to `server/kane.js`.
 
 Note: Kane CLI 0.10.4 exits `1` (not `2`) when unauthenticated, which is why authentication is
 detected from the absence of `run_end` plus stderr rather than from the exit code alone.
@@ -53,6 +64,29 @@ detected from the absence of `run_end` plus stderr rather than from the exit cod
 4. Only a `passed` result closes the task, and it stores which result verified it.
    A failed re-run re-opens it and increments the failure count.
 5. While a task is open the criterion's text, mandatory flag and existence are locked.
+
+## Streaming
+
+Every engine event is inserted into `run_events` before it is broadcast, and its row id is the SSE
+event id. A client that reconnects sends `Last-Event-ID` and receives only newer rows; the UI also
+de-duplicates by id and falls back to `GET /api/runs/:id/events?after=<id>` when the stream is down
+or the tab was suspended. A connection that falls more than ~1 MB behind is closed and resumes from
+its cursor. No progress value is computed or animated — the UI shows only persisted events and states.
+
+## Source of truth per screen
+
+| Screen | Endpoint(s) |
+|---|---|
+| Dashboard | `GET /api/projects` (projects, gate per project, metrics from execution rows, recent runs) |
+| New project | `POST /api/decompose` (preview), `POST /api/projects`, `POST /api/projects/:id/requirements` |
+| Project / requirement editor | `GET /api/projects/:id`, criteria `POST/PATCH/DELETE` |
+| Live execution + evidence explorer | `GET /api/runs/:id`, `…/stream`, `…/events`, `…/results/:rid`, `GET /api/evidence/:uid/file` |
+| Failure analysis | `repairTasks` in `GET /api/projects/:id`, `POST /api/repair-tasks/:id/fix-applied` |
+| History | `GET /api/projects/:id/runs?status=&before=&limit=` |
+| Release report | `GET /api/projects/:id/report`, share `POST/DELETE /api/projects/:id/share` |
+| Public report | `GET /api/public/report/:token` (+ screenshots only) |
+| Settings | `PATCH /api/projects/:id`, variables, API key, `GET /api/projects/:id/audit` |
+| Top bar engine pill | `GET /api/system` |
 
 ## Restart safety
 
