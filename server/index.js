@@ -6,10 +6,21 @@ if (fs.existsSync('.env')) for (const line of fs.readFileSync('.env', 'utf8').sp
 }
 const { createApp } = await import('./app.js');
 const { kaneStatus } = await import('./kane.js');
-const { app } = createApp();
+const { app, shutdown } = createApp();
 const port = Number(process.env.PORT) || 4000;
-app.listen(port, async () => {
+const server = app.listen(port, async () => {
   console.log(`SHIPPROOF listening on http://localhost:${port}`);
   const k = await kaneStatus();
   console.log(`Kane CLI: ${k.installed ? k.version : 'NOT INSTALLED'} · auth: ${k.auth} · ${k.detail}`);
+});
+
+let closing = false;
+for (const sig of ['SIGTERM', 'SIGINT']) process.on(sig, async () => {
+  if (closing) return; closing = true;
+  console.log(`${sig} received — draining`);
+  server.close();
+  server.closeIdleConnections?.();
+  setTimeout(() => process.exit(1), 15000).unref(); // hard stop if draining hangs
+  await shutdown();
+  process.exit(0);
 });

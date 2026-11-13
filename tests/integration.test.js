@@ -13,7 +13,8 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'shipproof-test-'));
 const stateFile = path.join(tmp, 'state.json');
 const setState = (s) => fs.writeFileSync(stateFile, JSON.stringify(s));
 process.env.FAKE_KANE_STATE = stateFile;
-const config = { bin: path.join(here, 'fixtures', 'fake-kane.js'), timeout: 30, maxSteps: 10, headless: true, username: 'ci-user', accessKey: 'SECRETKEY-1234567890' };
+const config = { bin: path.join(here, 'fixtures', 'fake-kane.js'), timeout: 30, maxSteps: 10, headless: true, username: 'ci-user', accessKey: 'SECRETKEY-1234567890', requireEvidence: true, allowPrivateTargets: true };
+process.env.LOG_LEVEL = 'silent';
 
 let server, base, ctx;
 const jar = {};
@@ -32,7 +33,7 @@ before(async () => {
   await new Promise((r) => { server = ctx.app.listen(0, r); });
   base = `http://127.0.0.1:${server.address().port}`;
 });
-after(() => { server.close(); ctx.db.close(); fs.rmSync(tmp, { recursive: true, force: true }); });
+after(async () => { server.close(); await ctx.shutdown(); fs.rmSync(tmp, { recursive: true, force: true }); });
 
 let pid, criteria;
 test('auth: signup, session, validation, isolation', async () => {
@@ -178,6 +179,12 @@ test('shareable report: public by token, revocable, no logs or secrets', async (
   const pub = await api('GET', `/api/public/report/${token}`, null, 'anon');
   assert.equal(pub.status, 200);
   assert.equal(pub.body.report.gate.verdict, 'verified');
+  const stored = ctx.db.get('SELECT share_token, share_token_hash FROM projects WHERE id = ?', pid);
+  assert.equal(stored.share_token, null, 'plaintext token is never stored');
+  assert.ok(stored.share_token_hash && stored.share_token_hash !== token);
+  ctx.db.run('UPDATE projects SET share_expires_at = ? WHERE id = ?', '2000-01-01T00:00:00.000Z', pid);
+  assert.equal((await api('GET', `/api/public/report/${token}`, null, 'anon')).status, 410, 'expired link is refused');
+  ctx.db.run('UPDATE projects SET share_expires_at = NULL WHERE id = ?', pid);
   assert.equal(pub.body.report.repairs[0].status, 'verified');
   assert.ok(pub.body.report.criteria[1].trail.some((t) => t.status === 'failed') && pub.body.report.criteria[1].trail.at(-1).status === 'passed');
   assert.ok(!JSON.stringify(pub.body).includes('stdout'));

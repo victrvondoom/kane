@@ -1,9 +1,9 @@
 // Derived truth: criterion status, release gate and repair tasks.
 // Everything here is computed from persisted execution rows — never from user input or model opinion.
-import { now } from './db.js';
+import { now, audit } from './db.js';
 import { textHash } from './requirements.js';
 
-const KIND = { auth: 'Kane CLI not authenticated', did_not_start: 'Kane CLI did not start', timeout: 'timeout', inconsistent: 'exit code and status disagreed', kane_not_installed: 'Kane CLI not installed', interrupted: 'server restarted mid-run' };
+const KIND = { auth: 'Kane CLI not authenticated', did_not_start: 'Kane CLI did not start', timeout: 'timeout', inconsistent: 'exit code and status disagreed', kane_not_installed: 'Kane CLI not installed', interrupted: 'execution interrupted', network: 'network unavailable', no_evidence: 'pass reported without evidence', target_blocked: 'target refused by server policy', spawn_failed: 'Kane CLI could not be started', runner: 'internal runner error' };
 const TERMINAL = ['passed', 'failed', 'error', 'timeout'];
 
 /** Status of each active criterion = its latest terminal result for the CURRENT criterion text. */
@@ -52,6 +52,11 @@ const DIAG = {
   timeout: 'The run hit its time limit before reaching a verdict. The app may be slow or the criterion too broad for one run.',
   inconsistent: 'Kane CLI output and exit code disagreed; the result is treated as unverified.',
   spawn_failed: 'The Kane CLI process could not be started on the server.',
+  network: 'Kane CLI could not reach the network (TestMu AI service or the target application). Nothing was verified.',
+  no_evidence: 'Kane CLI reported a pass, but no evidence artifact was produced or collected. Without evidence the criterion stays unverified.',
+  target_blocked: 'The application URL is not allowed by this server\'s target policy, so Kane CLI was not started.',
+  interrupted: 'The server stopped while this check was in flight. Re-run it.',
+  runner: 'An internal error stopped this check before a verdict.',
 };
 export const explainError = (kind) => DIAG[kind] || 'Execution ended without a verdict.';
 
@@ -59,7 +64,11 @@ export const explainError = (kind) => DIAG[kind] || 'Execution ended without a v
 export function syncRepairTask(db, result, project) {
   const open = db.get(`SELECT * FROM repair_tasks WHERE criterion_id = ? AND status != 'verified' ORDER BY id DESC LIMIT 1`, result.criterion_id);
   if (result.status === 'passed') {
-    if (open) db.run(`UPDATE repair_tasks SET status = 'verified', verified_result_id = ?, updated_at = ? WHERE id = ?`, result.id, now(), open.id);
+    if (open) {
+      // Only a passing execution of this exact criterion closes its task.
+      db.run(`UPDATE repair_tasks SET status = 'verified', verified_result_id = ?, verify_run_id = ?, closed_at = ?, updated_at = ? WHERE id = ?`, result.id, result.run_id, now(), now(), open.id);
+      audit(db, { projectId: project.id, actor: 'engine', action: 'repair_task.verified', entity: 'repair_task', entityId: open.id, detail: { criterion: result.criterion_key, runId: result.run_id, resultId: result.id } });
+    }
     return;
   }
   if (result.status !== 'failed') return; // errors/timeouts are not application defects
@@ -72,16 +81,18 @@ export function syncRepairTask(db, result, project) {
   if (open) {
     db.run(`UPDATE repair_tasks SET status = 'open', source_result_id = ?, observed = ?, diagnosis = ?, failures = failures + 1, updated_at = ? WHERE id = ?`,
       result.id, observed, diagnosis, now(), open.id);
+    audit(db, { projectId: project.id, actor: 'engine', action: 'repair_task.failed_again', entity: 'repair_task', entityId: open.id, detail: { criterion: result.criterion_key, runId: result.run_id, resultId: result.id } });
   } else {
-    db.run(`INSERT INTO repair_tasks (project_id, criterion_id, source_result_id, status, expected, observed, diagnosis, created_at, updated_at)
-            VALUES (?, ?, ?, 'open', ?, ?, ?, ?, ?)`, project.id, result.criterion_id, result.id, result.criterion_text, observed, diagnosis, now(), now());
+    const r = db.run(`INSERT INTO repair_tasks (project_id, criterion_id, source_result_id, origin_run_id, status, expected, observed, diagnosis, created_at, updated_at)
+            VALUES (?, ?, ?, ?, 'open', ?, ?, ?, ?, ?)`, project.id, result.criterion_id, result.id, result.run_id, result.criterion_text, observed, diagnosis, now(), now());
+    audit(db, { projectId: project.id, actor: 'engine', action: 'repair_task.opened', entity: 'repair_task', entityId: Number(r.lastInsertRowid), detail: { criterion: result.criterion_key, runId: result.run_id, resultId: result.id } });
   }
 }
 
 export function repairTaskView(db, t, baseUrl = '') {
   const r = db.get('SELECT id, run_id, criterion_key, criterion_text, objective, command, exit_code, kane_status, summary, reason, test_url, finished_at, failing_step FROM results WHERE id = ?', t.source_result_id);
   const p = db.get('SELECT name, app_url FROM projects WHERE id = ?', t.project_id);
-  const ev = db.all('SELECT id, kind, name, url, mime FROM evidence WHERE result_id = ?', t.source_result_id);
+  const ev = db.all('SELECT uid id, kind, name, url, mime FROM evidence WHERE result_id = ?', t.source_result_id);
   const verified = t.verified_result_id ? db.get('SELECT id, run_id, finished_at FROM results WHERE id = ?', t.verified_result_id) : null;
   const evidenceLines = ev.slice(0, 12).map((e) => `- ${e.kind}: ${e.url || `${baseUrl}/api/evidence/${e.id}/file`} (${e.name})`);
   const prompt = [
@@ -99,7 +110,10 @@ export function repairTaskView(db, t, baseUrl = '') {
   ].filter((l) => l !== null).join('\n');
   return { id: t.id, status: t.status, criterionId: t.criterion_id, criterionKey: r.criterion_key, criterionText: r.criterion_text,
     expected: t.expected, observed: t.observed, diagnosis: t.diagnosis, failures: t.failures, fixNote: t.fix_note,
-    createdAt: t.created_at, updatedAt: t.updated_at, sourceResult: { ...r, failing_step: r.failing_step ? JSON.parse(r.failing_step) : null },
+    createdAt: t.created_at, updatedAt: t.updated_at, originRunId: t.origin_run_id, fixDeclaredAt: t.fix_declared_at, fixDeclaredBy: t.fix_declared_by,
+    verifyRunId: t.verify_run_id, closedAt: t.closed_at,
+    timeline: db.all(`SELECT ts, actor, action, detail FROM audit_events WHERE entity = 'repair_task' AND entity_id = ? ORDER BY id`, t.id).map((e) => ({ ...e, detail: JSON.parse(e.detail) })),
+    sourceResult: { ...r, failing_step: r.failing_step ? JSON.parse(r.failing_step) : null },
     verifiedBy: verified, evidence: ev, prompt };
 }
 export { TERMINAL };

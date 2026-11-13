@@ -14,10 +14,18 @@ export function kaneConfig(env = process.env) {
     headless: env.KANE_HEADLESS !== '0',
     username: env.LT_USERNAME || '',
     accessKey: env.LT_ACCESS_KEY || '',
+    // A pass with no evidence artifact is treated as unverified ("missing evidence means unverified").
+    requireEvidence: env.REQUIRE_EVIDENCE !== '0',
+    // SSRF guard: loopback/private targets are refused unless explicitly allowed (local demo, private staging).
+    allowPrivateTargets: env.ALLOW_PRIVATE_TARGETS === '1',
   };
 }
 
 const PASS = /^(pass|passed|success|succeeded|completed|done)$/i;
+// Oldest CLI whose agent-mode contract (stream_start + run_end NDJSON, documented exit codes) this adapter was written against.
+export const MIN_KANE_VERSION = '0.8.17';
+export const TESTED_KANE_VERSION = '0.10.4';
+const NETWORK = /ENOTFOUND|ECONNREFUSED|ECONNRESET|ETIMEDOUT|EAI_AGAIN|ENETUNREACH|getaddrinfo|fetch failed|network (?:error|unavailable|unreachable)|socket hang up|tunnel|proxy/i;
 const AUTH = /not authenticated|not logged in|kane-cli login|unauthori[sz]ed|invalid (?:access key|credentials)|401/i;
 
 /** Pure classification of a finished kane-cli process. Exported for unit tests. */
@@ -35,6 +43,9 @@ export function classify({ exitCode, signal, runEnd, stderr = '', spawnError, ti
   if (!runEnd) {
     if (AUTH.test(stderr)) {
       return { status: 'error', errorKind: 'auth', reason: 'Kane CLI is not authenticated. Run `kane-cli login` on the server or set LT_USERNAME / LT_ACCESS_KEY.' };
+    }
+    if (NETWORK.test(stderr)) {
+      return { status: 'error', errorKind: 'network', reason: 'Kane CLI could not reach the TestMu AI service or the target (network error). Nothing was verified. ' + stderr.trim().split('\n').slice(-2).join(' ').slice(0, 300) };
     }
     const tail = stderr.trim().split('\n').slice(-3).join(' ').slice(0, 400);
     return { status: 'error', errorKind: 'did_not_start',
@@ -99,14 +110,16 @@ export function runKane({ objective, url, workDir, variables = [], config = kane
       clearTimeout(watchdog);
       if (varsFile) fs.rm(varsFile, { force: true }, () => {});
       resolve({ command: shown.join(' '), stdout: redact(stdout, secrets), stderr: redact(stderr, secrets), runEnd, events,
-        timedOut, cancelled, durationMs: Date.now() - started, exitCode: null, signal: null, spawnError: null, ...extra });
+        timedOut, cancelled, durationMs: Date.now() - started, exitCode: null, signal: null, spawnError: null, engine: null, ...extra });
     };
-    const watchdog = setTimeout(() => { timedOut = true; try { child?.kill('SIGKILL'); } catch {} }, (config.timeout + 45) * 1000);
+    const kill = (sig) => { if (!child?.pid) return; try { process.platform !== 'win32' ? process.kill(-child.pid, sig) : child.kill(sig); } catch { try { child.kill(sig); } catch {} } };
+    const watchdog = setTimeout(() => { timedOut = true; kill('SIGKILL'); }, (config.timeout + 45) * 1000);
     try {
-      child = spawn(config.bin, args, { cwd: workDir, stdio: ['ignore', 'pipe', 'pipe'],
+      // Own process group so the browser Kane launches is cleaned up with it.
+      child = spawn(config.bin, args, { cwd: workDir, stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32',
         env: { ...process.env, KANE_CLI_USER_AGENT: 'shipproof', NO_COLOR: '1', FORCE_COLOR: '0' } });
     } catch (e) { return finish({ spawnError: e }); }
-    onSpawn({ cancel() { cancelled = true; try { child.kill('SIGTERM'); } catch {} setTimeout(() => { try { child.kill('SIGKILL'); } catch {} }, 3000).unref(); } });
+    onSpawn({ pid: child.pid, cancel() { cancelled = true; kill('SIGTERM'); setTimeout(() => kill('SIGKILL'), 3000).unref(); } });
     const handleLine = (line) => {
       if (!line.trim()) return;
       let ev;
@@ -125,7 +138,12 @@ export function runKane({ objective, url, workDir, variables = [], config = kane
       onEvent({ kind: 'stderr', payload: { text: redact(s, secrets).slice(0, 4000) } });
     });
     child.on('error', (e) => finish({ spawnError: e }));
-    child.on('close', (code, signal) => { if (buf) handleLine(buf); finish({ exitCode: code, signal }); });
+    child.on('close', (code, signal) => {
+      if (buf) handleLine(buf);
+      kill('SIGKILL'); // reap anything the CLI left behind in its process group
+      const start = events.find((e) => e && e.type === 'stream_start');
+      finish({ exitCode: code, signal, engine: start?.cli_version ? `kane-cli ${start.cli_version}` : null });
+    });
   });
 }
 
@@ -173,6 +191,13 @@ export function failingStep(events) {
   return err ? { step: null, remark: err.message || err.error || JSON.stringify(err).slice(0, 300) } : null;
 }
 
+export function versionAtLeast(v, min) {
+  const a = String(v || '').split(/[.-]/).map(Number), b = min.split('.').map(Number);
+  if (a.slice(0, 3).some(Number.isNaN)) return /fixture/.test(String(v)); // test stand-ins identify themselves
+  for (let i = 0; i < 3; i++) { if ((a[i] || 0) > b[i]) return true; if ((a[i] || 0) < b[i]) return false; }
+  return true;
+}
+export const resetKaneStatusCache = () => { cached = { at: 0, value: null }; };
 let cached = { at: 0, value: null };
 const ex = (bin, args) => new Promise((res) => execFile(bin, args, { timeout: 15000, env: { ...process.env, NO_COLOR: '1' } },
   (err, stdout, stderr) => res({ code: err ? (err.code ?? 1) : 0, out: String(stdout) + String(stderr) })));
@@ -190,7 +215,12 @@ export async function kaneStatus(config = kaneConfig(), { fresh = false } = {}) 
     auth = w.code === 0 && !/not logged in/i.test(w.out) ? 'logged_in' : 'not_authenticated';
     detail = auth === 'logged_in' ? 'kane-cli login profile found on the server.' : 'Not logged in. Run `kane-cli login` on the server or set LT_USERNAME / LT_ACCESS_KEY.';
   }
-  cached = { at: Date.now(), value: { installed, version: installed ? v.out.trim().split('\n')[0] : null, auth, detail,
-    ready: installed && (auth === 'logged_in' || auth === 'env_credentials'), timeoutSeconds: config.timeout, headless: config.headless } };
+  const version = installed ? (v.out.match(/\d+\.\d+\.\d+[\w.-]*/)?.[0] ?? v.out.trim().split('\n')[0]) : null;
+  const compatible = installed && versionAtLeast(version, MIN_KANE_VERSION);
+  if (installed && !compatible) detail = `kane-cli ${version} is older than the minimum supported ${MIN_KANE_VERSION}. Upgrade: npm install -g @testmuai/kane-cli`;
+  const state = !installed ? 'unavailable' : !compatible ? 'incompatible' : auth === 'not_authenticated' ? 'not_authenticated' : 'ready';
+  cached = { at: Date.now(), value: { installed, version, compatible, minVersion: MIN_KANE_VERSION, testedVersion: TESTED_KANE_VERSION, auth, detail, state,
+    ready: state === 'ready', timeoutSeconds: config.timeout, headless: config.headless,
+    policy: { requireEvidence: !!config.requireEvidence, allowPrivateTargets: !!config.allowPrivateTargets } } };
   return cached.value;
 }

@@ -15,6 +15,25 @@ if (state.mode === 'unauthenticated') {
   process.stderr.write('Not authenticated. Run: kane-cli login --oauth\n');
   process.exit(1);
 }
+if (state.mode === 'network') {
+  out({ type: 'stream_start', cli_version: 'fixture' });
+  process.stderr.write('Error: getaddrinfo ENOTFOUND api.testmuai.invalid\n');
+  process.exit(2);
+}
+if (state.mode === 'crash') { // dies mid-run without a run_end
+  out({ type: 'stream_start', cli_version: 'fixture' });
+  out({ step: 1, status: 'done', remark: 'Opened start URL' });
+  process.stdout.write('{"step": 2, "status": "runn');
+  process.kill(process.pid, 'SIGKILL');
+}
+if (state.mode === 'garbage') { // malformed lines around a valid stream
+  process.stdout.write('\u001b[32mnot json at all\u001b[0m\n{"broken": \n\n');
+}
+if (state.mode === 'pass_no_evidence') {
+  out({ type: 'stream_start', cli_version: 'fixture' });
+  out({ type: 'run_end', status: 'passed', summary: 'claims a pass, wrote nothing' });
+  process.exit(0);
+}
 if (state.mode === 'hang') { out({ type: 'stream_start' }); setTimeout(() => {}, 600000); }
 else {
   const fails = (state.failWhen || []).some((s) => objective.includes(s));
