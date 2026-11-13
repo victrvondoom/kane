@@ -129,6 +129,38 @@ Reset the store to the buggy build for another take:
 npm run demo:break
 ```
 
+## Proof intelligence (Layer 3)
+
+SHIPPROOF tracks *which version* of the application each piece of evidence verified.
+
+- **Proof graph** — Project → Build → Requirement → Criterion version → Execution → Events → Evidence → Repair task → Verifying run → Release decision, all as linked rows. Editing a criterion appends an immutable version; executions keep pointing at the version they ran. Browse it in **Proof explorer** (search by key, text, area, path, commit SHA, run number or evidence hash).
+- **Builds and change impact** — a build is a commit + environment (+ optional deployment URL and changed files), registered by CI, the GitHub push webhook or the UI. Each criterion can declare criticality, functional areas and source-path patterns (`**`, `*`, `?`). For a build the engine reports every criterion as *affected*, *unaffected* or *unknown*, and produces a verification plan with a reason per criterion.
+- **Freshness** — evidence is `CURRENT`, `STALE`, `UNVERIFIED`, `FAILED` or `BLOCKED`. A pass goes stale when a later build changes mapped files, when impact cannot be established (unmapped criterion, unknown change set, mapping edited after the fact), or when environment / engine-version / policy rules say so.
+- **Stability** — classified from application outcomes only (passed / failed) of the current text: `stable_pass`, `stable_fail`, `intermittent`, or `insufficient_data` below the minimum sample (default 5). Auth, network, timeout and interruption results are counted separately and excluded.
+- **Risk** — an ordinal prioritisation from listed factors (criticality, evidence state, stability, coverage gaps). Not a probability; it never changes a verdict.
+- **Release policy** — versioned per project. The decision is the existing strict gate **and** the policy: it lists each blocking condition with a code, the run it refers to and the action that resolves it. No policy setting can make a failed or unexecuted mandatory criterion pass.
+- **Proof dossier** — canonical JSON with criterion versions, supporting executions, engine identity, evidence SHA-256 hashes, repair history and the decision, signed with a server-held Ed25519 key. Verify offline:
+
+```bash
+node scripts/verify-dossier.mjs shipproof-dossier-<id>.json --trust-key <keyId>
+```
+
+### GitHub CI
+
+1. Project → **Settings** → generate an API key. Add it to the repository as secret `SHIPPROOF_API_KEY`; add variable `SHIPPROOF_URL`.
+2. Copy the workflow from Project → **CI** (served at `/ci/shipproof-verify.yml`) to `.github/workflows/`. Make it run after your deploy job.
+3. Optional: Project → **CI** → create a webhook secret and add a GitHub webhook (push events, JSON) so builds are registered on every push.
+
+The job runs `/ci/shipproof-ci.mjs`: register build → run the impact plan → wait → fetch the decision → exit 0 only if the release is allowed.
+
+| Endpoint (Bearer project key) | Purpose |
+|---|---|
+| `POST /api/agent/builds` | register commit, environment, changed paths (idempotent) |
+| `POST /api/agent/verify` | run the plan (or `mode: "full"`) for a commit |
+| `GET /api/agent/runs/:id` | run status and per-criterion results |
+| `GET /api/agent/decision?commitSha=` | recorded release decision with blocking conditions |
+| `POST /api/webhooks/github/:projectId` | GitHub push webhook (HMAC-SHA256, one-time delivery ids) |
+
 ## Coding-agent API
 
 Generate a project API key under **Settings → Coding-agent access**.
@@ -147,7 +179,7 @@ Authorization: Bearer spk_…
 npm test
 ```
 
-43 tests in four files:
+54 tests in six files:
 
 - `unit.test.js` — requirement decomposition, outcome classification, release gate.
 - `integration.test.js` — real HTTP server + SQLite + one child process per criterion: auth, isolation,
@@ -156,6 +188,9 @@ npm test
   (including a captured real `kane-cli 0.10.4` unauthenticated run and a check that the installed CLI
   still documents every flag the adapter uses), malformed output, crashes, stream resume, pagination,
   restart recovery, audit trail, and the fail → real code fix → pass loop against the demo store.
+- `proof.test.js` — criterion versions, build registration, change impact, freshness, stability, policy decisions, signed webhook
+  deliveries and replays, the CI client end to end, dossier signing and tamper detection.
+- `e2e-proof.test.js` — the Layer 3 interfaces in Chromium.
 - `e2e.test.js` — the whole journey through the UI in Chromium (skipped if Playwright is absent),
   including refresh mid-run, a second account, revocation and phone-width layout checks.
 

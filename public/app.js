@@ -1,4 +1,5 @@
 // SHIPPROOF single-page app. No build step; every value on screen is fetched from the API.
+import { ProofTab, BuildsTab, IntelligenceTab, CITab, DossierTab } from './proof.js';
 const $app = document.getElementById('app');
 let me = null, system = null, cleanup = [];
 
@@ -43,8 +44,17 @@ const KIND = { auth: 'Kane not signed in', kane_not_installed: 'Kane unavailable
   no_evidence: 'Pass w/o evidence', target_blocked: 'Target blocked', inconsistent: 'Inconsistent result', spawn_failed: 'Kane unavailable', runner: 'Internal error' };
 const resultTag = (r) => tag(r.status, r.status === 'error' ? KIND[r.errorKind] : null);
 const ACTIVE = ['queued', 'starting', 'running'];
+const FRESH_TAG = { STALE: ['blocked', 'Stale'], CURRENT: null };
 // Modal dialogs (native <dialog>: focus trap, Esc to close). Resolves to the input value / true, or null when dismissed.
-function dialog({ title, body, value, confirm = 'Confirm', danger = false, multiline = true }) {
+function dialog({ title, body, value, confirm = 'Confirm', danger = false, multiline = true, fields }) {
+  if (fields) return new Promise((resolve) => {
+    const inputs = fields.map((f) => [f.name, f.options ? h('select', { style: { width: '100%' } }, f.options.map((o) => h('option', { value: o, selected: o === f.value }, o))) : h(f.multiline ? 'textarea' : 'input', { value: f.value ?? '', placeholder: f.placeholder || '' })]);
+    const d = h('dialog', { class: 'dlg' }, h('form', { method: 'dialog', class: 'stack', onsubmit: (e) => { e.preventDefault(); d.close(); resolve(Object.fromEntries(inputs.map(([n, i]) => [n, i.value]))); } },
+      h('h2', {}, title), body ? h('p', { class: 'small mute' }, body) : null, fields.map((f, i) => h('label', {}, f.label, inputs[i][1])),
+      h('div', { class: 'row', style: { 'justify-content': 'flex-end' } }, h('button', { class: 'btn', type: 'button', onclick: () => { d.close(); resolve(null); } }, 'Cancel'), h('button', { class: 'btn primary', type: 'submit' }, confirm))));
+    d.addEventListener('cancel', () => resolve(null)); d.addEventListener('close', () => d.remove());
+    document.body.append(d); d.showModal();
+  });
   return new Promise((resolve) => {
     const input = value != null ? h(multiline ? 'textarea' : 'input', { value, 'aria-label': title }) : null;
     const d = h('dialog', { class: 'dlg' }, h('form', { method: 'dialog', class: 'stack', onsubmit: (e) => { e.preventDefault(); d.close(); resolve(input ? input.value : true); } },
@@ -55,7 +65,7 @@ function dialog({ title, body, value, confirm = 'Confirm', danger = false, multi
     document.body.append(d); d.showModal(); (input || d.querySelector('button[type=submit]')).focus();
   });
 }
-const TRIGGER = { full: 'Full verification', rerun_failed: 'Re-run failed', untested: 'Untested only', selected: 'Selected criteria', repair_verify: 'Fix re-verification' };
+const TRIGGER = { impact_plan: 'Change-impact plan', full: 'Full verification', rerun_failed: 'Re-run failed', untested: 'Untested only', selected: 'Selected criteria', repair_verify: 'Fix re-verification' };
 const VERDICT = { verified: ['RELEASE VERIFIED', 's-verified'], blocked: ['RELEASE BLOCKED', 's-failed'], unverified: ['NOT VERIFIED', 's-blocked'] };
 const stamp = (verdict, lg) => h('div', { class: `stamp ${VERDICT[verdict][1]}${lg ? ' lg' : ''}`, role: 'status' }, h('b', {}, 'SHIPPROOF GATE'), h('span', {}, VERDICT[verdict][0]));
 const segBar = (counts, order) => {
@@ -227,7 +237,7 @@ async function NewProject() {
 }
 
 // ---------- project ----------
-async function Project(id, tab = 'requirements') {
+async function Project(id, tab = 'requirements', sub) {
   const d = await api('GET', `/projects/${id}`);
   const { project: p, criteria, runs, repairTasks } = d;
   const g = p.gate, t = g.totals;
@@ -239,12 +249,16 @@ async function Project(id, tab = 'requirements') {
     try { const { run } = await api('POST', `/projects/${id}/runs`, body); toast(msg); location.hash = `#/run/${run.id}`; }
     catch (e) { if (e.data?.activeRunId) { toast(e.message, true); location.hash = `#/run/${e.data.activeRunId}`; } else throw e; }
   });
-  const tabs = [['requirements', 'Requirements', criteria.length], ['failures', 'Failure analysis', openTasks.length + blocked.length, true], ['history', 'History', d.runCount], ['report', 'Release report'], ['settings', 'Settings']];
-  const body = { requirements: () => RequirementsTab(d), failures: () => FailuresTab(d, start), history: () => HistoryTab(d), report: () => ReportTab(d), settings: () => SettingsTab(d) }[tab] || (() => RequirementsTab(d));
+  const tabs = [['requirements', 'Requirements', criteria.length], ['failures', 'Failure analysis', openTasks.length + blocked.length, true], ['history', 'History', d.runCount],
+    ['proof', 'Proof explorer'], ['builds', 'Builds & impact'], ['intelligence', 'Release intelligence', g.reasons.length, true], ['ci', 'CI'], ['dossier', 'Dossier'], ['report', 'Release report'], ['settings', 'Settings']];
+  const body = { requirements: () => RequirementsTab(d), failures: () => FailuresTab(d, start), history: () => HistoryTab(d), report: () => ReportTab(d), settings: () => SettingsTab(d),
+    proof: () => ProofTab(d, sub), builds: () => BuildsTab(d, sub), intelligence: () => IntelligenceTab(d), ci: () => CITab(d), dossier: () => DossierTab(d, sub) }[tab] || (() => RequirementsTab(d));
   return shell(h('div', { class: 'page stack-l' },
     h('div', { class: 'row spread', style: { 'align-items': 'flex-start' } },
       h('div', { class: 'stack-s grow' }, h('h3', {}, h('a', { href: '#/app', style: { 'text-decoration': 'none' } }, '← Projects')), h('h1', {}, p.name),
-        h('a', { class: 'mono mute', href: p.appUrl, target: '_blank', rel: 'noopener' }, p.appUrl)),
+        h('div', { class: 'row small' }, h('a', { class: 'mono mute', href: p.appUrl, target: '_blank', rel: 'noopener' }, p.appUrl),
+          g.build ? h('a', { class: 'cat', href: `#/p/${id}/builds/${g.build.id}`, title: 'Current build' }, `build ${g.build.shortSha} · ${g.build.environment}`) : h('a', { class: 'cat', href: `#/p/${id}/builds` }, 'no build registered'),
+          h('a', { class: 'cat', href: `#/p/${id}/intelligence` }, `policy v${g.policyVersion}`))),
       stamp(g.verdict)),
     engineCallout(),
     h('div', { class: 'stats' },
@@ -253,13 +267,14 @@ async function Project(id, tab = 'requirements') {
       h('div', { class: 'stat' }, h('b', { class: t.failed ? 's-failed' : '' }, t.failed), h('span', {}, 'Failed')),
       h('div', { class: 'stat' }, h('b', { class: t.blocked ? 's-blocked' : '' }, t.blocked), h('span', {}, 'No evidence')),
       h('div', { class: 'stat' }, h('b', {}, t.untested), h('span', {}, 'Not tested')),
+      h('a', { class: 'stat', href: `#/p/${id}/intelligence`, style: { 'text-decoration': 'none' } }, h('b', { class: g.freshness.STALE ? 's-blocked' : '' }, g.freshness.STALE), h('span', {}, 'Stale evidence')),
       h('div', { class: 'stat' }, p.lastRun ? [h('div', {}, tag(p.lastRun.status)), h('span', {}, `Latest run · ${fmtDur(p.lastRun.durationMs)}`)] : [h('b', { class: 'mute' }, '—'), h('span', {}, 'Latest run')])),
     h('div', { class: 'row' },
       activeRun ? h('a', { class: 'btn primary', href: `#/run/${activeRun.id}` }, h('i', { class: 'dot live' }), `Watch run #${activeRun.id}`)
         : h('button', { class: 'btn primary', disabled: !criteria.length, onclick: start({}, 'Verification queued') }, 'Run full verification'),
       !activeRun && (t.failed + t.blocked) ? h('button', { class: 'btn', onclick: start({ mode: 'failed' }, 'Re-run queued') }, `Re-run ${t.failed + t.blocked} failed / unproven`) : null,
       !activeRun && t.untested && t.untested < t.total ? h('button', { class: 'btn', onclick: start({ mode: 'untested' }, 'Run queued') }, `Run ${t.untested} untested`) : null,
-      g.reasons.length ? h('span', { class: 'small mute grow' }, g.reasons[0], g.reasons.length > 1 ? ` (+${g.reasons.length - 1} more)` : '') : h('span', { class: 'small s-verified' }, 'Every mandatory criterion has a passing execution with evidence.')),
+      g.reasons.length ? h('a', { class: 'small mute grow', href: `#/p/${id}/intelligence` }, g.reasons[0], g.reasons.length > 1 ? ` (+${g.reasons.length - 1} more)` : '') : h('span', { class: 'small s-verified' }, 'Every mandatory criterion has a passing execution with evidence.')),
     h('div', { class: 'stack' },
       h('nav', { class: 'tabs' }, tabs.map(([k, label, n, warn]) => h('a', { href: `#/p/${id}/${k}`, class: tab === k ? 'on' : '' }, label, n != null ? h('span', { class: `count${warn && n ? ' bad' : ''}` }, n) : null))),
       await body())));
@@ -283,16 +298,27 @@ function RequirementsTab({ project: p, criteria, runs }) {
         h('td', { class: 'key' }, c.key),
         h('td', {}, h('div', { class: 'stack-s' }, h('span', {}, c.text),
           c.latest && c.status !== 'verified' ? h('span', { class: 'small mute' }, c.latest.failing_step?.remark || c.latest.reason || c.latest.summary || '') : null,
+          h('div', { class: 'row small' }, h('a', { class: 'cat', href: `#/p/${pid}/proof/${c.id}`, title: 'Open in Proof explorer' }, c.version ? `v${c.version.number}` : 'v?', ' · trace'), h('span', { class: 'cat' }, c.criticality),
+            c.areas.map((a) => h('span', { class: 'cat' }, a)), h('span', { class: 'cat', title: c.paths.join('\n') }, c.paths.length ? `${c.paths.length} path pattern${c.paths.length === 1 ? '' : 's'}` : 'unmapped')),
           h('label', { class: 'row small', style: { 'text-transform': 'none', 'letter-spacing': '0', 'font-family': 'var(--sans)' } },
             h('input', { type: 'checkbox', checked: c.mandatory, onchange: patch(c, { mandatory: !c.mandatory }) }), 'Mandatory for release'))),
         h('td', {}, h('select', { 'aria-label': `Type of ${c.key}`, onchange: (e) => patch(c, { category: e.target.value })(e) },
           ['functional', 'visual', 'persistence'].map((k) => h('option', { value: k, selected: c.category === k }, k)))),
-        h('td', {}, tag(c.status)),
+        h('td', {}, c.freshness.state === 'STALE' ? tag('blocked', 'Stale') : c.freshness.state === 'BLOCKED' && c.status === 'verified' ? tag('blocked', 'Not accepted') : tag(c.status),
+          c.freshness.state === 'STALE' ? h('div', { class: 'small mute', style: { 'max-width': '220px' } }, c.freshness.reasons[0].message) : null),
         h('td', { class: 'small' }, c.latest ? h('a', { href: `#/run/${c.latest.run_id}/${c.latest.id}` }, `run #${c.latest.run_id}`, c.evidenceCount ? ` · ${c.evidenceCount} file${c.evidenceCount === 1 ? '' : 's'}` : '') : h('span', { class: 'mute' }, 'none'),
           h('div', { class: 'mute' }, c.attempts ? `${c.attempts} execution${c.attempts === 1 ? '' : 's'}` : '')),
         h('td', {}, h('div', { class: 'row', style: { 'flex-wrap': 'nowrap' } },
           h('button', { class: 'btn sm', title: `Run ${c.key} now`, onclick: act(async () => { try { const { run } = await api('POST', `/projects/${pid}/runs`, { criterionIds: [c.id] }); location.hash = `#/run/${run.id}`; } catch (e) { if (e.data?.activeRunId) location.hash = `#/run/${e.data.activeRunId}`; throw e; } }) }, 'Run'),
           h('button', { class: 'btn sm', onclick: edit(c) }, 'Edit'),
+          h('button', { class: 'btn sm', title: 'Criticality, functional areas and source-path mapping', onclick: act(async () => {
+            const v = await dialog({ title: `Coverage of ${c.key}`, confirm: 'Save coverage', body: 'Used by change-impact analysis. Without a source mapping, every change is treated as potentially affecting this criterion. Saving creates a new criterion version.',
+              fields: [{ name: 'criticality', label: 'Criticality', value: c.criticality, options: ['low', 'medium', 'high', 'critical'] }, { name: 'areas', label: 'Functional areas (comma separated)', value: c.areas.join(', '), placeholder: 'checkout, pricing' },
+                { name: 'paths', label: 'Source file patterns (one per line; ** * ? supported)', value: c.paths.join('\n'), multiline: true, placeholder: 'src/cart/**\nsrc/pricing/*.js' }] });
+            if (!v) return;
+            await api('PATCH', `/projects/${pid}/criteria/${c.id}`, { criticality: v.criticality, areas: v.areas.split(',').map((x) => x.trim()).filter(Boolean), paths: v.paths.split('\n').map((x) => x.trim()).filter(Boolean) });
+            toast('Coverage saved as a new version'); render();
+          }) }, 'Coverage'),
           h('button', { class: 'btn sm danger', onclick: act(async () => { if (await dialog({ title: `Archive ${c.key}?`, body: 'It leaves the release gate. Its execution history is kept.', confirm: 'Archive', danger: true })) { await api('DELETE', `/projects/${pid}/criteria/${c.id}`); render(); } }) }, 'Archive'))))))))
       : h('div', { class: 'panel empty' }, 'No acceptance criteria yet. Add requirements below.'),
     h('div', { class: 'panel stack' }, h('h3', {}, 'Add requirements'), ta,
@@ -601,7 +627,7 @@ async function render() {
     else if (!me) { location.hash = '#/login'; return; }
     else if (parts[0] === 'app') view = await Dashboard();
     else if (parts[0] === 'new') view = await NewProject();
-    else if (parts[0] === 'p' && parts[1]) view = await Project(Number(parts[1]), parts[2]);
+    else if (parts[0] === 'p' && parts[1]) view = await Project(Number(parts[1]), parts[2], parts[3]);
     else if (parts[0] === 'run' && parts[1]) view = await RunPage(Number(parts[1]), parts[2]);
     else view = shell(h('div', { class: 'page' }, h('div', { class: 'panel empty stack' }, h('h2', {}, 'Page not found'), h('div', {}, h('a', { class: 'btn', href: '#/app' }, 'Back to projects')))));
   } catch (e) {
@@ -610,6 +636,7 @@ async function render() {
   clearTimeout(slow);
   if (view) { const y = window.scrollY, same = $app.dataset.route === location.hash; $app.replaceChildren(view); $app.dataset.route = location.hash; window.scrollTo(0, same ? y : 0); }
 }
+window.SP = { h, api, act, toast, copy, dialog, tag, fmtTime, fmtDur, ago, KIND, LABEL, render: () => render() };
 window.addEventListener('hashchange', render);
 (async () => {
   try { me = (await api('GET', '/auth/me')).user; if (me) system = await api('GET', '/system'); } catch {}

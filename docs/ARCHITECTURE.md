@@ -99,3 +99,16 @@ as no evidence.
   move it to a job table with leases.
 - Evidence collection copies whatever files Kane CLI wrote (images, logs, JSON, `.evidence`
   packs), capped at 80 MB / 400 files per check.
+
+## Proof intelligence
+
+`server/proof.js` holds the deterministic engines; `server/routes-proof.js` the HTTP surface; `server/keys.js` key material and canonical JSON.
+
+- `computeDecision` is the only place a release verdict is produced. It takes the strict gate (`gate.js`, unchanged) and adds freshness and policy. The project header, report, agent API, CI decision and dossier all call it.
+- Freshness of a pass is evaluated against the chain of builds registered (in the same environment) after the build it ran on. Any affected build, or any build whose impact cannot be established, makes it stale. The mapping in force when the evidence was produced must equal the current mapping, otherwise impact is treated as unknown.
+- Glob matching is implemented without regular expressions (segment DP + two-pointer wildcard), so patterns cannot cause catastrophic backtracking.
+- Webhook: HMAC-SHA256 over the raw request bytes, constant-time compare, identical 401 for unknown project / no secret / bad signature; delivery ids are unique per project and recorded in the same transaction as their effect. Secrets are AES-256-GCM encrypted at rest.
+- Dossiers: payload → canonical JSON → SHA-256 → Ed25519 signature; per-section hashes localise tampering; evidence files are re-hashed at generation and flagged `mismatch` / `missing`.
+- New tables (migration 003, additive): `criterion_versions`, `builds`, `policy_versions`, `webhook_deliveries`, `release_decisions`, `dossiers`; new columns pin each execution to criterion version, build, environment and policy version.
+
+Limits: change impact is only as good as the declared path mappings; the webhook trusts GitHub's file lists for non-forced pushes; the dossier key is a single server key without rotation tooling.
