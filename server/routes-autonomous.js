@@ -4,12 +4,24 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { generateSpecifications, saveSpecification, listSpecifications, getSpecification } from './steps-writer.js';
 import { scanSecurity, recordSecurityScan, getLatestSecurityScan } from './gatekeeper.js';
-import { investigateFailure, recordInvestigation, listInvestigations, getInvestigation } from './playtest.js';
+import { investigateFailure, recordInvestigation, listInvestigations, getInvestigation, queueReplay } from './playtest.js';
+import { setDefectState, DEFECTS } from './demo-defects.js';
+import { listTrials, getTrial } from './regression.js';
 import { checkOqedStatus, evaluateOqedEligibility } from './oqed.js';
 import { executeRepair } from './coding-agent.js';
 import { WORKFLOW_STATES } from './orchestrator.js';
 
-export function registerAutonomousRoutes(api, { db, orchestrator, runner, ROOT, auth, project, h, HttpError, bad, baseUrl }) {
+export function registerAutonomousRoutes(api, { db, orchestrator, runner, ROOT, auth, project, h, HttpError, bad, baseUrl, config = {} }) {
+  // Demo/workspace source mutation is off unless the operator explicitly enables it for a dev/test environment
+  // AND names the user. A signed-up account alone never grants write access to server source files.
+  const mayMutate = (user) => !!config.demoMutations && !!user && (config.demoMutationUsers || []).includes(String(user.email).toLowerCase());
+  const execOf = (req) => {
+    const p = project(req);
+    const row = db.get('SELECT id FROM agent_executions WHERE id = ? AND project_id = ?', Number(req.params.execId), p.id);
+    if (!row) throw new HttpError(404, 'Execution not found');
+    return row.id;
+  };
+
 
   // ==========================================
   // 1. STEPS WRITER — TEST SPECIFICATIONS
@@ -88,19 +100,16 @@ export function registerAutonomousRoutes(api, { db, orchestrator, runner, ROOT, 
     const { resultId } = req.body || {};
     if (!resultId) throw bad('resultId is required');
 
-    const result = db.get('SELECT * FROM results WHERE id = ?', Number(resultId));
+    const result = db.get('SELECT r.* FROM results r JOIN runs n ON n.id = r.run_id WHERE r.id = ? AND n.project_id = ?', Number(resultId), p.id);
     if (!result) throw new HttpError(404, 'Result not found');
-
+    if (['queued', 'starting', 'running'].includes(result.status)) throw new HttpError(409, 'This check has not finished');
+    if (orchestrator.activeFor(p.id)) throw new HttpError(409, 'An autonomous workflow is active for this project');
+    const busy = runner.activeRunFor(p.id);
+    if (busy) throw new HttpError(409, `Run #${busy} is already in progress for this project`);
     const run = db.get('SELECT * FROM runs WHERE id = ?', result.run_id);
-    if (run.project_id !== p.id) throw new HttpError(403, 'Forbidden');
-
     const evidenceFiles = db.all('SELECT * FROM evidence WHERE result_id = ?', result.id);
-    const investigation = await investigateFailure({
-      project: p,
-      result,
-      run,
-      evidenceFiles,
-    });
+    // The replay is a real, persisted execution of the same criterion; without it nothing is "reproduced".
+    const investigation = await investigateFailure({ project: p, result, run, evidenceFiles, replay: queueReplay({ db, runner }) });
 
     const invId = recordInvestigation(db, investigation);
     res.status(201).json({ investigation: getInvestigation(db, invId) });
@@ -141,12 +150,11 @@ export function registerAutonomousRoutes(api, { db, orchestrator, runner, ROOT, 
     const { taskDescription, autoRepair = true } = req.body || {};
     if (!taskDescription || typeof taskDescription !== 'string') throw bad('taskDescription is required');
 
-    const runResult = await orchestrator.startWorkflow({
-      projectId: p.id,
-      taskDescription: taskDescription.trim(),
-      appUrl: p.app_url,
-      autoRepair: !!autoRepair,
-    });
+    let runResult;
+    try {
+      runResult = await orchestrator.startWorkflow({ projectId: p.id, taskDescription: taskDescription.trim().slice(0, 2000), appUrl: p.app_url,
+        autoRepair: !!autoRepair, mutationAuthorized: mayMutate(req.user) });
+    } catch (e) { if (e.status) throw new HttpError(e.status, e.message); throw e; }
 
     res.status(202).json({
       executionId: runResult.executionId,
@@ -161,21 +169,24 @@ export function registerAutonomousRoutes(api, { db, orchestrator, runner, ROOT, 
   }));
 
   api.get('/projects/:pid/loop/:execId', auth, h((req, res) => {
-    const p = project(req);
-    const exec = orchestrator.getExecution(Number(req.params.execId));
-    if (!exec || exec.projectId !== p.id) throw new HttpError(404, 'Execution not found');
-    res.json({ execution: exec });
+    res.json({ execution: orchestrator.getExecution(execOf(req)) });
   }));
 
   api.post('/projects/:pid/loop/:execId/cancel', auth, h((req, res) => {
-    const p = project(req);
-    const cancelled = orchestrator.cancelWorkflow(Number(req.params.execId));
+    const cancelled = orchestrator.cancelWorkflow(execOf(req));
     res.json({ cancelled });
   }));
 
+  api.get('/projects/:pid/regression-trials', auth, h((req, res) => res.json({ trials: listTrials(db, project(req).id) })));
+  api.get('/projects/:pid/regression-trials/:tid', auth, h((req, res) => {
+    const t = getTrial(db, Number(req.params.tid));
+    if (!t || t.projectId !== project(req).id) throw new HttpError(404, 'Regression trial not found');
+    res.json({ trial: t });
+  }));
+
   api.get('/projects/:pid/loop/:execId/stream', auth, (req, res) => {
-    const p = project(req);
-    const execId = Number(req.params.execId);
+    let execId;
+    try { execId = execOf(req); } catch (e) { return res.status(e.status || 404).json({ error: e.message }); }
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
@@ -203,23 +214,24 @@ export function registerAutonomousRoutes(api, { db, orchestrator, runner, ROOT, 
   // 6. JUDGE DEMO EXPERIENCE
   // ==========================================
 
-  api.post('/demo/break-app', auth, h((req, res) => {
-    const pricingFile = path.join(ROOT, 'demo-app', 'pricing.js');
-    if (!fs.existsSync(pricingFile)) throw bad('demo-app/pricing.js not found');
-    let content = fs.readFileSync(pricingFile, 'utf8');
-    content = content.replace('const total = subtotal - discount;', 'const total = subtotal;');
-    fs.writeFileSync(pricingFile, content, 'utf8');
-    res.json({ success: true, message: 'Demo store bug seeded (coupon discount is ignored: total = subtotal)' });
-  }));
-
-  api.post('/demo/fix-app', auth, h((req, res) => {
-    const pricingFile = path.join(ROOT, 'demo-app', 'pricing.js');
-    if (!fs.existsSync(pricingFile)) throw bad('demo-app/pricing.js not found');
-    let content = fs.readFileSync(pricingFile, 'utf8');
-    content = content.replace('const total = subtotal;', 'const total = subtotal - discount;');
-    fs.writeFileSync(pricingFile, content, 'utf8');
-    res.json({ success: true, message: 'Demo store bug fixed (total = subtotal - discount)' });
-  }));
+  const demoMutation = (present) => h((req, res) => {
+    if (!config.demoMutations) throw new HttpError(403, 'Demo source mutation is disabled on this server (set ALLOW_DEMO_MUTATIONS=1 in a development/test environment).');
+    if (!mayMutate(req.user)) throw new HttpError(403, 'Your account is not authorized to modify the demo application source (DEMO_MUTATION_USERS).');
+    const s = runner.state();
+    if (s.activeRunId != null || s.queued > 0 || db.get(`SELECT 1 FROM runs WHERE status IN ('queued','running') LIMIT 1`))
+      throw new HttpError(409, 'A verification is in progress; the application under test cannot be changed while it runs.');
+    let r;
+    // The defect is chosen per request from the registry (defaults to its first entry); nothing is hardcoded here.
+    const key = req.body?.defect === undefined ? Object.keys(DEFECTS)[0] : String(req.body.defect);
+    if (!DEFECTS[key]) throw bad(`Unknown defect "${key}". Known: ${Object.keys(DEFECTS).join(', ')}`);
+    try { r = setDefectState(ROOT, key, present); } catch (e) { throw new HttpError(e.status || 500, e.message); }
+    db.run('INSERT INTO audit_events (ts, user_id, actor, action, entity, detail) VALUES (?, ?, ?, ?, ?, ?)', new Date().toISOString(), req.user.id, 'user', present ? 'demo.defect_introduced' : 'demo.defect_removed', 'demo_app', JSON.stringify(r));
+    res.json({ success: true, defect: key, changed: r.changed, file: r.file, beforeSha256: r.beforeSha256, afterSha256: r.afterSha256,
+      message: !r.changed ? `No change: the demo store was already ${present ? 'defective' : 'fixed'}.`
+        : present ? `Demo store bug seeded: ${DEFECTS[key].description}` : `Demo store bug fixed (${DEFECTS[key].healthy})` });
+  });
+  api.post('/demo/break-app', auth, demoMutation(true));
+  api.post('/demo/fix-app', auth, demoMutation(false));
 
   api.post('/demo/judge-scenario', auth, h(async (req, res) => {
     // One-click comprehensive demo workflow for evaluators & judges
@@ -227,7 +239,7 @@ export function registerAutonomousRoutes(api, { db, orchestrator, runner, ROOT, 
     if (!demoProject) {
       const pRes = db.run(
         `INSERT INTO projects (user_id, name, app_url, created_at) VALUES (?, ?, ?, ?)`,
-        req.user.id, 'Northwind Store (Judge Demo)', 'http://127.0.0.1:4100/', new Date().toISOString()
+        req.user.id, 'Northwind Store (Judge Demo)', config.demoAppUrl || 'http://127.0.0.1:4100/', new Date().toISOString()
       );
       demoProject = db.get('SELECT * FROM projects WHERE id = ?', Number(pRes.lastInsertRowid));
     }

@@ -87,7 +87,7 @@ function shell(...content) {
       h('a', { class: 'brand', href: me ? '#/app' : '#/' }, h('i'), 'SHIPPROOF'),
       h('nav', {}, engine,
         me ? [h('a', { href: '#/app' }, 'Projects'),
-          h('button', { class: 'linkbtn', style: { color: 'var(--info)', 'font-weight': '600' }, onclick: act(async () => {
+          h('button', { class: 'linkbtn opt', style: { color: 'var(--info)', 'font-weight': '600' }, onclick: act(async () => {
             const demo = await api('POST', '/demo/judge-scenario');
             toast('Judge demo loaded! Opening autonomous loop...');
             location.hash = `#/p/${demo.project.id}/loop`;
