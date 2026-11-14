@@ -30,10 +30,10 @@ const str = (v, max, name) => {
 const ACTIVE = `('queued','starting','running')`;
 const log = (level, msg, fields = {}) => { if (process.env.LOG_LEVEL !== 'silent') console.log(JSON.stringify({ ts: now(), level, msg, ...fields })); };
 
-export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './data'), config = kaneConfig() } = {}) {
+export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './data'), config = kaneConfig(), workspaceDir = ROOT, repairFn = null } = {}) {
   const db = openDb(dataDir);
   const runner = createRunner({ db, dataDir, config });
-  const orchestrator = new AutonomousOrchestrator({ db, runner, workspaceDir: ROOT });
+  const orchestrator = new AutonomousOrchestrator({ db, runner, workspaceDir, dataDir, config, repairFn, decide: (p) => decide(p) });
   const evidenceRoot = path.join(dataDir, 'evidence');
   const validUrl = async (v) => {
     const r = await checkTarget(str(v, 500, 'Application URL'), { allowPrivate: config.allowPrivateTargets });
@@ -573,7 +573,7 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
   }));
 
   registerProofRoutes(api, { db, runner, config, keys, evidenceRoot, h, auth, agent, project, bad, HttpError, record, decide, startRun, runView, baseUrl, validUrl, getEngineVersion: () => engineVersion });
-  registerAutonomousRoutes(api, { db, orchestrator, runner, ROOT, auth, project, h, HttpError, bad, baseUrl });
+  registerAutonomousRoutes(api, { db, orchestrator, runner, ROOT: workspaceDir, config, auth, project, h, HttpError, bad, baseUrl });
   api.use((req, res) => res.status(404).json({ error: 'Not found' }));
   app.use('/api', api);
   app.use('/api', (err, req, res, _next) => {
@@ -585,6 +585,6 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
   app.use(express.static(path.join(ROOT, 'public'), { index: false, maxAge: 0 }));
   app.get('*', (req, res) => res.sendFile(path.join(ROOT, 'public', 'index.html')));
   /** Graceful shutdown: stop taking work, stop the browser, flush state, close the DB. */
-  const shutdown = async () => { draining = true; await runner.shutdown(); try { db.close(); } catch {} };
+  const shutdown = async () => { draining = true; try { orchestrator.stop(); } catch {} await runner.shutdown(); try { db.close(); } catch {} };
   return { app, db, runner, orchestrator, shutdown };
 }

@@ -28,6 +28,8 @@ const baseConfig = {
   requireEvidence: true,
   allowPrivateTargets: true,
   acceptFixtureEngine: true,
+  demoMutations: true,
+  demoMutationUsers: ['judge@example.com'],
 };
 
 function client(base) {
@@ -55,7 +57,12 @@ function client(base) {
 let S;
 before(async () => {
   console.log('BEFORE: starting createApp');
-  const ctx = createApp({ dataDir: path.join(tmp, 'app'), config: baseConfig });
+  // Private workspace copy: the loop's repair must never modify the working tree.
+  const ws = path.join(tmp, 'ws'); fs.mkdirSync(ws);
+  fs.cpSync(path.join(root, 'demo-app'), path.join(ws, 'demo-app'), { recursive: true });
+  for (const f of ['package.json', 'package-lock.json']) fs.copyFileSync(path.join(root, f), path.join(ws, f));
+  fs.symlinkSync(path.join(root, 'node_modules'), path.join(ws, 'node_modules'));
+  const ctx = createApp({ dataDir: path.join(tmp, 'app'), config: baseConfig, workspaceDir: ws });
   const server = await new Promise((r) => { const s = ctx.app.listen(0, () => r(s)); });
   const base = `http://127.0.0.1:${server.address().port}`;
   S = { ...ctx, server, base, api: client(base), stop: async () => { server.close(); server.closeAllConnections?.(); await ctx.shutdown(); } };
@@ -158,8 +165,9 @@ test('Autonomous Loop: Failure triggers Playtest investigation, Coding Agent rep
   const pRes = await S.api('POST', '/api/projects', { name: 'Autoloop Failure Repair Target', appUrl: 'http://127.0.0.1:4100/' });
   const pid = pRes.body.project.id;
 
-  // Configure fixture to fail once, then succeed on reverification
-  setState({ mode: 'ok', failTimes: 1 });
+  // The stand-in fails twice (original run + independent replay), then passes on re-verification.
+  // It never looks at the application, so it CANNOT detect the reintroduced defect in the regression trial.
+  setState({ mode: 'ok', failTimes: 2 });
 
   const loop = await S.api('POST', `/api/projects/${pid}/loop/start`, {
     taskDescription: 'Order checkout total reflects correct discount after coupon SAVE10.',
@@ -167,20 +175,27 @@ test('Autonomous Loop: Failure triggers Playtest investigation, Coding Agent rep
   });
   assert.equal(loop.status, 202);
   const execId = loop.body.executionId;
-  assert.ok(execId > 0);
-
-  // Allow orchestrator to process initial failure, Playtest investigation, Agent repair, and Kane reverification
   await S.orchestrator.waitFor(execId);
 
-  const state = await S.api('GET', `/api/projects/${pid}/loop/${execId}`);
-  assert.equal(state.status, 200);
-  assert.ok([WORKFLOW_STATES.VERIFIED, WORKFLOW_STATES.RELEASE_READY].includes(state.body.execution.status));
-  assert.ok(state.body.execution.investigationId > 0, 'Playtest investigation was recorded');
-  assert.equal(state.body.execution.retryCount, 1, 'Agent repair was attempted');
+  const ex = (await S.api('GET', `/api/projects/${pid}/loop/${execId}`)).body.execution;
+  assert.ok(ex.investigationId > 0, 'Playtest investigation was recorded');
+  assert.equal(ex.retryCount, 1, 'one repair attempt');
+  assert.equal(ex.repairs[0].status, 'applied');
+  assert.deepEqual(ex.repairs[0].changedFiles, ['demo-app/pricing.js']);
+  assert.notEqual(ex.repairs[0].fileHashes[0].beforeSha256, ex.repairs[0].fileHashes[0].afterSha256, 'the source file really changed');
+  assert.equal(ex.repairs[0].outcome, 'verified');
 
-  // Verify Playtest investigation details
-  const invRes = await S.api('GET', `/api/projects/${pid}/investigations/${state.body.execution.investigationId}`);
-  assert.equal(invRes.status, 200);
-  assert.equal(invRes.body.investigation.reproduced, true);
-  assert.ok(invRes.body.investigation.diagnosis.length > 0);
+  const inv = (await S.api('GET', `/api/projects/${pid}/investigations/${ex.investigationId}`)).body.investigation;
+  assert.equal(inv.reproduced, true);
+  assert.ok(inv.replay.resultId > 0 && inv.replay.resultId !== inv.resultId, 'reproduction is backed by a separate replay execution');
+  assert.equal(inv.replay.status, 'failed');
+
+  // A regression trial was really executed; the stand-in passed the defective copy, which is recorded as a miss
+  // and withholds RELEASE_READY — a state label alone can never produce a regression success.
+  assert.equal(ex.regression.outcome, 'missed');
+  assert.equal(ex.regression.runs.length, 2);
+  assert.equal(ex.regression.runs[1].groundTruth.defectPresent, true);
+  assert.equal(ex.regression.runs[1].status, 'passed');
+  assert.equal(ex.status, WORKFLOW_STATES.NOT_RELEASE_READY);
+  assert.equal(ex.currentStage, 'REGRESSION_NOT_DETECTED');
 });
