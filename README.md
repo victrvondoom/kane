@@ -227,3 +227,20 @@ classifies the run, and which evidence files were collected.
   open; rate limiting is in-memory per process. This has had no external security review.
 
 More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+## Continuous watch
+
+A per-project health check of the verification system itself, run on a schedule or on demand. Each check measures
+variables from live data, turns every abnormal one into a finding (`variable` → `scenario` → `cause`, with an
+`origin` of harness / environment / application / evidence / process), tracks findings across checks
+(new, persisting, reopened, resolved) and derives the next workflow from them. Harness and environment problems
+gate the workflow: no verification is started while they are open.
+
+| Endpoint | Purpose |
+|---|---|
+| `GET/PUT /api/projects/:pid/watch` | Schedule (`enabled`, `intervalMinutes`), `autoRun`, per-project `thresholds` |
+| `POST /api/projects/:pid/watch/check` | Run a check now |
+| `GET /api/projects/:pid/watch/checks`, `/findings?status=`, `/trend` | History, finding ledger, variable series |
+| `POST /api/projects/:pid/watch/checks/:cid/execute` | Start the automatic step of the latest check's plan |
+
+`autoRun` is off by default: a scheduled check only starts verification runs (which spend engine credits) when it is on.
