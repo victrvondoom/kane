@@ -1,0 +1,23 @@
+{
+ "written": "2026-10-29 hand written from game/index.html",
+ "fixes": {
+  "1": [
+   {"search": "    s.push({x: 58, y: 50, w: 6, h: 200, door: 1});", "replace": "    if (!st.shedOpen) s.push({x: 58, y: 50, w: 6, h: 200, door: 1});"}
+  ],
+  "2": [
+   {"search": "    return s;", "replace": "    s.push({x: 300, y: GROUND, w: 30, h: 110});\n    return s;"},
+   {"search": "    earth(300, GROUND, 30, 110, true);\n", "replace": ""},
+   {"search": "    g.fillStyle = '#4d5c4a'; g.fillRect(300, GROUND, 30, 110);\n", "replace": ""}
+  ],
+  "3": [
+   {"search": "      say('Thanks! Enjoy the boots!');", "replace": "      st.boots = true; say('You bought boots. Jump twice!');"}
+  ],
+  "4": [
+   {"search": "  const PIT_FLOOR = 350;", "replace": "  const PIT_FLOOR = 320;"},
+   {"search": "        if (st.y > GROUND) { continue; }\n", "replace": ""}
+  ],
+  "5": [
+   {"search": "      if (c.id === 3) { st.score += 1; } else st.score += 10;", "replace": "      st.score += 10;"}
+  ]
+ }
+}

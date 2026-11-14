@@ -36,7 +36,16 @@ if (state.mode === 'pass_no_evidence') {
 }
 if (state.mode === 'hang') { out({ type: 'stream_start' }); setTimeout(() => {}, 600000); }
 else {
-  const fails = (state.failWhen || []).some((s) => objective.includes(s));
+  let fails = (state.failWhen || []).some((s) => objective.includes(s));
+  if (state.failTimes !== undefined) {
+    if (state.failTimes > 0) {
+      fails = true;
+      state.failTimes--;
+      fs.writeFileSync(process.env.FAKE_KANE_STATE, JSON.stringify(state));
+    } else {
+      fails = false;
+    }
+  }
   const sessionDir = path.join(process.cwd(), 'session');
   fs.mkdirSync(path.join(sessionDir, 'evidence'), { recursive: true });
   // 1x1 PNG

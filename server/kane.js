@@ -118,8 +118,11 @@ export function runKane({ objective, url, workDir, variables = [], config = kane
     const kill = (sig) => { if (!child?.pid) return; try { process.platform !== 'win32' ? process.kill(-child.pid, sig) : child.kill(sig); } catch { try { child.kill(sig); } catch {} } };
     const watchdog = setTimeout(() => { timedOut = true; kill('SIGKILL'); }, (config.timeout + 45) * 1000);
     try {
+      const isJs = /\.[cm]?js$/i.test(config.bin) && fs.existsSync(config.bin);
+      const spawnBin = isJs ? process.execPath : config.bin;
+      const spawnArgs = isJs ? [config.bin, ...args] : args;
       // Own process group so the browser Kane launches is cleaned up with it.
-      child = spawn(config.bin, args, { cwd: workDir, stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32',
+      child = spawn(spawnBin, spawnArgs, { cwd: workDir, stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32',
         env: { ...process.env, KANE_CLI_USER_AGENT: 'shipproof', NO_COLOR: '1', FORCE_COLOR: '0' } });
     } catch (e) { return finish({ spawnError: e }); }
     onSpawn({ pid: child.pid, cancel() { cancelled = true; kill('SIGTERM'); setTimeout(() => kill('SIGKILL'), 3000).unref(); } });
@@ -202,8 +205,13 @@ export function versionAtLeast(v, min) {
 }
 export const resetKaneStatusCache = () => { cached = { at: 0, value: null }; };
 let cached = { at: 0, value: null };
-const ex = (bin, args) => new Promise((res) => execFile(bin, args, { timeout: 15000, env: { ...process.env, NO_COLOR: '1' } },
-  (err, stdout, stderr) => res({ code: err ? (err.code ?? 1) : 0, out: String(stdout) + String(stderr) })));
+const ex = (bin, args) => new Promise((res) => {
+  const isJs = /\.[cm]?js$/i.test(bin) && fs.existsSync(bin);
+  const execBin = isJs ? process.execPath : bin;
+  const execArgs = isJs ? [bin, ...args] : args;
+  execFile(execBin, execArgs, { timeout: 15000, env: { ...process.env, NO_COLOR: '1' } },
+    (err, stdout, stderr) => res({ code: err ? (typeof err.code === 'number' ? err.code : 1) : 0, out: String(stdout) + String(stderr) }));
+});
 
 /** Real engine status for the UI: installed version and whether a login/credentials exist. No secrets returned. */
 export async function kaneStatus(config = kaneConfig(), { fresh = false } = {}) {

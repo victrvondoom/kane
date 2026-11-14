@@ -1,0 +1,139 @@
+{
+ "bugs_on": "",
+ "steps": 2,
+ "cost_usd": 0.01655,
+ "reports": [],
+ "actions_by_step": [
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "space"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "space"
+    ]
+   }
+  ]
+ ],
+ "log": [
+  {
+   "step": 0,
+   "t": 3.53,
+   "shot_t": 0.0,
+   "cost": 0.010112,
+   "latency_s": 3.43,
+   "in": 1713,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "space"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"space\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "Starting the game — launching the ball to break bricks and chase 100 points.",
+   "out": 163,
+   "reasoning_tokens": 80,
+   "spans": [
+    {
+     "from_s": 1793242476.3726466,
+     "to_s": 1793242476.7031505
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 1,
+   "t": 12.97,
+   "shot_t": 3.86,
+   "cost": 0.0064424,
+   "latency_s": 9.014,
+   "in": 2780,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "space"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"space\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 80,
+   "reasoning_tokens": 21,
+   "spans": [
+    {
+     "from_s": 1793242485.8195608,
+     "to_s": 1793242486.153634
+    }
+   ],
+   "checklist": []
+  }
+ ],
+ "fallbacks": 0,
+ "started_at": 1793242472.8449118,
+ "checklist": [],
+ "nudges": 0,
+ "final_tick": null,
+ "stop": "won",
+ "seconds": 13.3,
+ "final_text": "",
+ "won": true,
+ "bug_hits": null,
+ "final_state": {
+  "score": 155,
+  "lives": 2,
+  "level": 1,
+  "state": "game",
+  "ball": {
+   "x": 234.3549487217142,
+   "y": 412.03757909358404
+  },
+  "paddle": {
+   "x": 384.8074721847021,
+   "y": 401
+  }
+ },
+ "kind": "goal",
+ "goal": "Reach a score of at least 100 by breaking bricks.",
+ "game": "Javascript Breakout",
+ "game_id": "breakout",
+ "game_fps": 60,
+ "settings": {
+  "model": "wonder",
+  "effort": "low",
+  "max_out": 3000,
+  "state_text": true,
+  "checklist": false,
+  "narrate": false,
+  "escalate": false,
+  "history": "own",
+  "summary": null,
+  "look_plan": false,
+  "notes": false,
+  "vision": "normal"
+ }
+}

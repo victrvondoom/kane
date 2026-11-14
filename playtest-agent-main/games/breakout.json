@@ -1,0 +1,13 @@
+{
+  "type": "web",
+  "name": "Javascript Breakout",
+  "serve": {"dir": "games.cache/breakout", "path": "index.html"},
+  "viewport": {"width": 900, "height": 700},
+  "frame_lock": false,
+  "ready_js": "typeof Game !== 'undefined' && !!Game.current && !!Game.current.score",
+  "state_js": "(() => { const g = Game.current; return {score: g.score.score, lives: g.score.lives, level: g.level + 1, state: g.current, ball: {x: g.ball.x, y: g.ball.y}, paddle: {x: g.paddle.x, y: g.paddle.y}}; })()",
+  "won_js": "typeof Game !== 'undefined' && !!Game.current && Game.current.score.score >= 100",
+  "controls": "Space or Enter starts the game and launches the ball. Left and right arrows move the paddle. Bounce the ball into bricks and keep it above the bottom. Sound starts off; leave the sound box off.",
+  "goal": "Reach a score of at least 100 by breaking bricks.",
+  "notes": "Run python -m tools.fetch_games first. Reads Game.current, the game's own live instance, without changing game files. No replay frame counter: reports show Not reproducible and recordings use real time. Browser proof within about 40 steps is owed. Code is MIT; upstream sound has separate notices recorded in docs/GAMES-LICENCES.md."
+}

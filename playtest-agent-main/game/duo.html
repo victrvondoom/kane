@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Switch Partners</title>
+<style>html,body{margin:0;background:#101b2d;overflow:hidden}canvas{display:block}</style>
+</head><body><canvas id="c" width="800" height="440"></canvas>
+<script>
+(() => {
+  const q = new URLSearchParams(location.search);
+  const BUGS = new Set((q.get('bugs') || '').split(',').filter(Boolean).map(Number));
+  const cv = document.getElementById('c'), g = cv.getContext('2d');
+  const ground = 330, gateX = 360, gateW = 20, speed = 3;
+  const players = [
+    {id: 1, x: 80, y: ground, vy: 0, holding: null, color: '#65caff'},
+    {id: 2, x: 140, y: ground, vy: 0, holding: null, color: '#ffd367'}
+  ];
+  const switches = [{x: 220, name: 'LEFT'}, {x: 480, name: 'RIGHT'}];
+  const keys = {}, queue = [];
+  window.__frame = 0;
+  window.__ready = false;
+  window.__won = false;
+  window.__bugHit = {1: false, 2: false};
+  const gateOpen = () => players.some(p => p.holding !== null);
+  const codes = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Enter', 'KeyA', 'KeyD', 'KeyW', 'KeyS', 'KeyQ'];
+  addEventListener('keydown', e => {
+    if (!codes.includes(e.code)) return;
+    e.preventDefault();
+    if (e.repeat || keys[e.code]) return;
+    keys[e.code] = true;
+    if (e.code === 'Enter') queue.push([0, 'use']);
+    if (e.code === 'KeyQ') queue.push([1, 'use']);
+    if (e.code === 'ArrowUp') queue.push([0, 'jump']);
+    if (e.code === 'KeyW') queue.push([1, 'jump']);
+  });
+  addEventListener('keyup', e => { keys[e.code] = false; });
+
+  function step() {
+    if (window.__won) return;
+    for (const [index, action] of queue.splice(0)) {
+      const p = players[index];
+      if (action === 'use' && p.y === ground) {
+        if (p.holding !== null) p.holding = null;
+        else {
+          const nearby = switches.findIndex(s => Math.abs(p.x - s.x) < 28);
+          if (nearby >= 0) p.holding = nearby;
+        }
+      }
+      if (action === 'jump' && p.y === ground) {
+        p.vy = -8;
+        p.holding = null;
+        if (BUGS.has(1) && index === 1 && players[0].holding !== null) {
+          players[0].holding = null;
+          window.__bugHit[1] = true;
+        }
+      }
+    }
+    for (const [index, p] of players.entries()) {
+      const left = index === 0 ? keys.ArrowLeft : keys.KeyA;
+      const right = index === 0 ? keys.ArrowRight : keys.KeyD;
+      const stop = index === 0 ? keys.ArrowDown : keys.KeyS;
+      const dx = stop ? 0 : ((right ? 1 : 0) - (left ? 1 : 0)) * speed;
+      if (dx) p.holding = null;
+      const open = gateOpen();
+      let next = Math.max(18, Math.min(782, p.x + dx));
+      if (!open || (BUGS.has(2) && index === 1)) {
+        if (dx > 0 && p.x <= gateX - 10 && next > gateX - 10) {
+          next = gateX - 10;
+          if (open && BUGS.has(2) && index === 1) window.__bugHit[2] = true;
+        }
+        if (dx < 0 && p.x >= gateX + gateW + 10 && next < gateX + gateW + 10) {
+          next = gateX + gateW + 10;
+          if (open && BUGS.has(2) && index === 1) window.__bugHit[2] = true;
+        }
+      }
+      p.x = next;
+      p.vy += 0.5;
+      p.y = Math.min(ground, p.y + p.vy);
+      if (p.y === ground) p.vy = 0;
+    }
+    window.__won = players.every(p => p.x >= 690);
+  }
+
+  function draw() {
+    g.fillStyle = '#101b2d'; g.fillRect(0, 0, 800, 440);
+    g.fillStyle = '#e7effb'; g.font = 'bold 22px sans-serif';
+    g.fillText('SWITCH PARTNERS', 24, 34);
+    g.font = '14px sans-serif';
+    g.fillText('Hold LEFT. Partner crosses and holds RIGHT. Then both reach EXIT.', 24, 62);
+    g.fillText('A switch stays held until its player moves, jumps or uses it again.', 24, 84);
+    g.fillStyle = '#314864'; g.fillRect(0, ground, 800, 110);
+    g.fillStyle = '#21614b'; g.fillRect(690, 150, 90, 180);
+    g.fillStyle = '#b9ffe0'; g.fillText('EXIT: BOTH', 693, 140);
+    for (const [i, s] of switches.entries()) {
+      const holder = players.find(p => p.holding === i);
+      g.fillStyle = holder ? '#95f0b7' : '#c3cddd'; g.fillRect(s.x - 25, 322, 50, 8);
+      g.fillStyle = '#e7effb'; g.fillText(s.name, s.x - 23, 364);
+      g.fillText(holder ? 'HELD P' + holder.id : 'USE TO HOLD', s.x - 35, 384);
+    }
+    g.fillStyle = gateOpen() ? '#365f68' : '#db8872';
+    g.fillRect(gateX, 110, gateW, gateOpen() ? 20 : ground - 110);
+    g.fillStyle = '#e7effb'; g.fillText(gateOpen() ? 'GATE OPEN' : 'GATE CLOSED', 318, 103);
+    for (const p of players) {
+      g.fillStyle = p.color; g.fillRect(p.x - 10, p.y - 28, 20, 28);
+      g.font = 'bold 14px sans-serif'; g.fillText('P' + p.id, p.x - 10, p.y - 38);
+    }
+    g.font = '13px sans-serif';
+    g.fillStyle = players[0].color; g.fillText('P1: arrows move, Up jump, Enter use', 24, 418);
+    g.fillStyle = players[1].color; g.fillText('P2: A/D move, W jump, S stop, Q use', 420, 418);
+    if (window.__won) {
+      g.fillStyle = 'rgba(5,15,25,.85)'; g.fillRect(170, 150, 460, 90);
+      g.fillStyle = '#b9ffe0'; g.font = 'bold 30px sans-serif'; g.fillText('BOTH PLAYERS WIN', 230, 205);
+    }
+  }
+
+  function frame() {
+    step(); window.__frame++; draw(); window.__ready = true;
+    requestAnimationFrame(frame);
+  }
+  window.__state = () => ({players: players.map(p => ({id: p.id, x: p.x, y: p.y, holding: p.holding})),
+    gateOpen: gateOpen(), won: window.__won});
+  requestAnimationFrame(frame);
+})();
+</script></body></html>

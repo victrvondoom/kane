@@ -1,0 +1,199 @@
+<!doctype html>
+<!-- Cave Courier. A tiny side view platformer written for the Playtest Agent trial. MIT licence, see LICENSE. No third party code.
+     URL ?bugs=1,2,3,4,5 turns on the planted bugs (a clean build has none). ?debug=1 adds a teleport hook for the tests. -->
+<html><head><meta charset="utf-8"><title>Cave Courier</title>
+<style>html,body{margin:0;background:#111;overflow:hidden}canvas{display:block}</style></head>
+<body><canvas id="c" width="640" height="360"></canvas>
+<script>
+(() => {
+  const q = new URLSearchParams(location.search);
+  const BUGS = new Set((q.get('bugs') || '').split(',').filter(Boolean).map(Number));
+  const DEBUG = q.get('debug') === '1';
+  const ART = q.get('art') === '1';   // ?art=1 draws the pictures in game/art. It changes only the picture, never the game.
+  window.__bugHit = {1: false, 2: false, 3: false, 4: false, 5: false, 6: false};
+  const cv = document.getElementById('c'), g = cv.getContext('2d');
+
+  const ART_NAMES = ['bg_far', 'coin', 'door_big', 'door_shed', 'flag', 'ground_top', 'key', 'platform',
+                     'player_idle', 'player_jump', 'player_walk1', 'player_walk2', 'rock_fill', 'shop'];
+  const art = {};
+  let artLeft = ART ? ART_NAMES.length : 0;
+  if (ART) for (const n of ART_NAMES) {
+    const im = new Image();
+    im.onload = im.onerror = () => { artLeft--; };
+    im.src = 'art/' + n + '.png';
+    art[n] = im;
+  }
+
+  const GROUND = 250, W = 14, H = 24, SPEED = 3, GRAV = 0.5, JUMP = 9;
+  const PIT_FLOOR = BUGS.has(4) ? 350 : 320;
+  const solids = () => {
+    const s = [
+      {x: 0, y: GROUND, w: 300, h: 110},
+      {x: 330, y: GROUND, w: 150, h: 110},
+      {x: 480, y: PIT_FLOOR, w: 50, h: 360 - PIT_FLOOR + 40, pit: 1},
+      {x: 530, y: GROUND, w: 110, h: 110},
+      {x: 0, y: 50, w: 10, h: 200},                       // shed back wall
+      {x: 210, y: 200, w: 80, h: 8}, {x: 340, y: 150, w: 80, h: 8},
+    ];
+    if (!BUGS.has(2)) s.push({x: 300, y: GROUND, w: 30, h: 110});   // the ground under x 300 to 330 exists only in a clean build
+    if (!st.shedOpen || BUGS.has(1)) s.push({x: 58, y: 50, w: 6, h: 200, door: 1});   // bug 1: the door stays solid after it opens
+    if (!st.doorOpen) s.push({x: 560, y: 50, w: 6, h: 200, door: 2});
+    if (BUGS.has(6)) s[0] = {x: 0, y: GROUND, w: 80, h: 110};   // bug 6: the main path floor ends before the starting point
+    return s;
+  };
+
+  let st, coins, msg, msgT, keys = {}, queue = [];
+  function reset() {
+    st = {x: 90, y: 226, vx: 0, vy: 0, ground: false, jumps: 0, coins: 0, score: 0, key: false, boots: false, won: false, shedOpen: false, doorOpen: false};
+    coins = [{x: 120, y: 236}, {x: 230, y: 186}, {x: 270, y: 186}, {x: 360, y: 136}, {x: 450, y: 236}, {x: 34, y: 236}].map((c, i) => ({...c, id: i + 1, got: false}));
+    st.keyItem = {x: 400, y: 136, got: false};
+    msg = ''; msgT = 0;
+  }
+  reset();
+  const say = (t) => { msg = t; msgT = 120; };
+
+  addEventListener('keydown', (e) => {
+    if (e.repeat) return;
+    keys[e.code] = true;
+    if (e.code === 'Space') queue.push('jump');
+    if (e.code === 'KeyE') queue.push('use');
+    if (e.code === 'KeyR') queue.push('restart');
+    if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault();
+  });
+  addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+  function overlap(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
+
+  function use() {
+    if (Math.abs(st.x - 61) < 24 && !st.shedOpen) { st.shedOpen = true; if (BUGS.has(1)) window.__bugHit[1] = true; say('The shed door opens.'); return; }
+    if (Math.abs(st.x - 165) < 30) {
+      if (st.boots) return say('You already have boots.');
+      if (st.coins < 3) return say('Boots cost 3 coins.');
+      st.coins -= 3;
+      if (BUGS.has(3)) { window.__bugHit[3] = true; say('Thanks! Enjoy the boots!'); }   // bug 3: the coins go, the boots do not come
+      else { st.boots = true; say('You bought boots. Jump twice!'); }
+      return;
+    }
+    if (Math.abs(st.x - 563) < 24 && !st.doorOpen) {
+      if (!st.key) return say('The door is locked.');
+      st.doorOpen = true; say('The big door opens.');
+    }
+  }
+
+  function step() {
+    for (const a of queue.splice(0)) {
+      if (a === 'restart') {
+        if (BUGS.has(4) && st.y > GROUND) { window.__bugHit[4] = true; continue; }   // bug 4: no restart from the deep pit
+        reset(); continue;
+      }
+      if (st.won) continue;
+      if (a === 'jump') {
+        if (st.ground) { st.vy = -JUMP; st.jumps = 1; }
+        else if (st.boots && st.jumps === 1) { st.vy = -JUMP; st.jumps = 2; }
+      }
+      if (a === 'use') use();
+    }
+    if (st.won) return;
+    st.vx = ((keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0)) * SPEED;
+    const S = solids();
+    // y first, then x: a player landing on the edge of a platform is not pushed off its side
+    st.vy = Math.min(12, st.vy + GRAV);
+    let box = {x: st.x - W / 2, y: st.y + st.vy, w: W, h: H};
+    st.ground = false;
+    for (const s of S) if (overlap(box, s)) {
+      if (st.vy > 0) { box.y = s.y - H; st.ground = true; st.jumps = 0; } else { box.y = s.y + s.h; }
+      st.vy = 0;
+    }
+    box = {x: st.x - W / 2 + st.vx, y: box.y, w: W, h: H};
+    for (const s of S) if (overlap(box, s)) { box.x = st.vx > 0 ? s.x - W : s.x + s.w; }
+    st.x = box.x + W / 2;
+    if (BUGS.has(2) && st.x > 300 && st.x < 330 && box.y > GROUND - H) window.__bugHit[2] = true;
+    if (BUGS.has(6) && st.x > 80 && st.x < 300 && box.y > GROUND - H) window.__bugHit[6] = true;
+    st.y = box.y; st.x = box.x + W / 2;
+    // items
+    const me = {x: st.x - W / 2, y: st.y, w: W, h: H};
+    for (const c of coins) if (!c.got && overlap(me, {x: c.x - 6, y: c.y - 6, w: 12, h: 12})) {
+      c.got = true; st.coins += 1;
+      if (BUGS.has(5) && c.id === 3) { st.score += 1; window.__bugHit[5] = true; } else st.score += 10;   // bug 5: the third coin is worth 1
+    }
+    const k = st.keyItem;
+    if (!k.got && overlap(me, {x: k.x - 6, y: k.y - 6, w: 12, h: 12})) { k.got = true; st.key = true; say('You got the key.'); }
+    if (overlap(me, {x: 598, y: 190, w: 10, h: 60})) { st.won = true; window.__won = true; }
+    if (msgT > 0) msgT--;
+    if (st.y > 2000) st.y = 2000;
+  }
+
+  let face = 1;
+  function drawArtWorld() {
+    g.imageSmoothingEnabled = false;
+    g.drawImage(art.bg_far, 0, 0, 640, 360);
+    g.fillStyle = 'rgba(8, 12, 20, 0.55)'; g.fillRect(0, 0, 640, 360);   // the cave picture sits back, so only the blocks read as solid
+    const rock = g.createPattern(art.rock_fill, 'repeat'), top = g.createPattern(art.ground_top, 'repeat');
+    // the tiles line up across blocks; each block starts its top tile at its own top edge
+    const earth = (x, y, w, h, grass) => {
+      g.save(); g.translate(0, y);
+      g.fillStyle = rock; g.fillRect(x, 0, w, h);
+      if (grass) { g.fillStyle = top; g.fillRect(x, 0, w, Math.min(h, 32)); }
+      g.fillStyle = 'rgba(8, 12, 20, 0.3)'; g.fillRect(x, 0, w, h);   // calmer rock, so the small player stands out
+      g.restore();
+    };
+    for (const s of solids()) {
+      if (s.door) g.drawImage(s.door === 1 ? art.door_shed : art.door_big, s.x - 5, s.y, 16, s.h);
+      else if (s.h <= 10) g.drawImage(art.platform, s.x, s.y - 1, s.w, 10);
+      else if (s.pit) { g.fillStyle = '#05070b'; g.fillRect(s.x, s.y, s.w, s.h); }   // the pit floor is dark, so the pit reads as a hole
+      else earth(s.x, s.y, s.w, s.h, s.w >= 20);
+    }
+    // the 30 px of ground above the fall-through zone is drawn the same in every build
+    if (BUGS.has(2)) earth(300, GROUND, 30, 110, true);
+    g.drawImage(art.shop, 148, 220, 34, 30);
+    g.fillStyle = '#fff'; g.font = '9px monospace'; g.fillText('BOOTS 3c', 146, 216);
+    for (const c of coins) if (!c.got) g.drawImage(art.coin, c.x - 6, c.y - 6, 12, 12);
+    if (!st.keyItem.got) g.drawImage(art.key, st.keyItem.x - 7, st.keyItem.y - 4, 14, 8);
+    g.drawImage(art.flag, 598, 190, 16, 60);
+    if (st.vx) face = Math.sign(st.vx);
+    const pose = !st.ground ? art.player_jump : st.vx ? (Math.floor(window.__frame / 8) % 2 ? art.player_walk2 : art.player_walk1) : art.player_idle;
+    g.save(); g.translate(st.x, 0); g.scale(face, 1); g.drawImage(pose, -10, st.y - 4, 20, 28); g.restore();
+    if (st.boots) { g.fillStyle = '#58d068'; g.fillRect(st.x - 7, st.y + 20, 14, 4); }
+    g.fillStyle = 'rgba(0, 0, 0, 0.6)'; g.fillRect(0, 0, 640, 22); g.fillRect(0, 338, 640, 22);
+  }
+
+  function draw() {
+    if (ART) drawArtWorld(); else drawPlainWorld();
+    g.fillStyle = '#fff'; g.font = '12px monospace';
+    g.fillText(`Coins ${st.coins}   Score ${st.score}   Key ${st.key ? 'yes' : 'no'}   Boots ${st.boots ? 'yes' : 'no'}`, 8, 16);
+    g.font = '10px monospace'; g.fillStyle = '#aab';
+    g.fillText('Arrows move, Space jump, E use, R restart', 8, 350);
+    if (msgT > 0) { g.fillStyle = '#fff'; g.font = '14px monospace'; g.fillText(msg, 160, 60); }
+    if (st.won) { g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(0, 0, 640, 360); g.fillStyle = '#fff'; g.font = '28px monospace'; g.fillText('YOU WIN  Score ' + st.score, 170, 180); }
+  }
+
+  function drawPlainWorld() {
+    g.fillStyle = '#1b2433'; g.fillRect(0, 0, 640, 360);
+    g.fillStyle = '#3b4a3a';
+    for (const s of solids()) { g.fillStyle = s.door ? '#a0702a' : '#4d5c4a'; g.fillRect(s.x, s.y, s.w, s.h); }
+    // the 30 px of ground above the fall-through zone is drawn the same in every build
+    if (BUGS.has(2)) { g.fillStyle = '#4d5c4a'; g.fillRect(300, GROUND, 30, 110); }
+    g.fillStyle = '#7a5a2a'; g.fillRect(150, 226, 30, 24); g.fillStyle = '#fff'; g.font = '9px monospace'; g.fillText('BOOTS 3c', 146, 220);
+    g.fillStyle = '#e8c840';
+    for (const c of coins) if (!c.got) { g.beginPath(); g.arc(c.x, c.y, 6, 0, 7); g.fill(); }
+    if (!st.keyItem.got) { g.fillStyle = '#9fe6ff'; g.fillRect(st.keyItem.x - 6, st.keyItem.y - 3, 12, 6); }
+    g.fillStyle = '#e04040'; g.fillRect(598, 190, 3, 60); g.fillRect(598, 190, 14, 10);
+    g.fillStyle = st.boots ? '#58d068' : '#f0f0f0'; g.fillRect(st.x - W / 2, st.y, W, H);
+  }
+
+  // One simulation step per animation frame, so a run does not depend on how fast the machine is. window.__frame counts the steps.
+  // With ?art=1 the game waits for its pictures before its first step, so a run starts at the same frame every time.
+  window.__frame = 0;
+  function frame() {
+    if (artLeft > 0) { requestAnimationFrame(frame); return; }
+    step(); window.__frame++;
+    draw();
+    window.__ready = true;
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  window.__state = () => ({x: st.x, y: st.y, coins: st.coins, score: st.score, key: st.key, boots: st.boots, won: st.won, shedOpen: st.shedOpen, doorOpen: st.doorOpen});
+  if (DEBUG) window.__debug = {set: (a) => { for (const k of Object.keys(a)) st[k] = a[k]; st.vx = 0; st.vy = 0; }};
+})();
+</script></body></html>

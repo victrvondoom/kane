@@ -1,0 +1,29 @@
+{
+  "source": "mods/pt_fix",
+  "editable": ["Fix.cs"],
+  "context": ["games.local/REPLACE-context.cs"],
+  "repair_instructions": "Use one small C# Harmony patch in TestPatch. Add its target attribute and patch method. Keep the initializer. Write only original patch code; do not copy decompiled methods.",
+  "build": [
+    "python", "tools/build_sts2_fix.py", "--src", "{src}", "--out", "{out}",
+    "--game-folder", "REPLACE-test-folder/REPLACE-game-copy"
+  ],
+  "mod": {"game_folder": "REPLACE-test-folder/REPLACE-game-copy"},
+  "game": {
+    "type": "pcgame",
+    "name": "Isolated test copy",
+    "exe": "REPLACE-test-folder/REPLACE-game-copy/REPLACE-game.exe",
+    "run_root": "REPLACE-test-folder/fix-runs",
+    "seed_profile": "REPLACE-test-folder/REPLACE-seed-profile",
+    "args": ["--force-steam", "off", "--windowed"],
+    "use_mod": true,
+    "side_display": "\\\\.\\DISPLAY5",
+    "allowed_keys": ["esc", "enter", "space", "1", "2", "3", "4", "5"],
+    "setup": []
+  },
+  "replay_check": [
+    "python", "games.local/REPLACE-picture-check.py", "--frame", "{frame}",
+    "--region", "REPLACE-x,y,width,height", "--expected", "REPLACE-number"
+  ],
+  "checks": [["python", "games.local/REPLACE-normal-play-check.py", "{out}"]],
+  "notes": "Copy this config to games.local and replace each REPLACE value. A picture checker reads the final replay picture, returns 0 for the expected number, 1 for a clearly read wrong number, and 2 for an unreadable picture or an error. The same check runs with the fix off and on. Omit seed_profile to start fresh. Keep seed_profile unchanged between replays. The normal play check must replay a clean stretch and fail on changed behavior. No context file may be in source. Context is read only and never written to output. Set PLAYTEST_STS2_ROOT in local.env to the same test folder."
+}

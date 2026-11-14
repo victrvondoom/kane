@@ -1,0 +1,22 @@
+{
+ "type": "web",
+ "name": "Lantern Rooms",
+ "url": "bench/holdout/game/index.html",
+ "url_query": {
+  "bugs": "{bugs}"
+ },
+ "viewport": {
+  "width": 640,
+  "height": 360
+ },
+ "ready_js": "window.__ready === true",
+ "frame_js": "window.__frame",
+ "frame_lock": true,
+ "hold_frames": 15,
+ "settle_frames": 4,
+ "state_js": "window.__state()",
+ "won_js": "window.__won === true",
+ "bug_js": "window.__bugHit",
+ "controls": "Arrow keys walk. E uses the door next to you. R restarts.",
+ "goal": "Find the way out of the rooms."
+}

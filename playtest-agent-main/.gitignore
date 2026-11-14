@@ -1,0 +1,16 @@
+__pycache__/
+.pytest_cache/
+*.pyc
+.env
+.env.*
+*.key
+*.pem
+data/
+out/
+games.local/
+local.env
+.public-check-terms
+_vizdoom.ini
+games.cache/
+mods/**/bin/
+mods/**/obj/

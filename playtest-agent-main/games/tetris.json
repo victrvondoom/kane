@@ -1,0 +1,13 @@
+{
+  "type": "web",
+  "name": "Javascript Tetris",
+  "serve": {"dir": "games.cache/tetris", "path": "index.html"},
+  "viewport": {"width": 800, "height": 700},
+  "frame_lock": false,
+  "ready_js": "typeof window.rows === 'number' && !!window.current",
+  "state_js": "({score: window.score, rows: window.rows, playing: !!window.playing, current: window.current, next: window.next, blocks: window.blocks})",
+  "won_js": "typeof window.rows === 'number' && window.rows >= 1",
+  "controls": "Space starts a game. Left and right arrows move the falling piece. Up rotates. Down drops it one row per press. Fill a whole horizontal row to clear it. Escape ends the game.",
+  "goal": "Clear at least one horizontal row.",
+  "notes": "Run python -m tools.fetch_games first. Reads the game's global rows, score and pieces without changing game files. Random pieces and no replay frame counter: reports show Not reproducible and recordings use real time. Browser proof within about 40 steps is owed."
+}

@@ -1,0 +1,17 @@
+{
+  "type": "pcgame",
+  "name": "Slay the Spire 2 (isolated test)",
+  "controls": "Click cards and buttons. Escape closes a menu. Enter confirms.",
+  "goal": "Play a run and report any visible problems.",
+  "exe": "C:/isolated-game/SlayTheSpire2.exe",
+  "run_root": "out/sts2-runs",
+  "args": ["--force-steam", "off", "--windowed"],
+  "env": {},
+  "frame_size": [1920, 1080],
+  "real_per_frame": [2, 3],
+  "side_display": "\\\\.\\DISPLAY5",
+  "shot_width": 1280,
+  "launch_wait_s": 18,
+  "allowed_keys": ["esc", "enter", "space", "1", "2", "3", "4", "5"],
+  "setup": []
+}

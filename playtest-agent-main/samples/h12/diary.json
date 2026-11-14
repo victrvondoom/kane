@@ -1,0 +1,88 @@
+{
+ "run": "h12",
+ "lines": [
+  {
+   "step": 0,
+   "text": "I started by scoping the shop, coins and doors and planned to test the nearest pickups first.",
+   "quote": "Starting your sweep — noting the shop, coins and doors, then testing the nearest pickups first.",
+   "frame": "s000.jpg"
+  },
+  {
+   "step": 14,
+   "text": "I tried the shed door, it said it opened but still blocked me, so I logged it and moved to test the platforms.",
+   "quote": "The shed message says it opened but the door still blocks me, so I'll log that and test the platforms.",
+   "frame": "s014.jpg"
+  },
+  {
+   "step": 14,
+   "text": "I would tell the developer the shed door stays closed and blocks the left coin despite the open message.",
+   "quote": "Message 'The shed door opens.' appeared, but orange door sprite remained fully closed in place; repeated E and walking/jumping left could not pass it and leftmost coin remained unreachable behind it.",
+   "frame": "s014.jpg"
+  },
+  {
+   "step": 23,
+   "text": "I jumped toward the low platform and my character vanished, so I stopped to check where it went.",
+   "quote": "The character vanished after jumping toward that low platform — checking where it went.",
+   "frame": "s023.jpg"
+  },
+  {
+   "step": 25,
+   "text": "I got stuck when jumping right from the boots shop made my character disappear completely with no way to bring him back.",
+   "quote": "After walking right from boots shop and jumping (space/right+space), character sprite vanished completely from screen. HUD stayed Coins 1 Score 10.",
+   "frame": "s025.jpg"
+  },
+  {
+   "step": 31,
+   "text": "I reloaded and reproduced the vanishing, and found R also failed to reset, so I reported that separately.",
+   "quote": "After reloading I reproduced the vanishing, and R also failed to reset — I'll report that separately.",
+   "frame": "s031.jpg"
+  },
+  {
+   "step": 31,
+   "text": "I would tell the developer pressing R when invisible does not restart the level or reset Coins and Score.",
+   "quote": "After character vanished, pressing R left screen unchanged: Coins 1 Score 10, character still invisible, coins still collected.",
+   "frame": "s031.jpg"
+  },
+  {
+   "step": 37,
+   "text": "I collected the platform coins and noticed the score was off, but I had 3 coins so I went to buy the boots and check the deduction.",
+   "quote": "Those platform coins paid inconsistent score — logged it. Now I have 3 coins, so I'll buy the boots and check the deduction.",
+   "frame": "s037.jpg"
+  },
+  {
+   "step": 37,
+   "text": "I would tell the developer the two platform coins only gave +11 Score total instead of +20.",
+   "quote": "Collecting the two coins on low floating platform went from Coins 1 Score 10 to Coins 3 Score 21. That is +2 Coins but only +11 Score total for two coins, not +20 (expected Score 30).",
+   "frame": "s037.jpg"
+  },
+  {
+   "step": 39,
+   "text": "I bought the boots and the charge worked but the HUD still said no, so I tested if jumping changed anyway.",
+   "quote": "Boots charged 3 coins but the HUD still says no — logged that. Now testing whether they change jumping anyway.",
+   "frame": "s039.jpg"
+  },
+  {
+   "step": 39,
+   "text": "I would tell the developer buying boots takes the coins but leaves Boots as no.",
+   "quote": "Paid 3 coins (Coins 3->0, message 'Thanks! Enjoy the boots!') but top bar still reads 'Boots no'.",
+   "frame": "s039.jpg"
+  },
+  {
+   "step": 49,
+   "text": "I reloaded for a cleaner route and tried the jump up to the upper platforms carefully.",
+   "quote": "Reloaded for a cleaner route to the upper platforms — trying the jump up carefully.",
+   "frame": "s049.jpg"
+  },
+  {
+   "step": 54,
+   "text": "I got stuck again when I fell through the ground edge and disappeared below the platform.",
+   "quote": "After right+space from under low platform, character landed partially sunk, then disappeared below ground on subsequent move; screenshot shows no character on solid ground.",
+   "frame": "s054.jpg"
+  }
+ ],
+ "rejected": [],
+ "rejected_count": 0,
+ "cost_usd": 0.0085525,
+ "parse_error": null,
+ "rule": "Rule for each diary line the model writes (the harness checks it, the model's word is not enough):\n- its step must be a step of the run (a logged step, or 0 to the run's step count), else it is rejected;\n- if it carries a quote, the quote (case and spacing ignored) must appear in that same step's own logged lines, else it is rejected.\nRejected lines are kept in diary.json with the reason and counted, never shown as diary."
+}

@@ -1,0 +1,1106 @@
+"""Whole-project mode: find every function oqed can work on and rank it by use.
+
+    oqed scan        # in a directory with oqed.toml
+
+`oqed.toml` names a `build` command (run with `CC` set to oqed-cc) and a `run`
+command (the workload). Optionally `test`, whose output must not change (by
+default `run`; when its output varies from run to run, only its exit status
+counts), and `bench`, which prints one number, lower is better unless
+`bench_higher_is_better` (by default oqed times `run`'s CPU time). Scanning:
+
+1. Builds the project with every compile logged and `-g` added, then runs
+   the workload, sampling where its time goes (`profile_rt.c`, see `read_time`).
+2. Preprocesses each logged source with its own flags and walks clang's JSON
+   AST for function definitions located in the project (the `.i` line markers
+   say where each one came from).
+3. Keeps leaf functions with 1-4 integer or pointer arguments and an
+   integer, pointer or void result. Each becomes a target in
+   `.oqed/targets/<name>/` whose `func.c` (`func.cpp` for C++) is a slice of
+   the preprocessed source: the function plus the project typedefs, structs,
+   enums, constants and helpers it uses. In C++ also the classes, namespaces
+   and out-of-line methods; a method takes `this` as its first argument and a
+   reference is a pointer. A target is dropped when the slice doesn't compile or
+   the compiled function calls something. Functions on integers that read no
+   global data run in the harness and can be proven (`oracle = "harness"`);
+   the rest are judged by the project itself (`oracle = "project"`, see
+   `oracle.py`).
+4. Ranks targets by their share of the workload's time, most first.
+"""
+
+from __future__ import annotations
+
+import bisect
+import hashlib
+import json
+import os
+import pickle
+import re
+import shutil
+import subprocess
+import sys
+import tomllib
+from dataclasses import dataclass, field
+from pathlib import Path
+
+from .cc import _INT_TYPES, ast_flags, source_lang
+from .targets import MAX_ARGS as HARNESS_ARGS
+from .targets import IntType, Target, load_target
+from .toolchain import ToolError, compile_to_asm, cxx_driver, instruction_lines
+
+CONFIG = "oqed.toml"
+STATE = ".oqed"
+_PRELUDE = "".join(
+    f"#include <{h}.h>\n" for h in ("stdint", "stddef", "stdbool", "limits", "string", "stdlib", "assert")
+)
+_STORAGE = re.compile(r"\b(static|inline|__inline__|__inline|extern)\b\s*")
+_LOOPS = {"ForStmt", "WhileStmt", "DoStmt", "GotoStmt", "IndirectGotoStmt", "CXXForRangeStmt"}
+_GPRS = {f"r{n}" for n in ("ax", "bx", "cx", "dx", "si", "di", "bp", "sp")} | {f"r{i}" for i in range(8, 16)}
+_C_KEYWORDS = {"struct", "union", "enum", "const", "volatile", "restrict", "unsigned", "signed"}
+
+
+@dataclass
+class Project:
+    root: Path
+    build: str
+    run: str
+    cc: str = "clang"
+    test: str | None = None  # deterministic output; the oracle for functions that touch memory
+    bench: str | None = None  # prints one number; None: oqed times `run`
+    bench_runs: int = 7
+    bench_unit: str = "units"
+    bench_higher_is_better: bool = False  # e.g. MB/s
+
+    @property
+    def test_command(self) -> str:
+        return self.test or self.run
+
+    @property
+    def unit(self) -> str:
+        if self.bench is None:
+            return "CPU ms"
+        return f"1/({self.bench_unit})" if self.bench_higher_is_better else self.bench_unit
+
+    @property
+    def state(self) -> Path:
+        return self.root / STATE
+
+    @property
+    def cxx(self) -> str:
+        return cxx_driver(self.cc)
+
+
+def load(root: Path) -> Project:
+    path = root / CONFIG
+    if not path.is_file():
+        raise FileNotFoundError(f"no {CONFIG} in {root} (needs `build` and `run` commands)")
+    cfg = tomllib.loads(path.read_text())
+    return Project(
+        root=root.resolve(),
+        build=cfg["build"],
+        run=cfg["run"],
+        cc=cfg.get("cc", "clang"),
+        test=cfg.get("test"),
+        bench=cfg.get("bench"),
+        bench_runs=cfg.get("bench_runs", 7),
+        bench_unit=cfg.get("bench_unit", "units"),
+        bench_higher_is_better=cfg.get("bench_higher_is_better", False),
+    )
+
+
+SUPPORT = "oqed_support"  # drivers and generators `oqed init` writes
+
+
+@dataclass
+class Function:
+    """A function definition found in the project."""
+
+    name: str  # target name (the function name, qualified by file stem on a clash)
+    function: str
+    location: str  # path relative to the project root, with the line
+    time: float = 0.0  # share of the workload's time spent in its code (see `read_time`)
+    own: float = 0.0  # share in its own code only, not what was inlined into it (see `read_times`)
+    target: Path | None = None  # set when oqed can search it
+    oracle: str = "harness"  # "project" when judged by the project's test command
+    skipped: str | None = None  # why not, otherwise
+
+
+@dataclass
+class Scan:
+    functions: list[Function] = field(default_factory=list)  # every definition, most-called first
+
+    @property
+    def targets(self) -> list[Function]:
+        return [f for f in self.functions if f.target is not None]
+
+
+# --- record build and profile ---------------------------------------------------------
+
+
+def _oqed_cc(name: str = "oqed-cc") -> str:
+    """oqed-cc (or oqed-cxx) as one executable path, so any build system
+    takes it as `CC` (CMake and configure scripts don't accept a command with
+    arguments). The compiler it wraps comes from `$OQED_CC` / `$OQED_CXX`
+    (see `cc_env`)."""
+    exe = Path(sys.executable).parent / name
+    if exe.is_file():
+        return str(exe)
+    if found := shutil.which(name):
+        return found
+    wrapper = Path.home() / ".cache" / "oqed" / "bin" / name
+    wrapper.parent.mkdir(parents=True, exist_ok=True)
+    cxx = "OQED_AS_CXX=1 " if name == "oqed-cxx" else ""
+    wrapper.write_text(f'#!/bin/sh\n{cxx}exec "{sys.executable}" -m oqed.cc "$@"\n')
+    wrapper.chmod(0o755)
+    return str(wrapper)
+
+
+def cc_env(project: Project) -> dict[str, str]:
+    """Environment for a build that compiles through oqed-cc (C) and oqed-cxx (C++)."""
+    return {"CC": _oqed_cc(), "OQED_CC": project.cc, "CXX": _oqed_cc("oqed-cxx"), "OQED_CXX": project.cxx}
+
+
+def plain_env(project: Project) -> dict[str, str]:
+    """Environment for a build with the plain compilers."""
+    return {"CC": project.cc, "CXX": project.cxx}
+
+
+def _shell(command: str, cwd: Path, env: dict) -> subprocess.CompletedProcess:
+    return subprocess.run(command, shell=True, cwd=cwd, env=env, capture_output=True, text=True, check=False)
+
+
+def record(project: Project) -> Path:
+    """Build and run the workload in record mode; returns the record directory."""
+    rec = project.state / "record"
+    shutil.rmtree(rec, ignore_errors=True)
+    rec.mkdir(parents=True)
+    env = {**os.environ, **cc_env(project), "OQED_RECORD": str(rec)}
+    b = _shell(project.build, project.root, env)
+    if b.returncode != 0:
+        raise RuntimeError(f"build failed ({project.build}):\n{(b.stdout + b.stderr)[-2000:]}")
+    if not (rec / "commands.jsonl").exists():
+        raise RuntimeError(f"`{project.build}` compiled nothing through $CC (does it rebuild, e.g. make -B?)")
+    env = {**os.environ, "OQED_PROFILE": str(rec / "profile.txt")}
+    r = _shell(project.run, project.root, env)
+    if r.returncode != 0:
+        raise RuntimeError(f"workload failed ({project.run}):\n{(r.stdout + r.stderr)[-2000:]}")
+    return rec
+
+
+def read_time(path: Path) -> dict[str, float]:
+    return read_times(path)[0]
+
+
+def read_times(path: Path) -> tuple[dict[str, float], dict[str, float]]:
+    """(time, own) per function. `own` is the share of samples whose innermost
+    inlined frame is the function: its own code wherever it ended up. Every
+    sample has one innermost frame, so these don't overlap and sum to at most 1
+    (the treemap's areas); `time` overlaps between a function and what was
+    inlined into it.
+
+    Share of the workload's time per function, over every process that
+    wrote a section of the profile. A function's share is the larger of:
+
+    - the samples in its symbol's address range: its own code plus whatever
+      was inlined into it (what replacing the whole function can speed up);
+    - the samples whose innermost inlined frame (from the debug info) is it:
+      its own code wherever it was inlined (what a faster inline block can
+      speed up).
+
+    Shares are of all samples, including time in libraries and blocked."""
+    sections: list[tuple[str, int, list[tuple[int, int]]]] = []
+    if not path.exists():
+        return {}, {}
+    for line in path.read_text().splitlines():
+        key, _, value = line.partition(" ")
+        if key == "exe":
+            sections.append((value, 0, []))
+        elif key == "anchor" and sections:
+            sections[-1] = (sections[-1][0], int(value, 16), sections[-1][2])
+        elif key == "pc" and sections:
+            pc, n = value.split()
+            sections[-1][2].append((int(pc, 16), int(n)))
+    total = sum(n for _, _, pcs in sections for _, n in pcs)
+    by_symbol: dict[str, int] = {}
+    by_inline: dict[str, int] = {}
+    for exe, anchor, pcs in sections:
+        symbols = _Symbols(_symbols(Path(exe)))
+        at = next((a for a, name in symbols.starts.items() if name == "__oqed_prof_anchor"), None)
+        if at is None:
+            continue
+        bias = anchor - at
+        local = [(pc - bias, n) for pc, n in pcs if symbols.containing(pc - bias)]
+        for (pc, n), inner in zip(local, _innermost(Path(exe), [pc for pc, _ in local]), strict=True):
+            name = symbols.containing(pc)
+            by_symbol[name] = by_symbol.get(name, 0) + n  # type: ignore[index]
+            if inner:
+                by_inline[inner] = by_inline.get(inner, 0) + n
+    if not total:
+        return {}, {}
+    names = set(by_symbol) | set(by_inline)
+    time = {f: max(by_symbol.get(f, 0), by_inline.get(f, 0)) / total for f in names}
+    return time, {f: n / total for f, n in by_inline.items()}
+
+
+def _innermost(exe: Path, addrs: list[int]) -> list[str | None]:
+    """The innermost inlined function at each address, from the debug info."""
+    if not addrs:
+        return []
+    out = subprocess.run(
+        # Mangled, like nm's names: C++ overloads stay apart.
+        ["llvm-symbolizer", f"--obj={exe}", "--inlining", "--no-demangle", "--output-style=JSON"],
+        input="\n".join(hex(a) for a in addrs),
+        capture_output=True,
+        text=True,
+        check=False,
+    ).stdout.splitlines()
+    names: list[str | None] = []
+    for line in out:
+        frames = json.loads(line).get("Symbol", []) if line.strip() else []
+        name = frames[0].get("FunctionName") if frames else None
+        names.append(name if name and name != "??" else None)
+    return names if len(names) == len(addrs) else [None] * len(addrs)
+
+
+class _Symbols:
+    """Function symbols of an executable, to look up an address."""
+
+    def __init__(self, syms: dict[int, tuple[str, int]]):
+        self.starts = {a: name for a, (name, _) in syms.items()}
+        self.sizes = {a: size for a, (_, size) in syms.items()}
+        self._sorted = sorted(syms)
+
+    def containing(self, addr: int) -> str | None:
+        i = bisect.bisect_right(self._sorted, addr) - 1
+        if i < 0:
+            return None
+        start = self._sorted[i]
+        return self.starts[start] if addr < start + self.sizes[start] else None
+
+
+def _symbols(exe: Path) -> dict[int, tuple[str, int]]:
+    nm = subprocess.run(["nm", "-S", "--defined-only", str(exe)], capture_output=True, text=True, check=False)
+    syms: dict[int, tuple[str, int]] = {}
+    for line in nm.stdout.splitlines():
+        parts = line.split()
+        # Sized code symbols only: a sizeless one (data_start, _end) would
+        # swallow every address after it, libraries included.
+        if len(parts) == 4 and parts[2] in "tTwW":
+            syms[int(parts[0], 16)] = (parts[3], int(parts[1], 16))
+    return syms
+
+
+# --- discovery ------------------------------------------------------------------------
+
+
+@dataclass
+class _Fn:
+    """A function definition in a unit: a C function, or in C++ a free
+    function or method (in its class `cls`, or defined out of line)."""
+
+    decl: dict
+    qualified: str  # ns::Class::name (the name in C)
+    cls: dict | None = None  # the class it is defined in, for in-class definitions
+    method: str | None = None  # qualified class of a non-static method
+
+    @property
+    def name(self) -> str:
+        return self.decl["name"]
+
+    @property
+    def symbol(self) -> str:
+        return self.decl.get("mangledName") or self.name
+
+
+def _scope_name(sc: tuple[str, str]) -> str | None:
+    kind, name = sc
+    return None if kind == "extern" else (name or "(anonymous namespace)")
+
+
+class _Unit:
+    """One preprocessed translation unit and its AST."""
+
+    def __init__(self, ipath: Path, cwd: Path, lang: str = "c", flags: list[str] = ()):  # type: ignore[assignment]
+        self.text = ipath.read_bytes()
+        self.cwd = cwd
+        self.lang = lang
+        self.markers: list[tuple[int, int, str]] = []  # (offset after the marker line, line, file)
+        # System headers the project's own files include, for the slice's prelude:
+        # a marker entering a system header (flags 1 and 3) right after one in a
+        # project file. Named as included (<math.h>), not by the path found.
+        self.system_headers: list[str] = []
+        self._system: list[bool] = []  # per marker: the text after it is a system header
+        in_system = False
+        for m in re.finditer(rb'^# (\d+) "([^"]*)"([^\n]*)\n', self.text, re.M):
+            self.markers.append((m.end(), int(m.group(1)), m.group(2).decode()))
+            marks = m.group(3).split()
+            self._system.append(b"3" in marks)
+            if b"1" in marks and b"3" in marks and not in_system:
+                name = m.group(2).decode().rsplit("/include/", 1)[-1]
+                if name not in self.system_headers:
+                    self.system_headers.append(name)
+            in_system = b"3" in marks
+        self._starts = [m[0] for m in self.markers]
+        out = subprocess.run(
+            [
+                "clang",
+                "-Xclang",
+                "-ast-dump=json",
+                "-fsyntax-only",
+                "-w",
+                *ast_flags(lang, flags),
+                str(ipath),
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        ).stdout
+        # Declarations in namespaces and extern "C" blocks are flattened, each
+        # with the scopes it sits in (`scope`); members of classes point to
+        # their class (`owner`).
+        self.scope: dict[str, tuple[tuple[str, str], ...]] = {}
+        self.owner: dict[str, dict] = {}
+        self.functions: list[_Fn] = []
+        self.decls = list(self._flatten(json.loads(out).get("inner", []), ()))
+        self.by_id = {d["id"]: d for d in self.decls}
+        # A call to a template names its specialization, which sits inside the template.
+        for d in self.decls:
+            if d.get("kind") in ("FunctionTemplateDecl", "ClassTemplateDecl"):
+                for x in d.get("inner", []):
+                    if "id" in x and x.get("kind") not in ("TemplateTypeParmDecl", "NonTypeTemplateParmDecl"):
+                        self.by_id.setdefault(x["id"], d)
+        self.defs = {f.name: f.decl for f in self.functions if f.cls is None and f.method is None}
+        # A definition by the id of any declaration of it (C++ prototypes,
+        # in-class declarations of methods defined out of line).
+        self.def_of: dict[str, dict] = {}
+        for f in self.functions:
+            self.def_of[f.decl["id"]] = f.decl
+            if prev := f.decl.get("previousDecl"):
+                self.def_of[prev] = f.decl
+        # A name can be a typedef and a struct tag at once (`typedef struct X X;`),
+        # and a struct can be declared before it is defined: keep them all.
+        self.types: dict[str, list[dict]] = {}
+        for d in self.decls:
+            if d.get("kind") in _TYPE_KINDS and d.get("name"):
+                self.types.setdefault(d["name"], []).append(d)
+        self.enum_of = {
+            c["id"]: d["id"]
+            for d in self.decls
+            if d.get("kind") == "EnumDecl"
+            for c in d.get("inner", [])
+            if c.get("kind") == "EnumConstantDecl"
+        }
+
+    def _flatten(self, nodes: list[dict], scope: tuple, cls_scope: str = ""):
+        for d in nodes:
+            kind = d.get("kind")
+            if kind == "NamespaceDecl":
+                yield from self._flatten(d.get("inner", []), (*scope, ("namespace", d.get("name", ""))))
+                continue
+            if kind == "LinkageSpecDecl":
+                yield from self._flatten(d.get("inner", []), (*scope, ("extern", d.get("language", "C"))))
+                continue
+            if _offset(d) is None or d.get("isImplicit"):
+                continue
+            # System headers (libc, the STL) are most of a C++ unit's AST, and
+            # slices include them instead of copying them: keep only the
+            # typedefs and enums that integer types resolve through.
+            if kind not in ("TypedefDecl", "TypeAliasDecl", "EnumDecl") and self.in_system(_offset(d)):  # type: ignore[arg-type]
+                continue
+            self.scope[d["id"]] = scope
+            names = [n for n in map(_scope_name, scope) if n]
+            if kind == "CXXRecordDecl" and d.get("completeDefinition"):
+                # A nested class defined out of line (`class Block::Iter {`): its outer class.
+                parent = self.owner.get(d.get("previousDecl", ""))
+                q = self._qualified_member(parent, d.get("name", "")) if parent is not None else None
+                self._members(d, q or "::".join([*names, d.get("name", "")]))
+            if (
+                kind in ("FunctionDecl", "CXXMethodDecl")
+                and _body(d)
+                and re.fullmatch(r"\w+", d.get("name", ""))
+            ):
+                q = "::".join([*names, d["name"]])
+                method = None
+                if kind == "CXXMethodDecl":
+                    # Defined out of line: `ns::Class::name`, its class from the qualifier.
+                    q = d.get("__qualified") or q
+                    parent = self.owner.get(d.get("previousDecl", ""))
+                    if parent is not None:
+                        q = self._qualified_member(parent, d["name"])
+                    if d.get("storageClass") != "static":
+                        method = q.rsplit("::", 1)[0]
+                self.functions.append(_Fn(d, q, None, method))
+            yield d
+
+    def _members(self, rec: dict, qualified: str) -> None:
+        rec["__qualified"] = qualified
+        for m in rec.get("inner", []):
+            if m.get("isImplicit"):
+                continue
+            self.owner[m["id"]] = rec
+            if m.get("kind") == "CXXRecordDecl" and m.get("completeDefinition"):
+                self._members(m, f"{qualified}::{m.get('name', '')}")
+            if m.get("kind") == "CXXMethodDecl" and _body(m) and re.fullmatch(r"\w+", m.get("name", "")):
+                method = qualified if m.get("storageClass") != "static" else None
+                self.functions.append(_Fn(m, f"{qualified}::{m['name']}", rec, method))
+
+    def _qualified_member(self, rec: dict, name: str) -> str:
+        return f"{rec.get('__qualified', rec.get('name', ''))}::{name}"
+
+    def find(self, key: str) -> _Fn | None:
+        """A definition by name (C), or by mangled symbol or qualified name (C++)."""
+        return (
+            next((f for f in self.functions if f.symbol == key and "::" not in key), None)
+            or next((f for f in self.functions if key in (f.qualified, f.name) and f.qualified == key), None)
+            or next((f for f in self.functions if f.name == key), None)
+        )
+
+    def in_system(self, offset: int) -> bool:
+        i = bisect.bisect_right(self._starts, offset) - 1
+        return i >= 0 and self._system[i]
+
+    def origin(self, offset: int) -> tuple[Path, int]:
+        i = bisect.bisect_right(self._starts, offset) - 1
+        if i < 0:
+            return Path("<unknown>"), 0
+        start, line, name = self.markers[i]
+        return (self.cwd / name).resolve(), line + self.text.count(b"\n", start, offset)
+
+    def span(self, d: dict) -> tuple[int, int]:
+        end = d["range"]["end"]
+        return _offset(d), end["offset"] + end.get("tokLen", 1)  # type: ignore[return-value]
+
+
+_TYPE_KINDS = ("TypedefDecl", "RecordDecl", "EnumDecl", "CXXRecordDecl", "TypeAliasDecl", "ClassTemplateDecl")
+
+
+def _offset(d: dict) -> int | None:
+    return d.get("range", {}).get("begin", {}).get("offset")
+
+
+def _body(d: dict) -> dict | None:
+    return next((x for x in d.get("inner", []) if x.get("kind") == "CompoundStmt"), None)
+
+
+def _walk(node):
+    if isinstance(node, dict):
+        yield node
+        for v in node.values():
+            if isinstance(v, (dict, list)):
+                yield from _walk(v)
+    elif isinstance(node, list):
+        for v in node:
+            yield from _walk(v)
+
+
+def _int(spelling: str) -> IntType | None:
+    return _INT_TYPES.get(re.sub(r"\b(const|volatile)\b", "", spelling).strip())
+
+
+def _resolve(unit: _Unit, spelling: str) -> IntType | None:
+    """Map a type spelling to an IntType, following typedefs declared in the unit."""
+    for _ in range(8):
+        if (t := _int(spelling)) is not None:
+            return t
+        name = re.sub(r"\b(const|volatile)\b", "", spelling).strip()
+        # Enums are passed as int (the compilers pick int unless a value doesn't fit).
+        if name.startswith("enum ") or any(x.get("kind") == "EnumDecl" for x in unit.types.get(name, [])):
+            return "i32"
+        td = next((x for x in unit.types.get(name, []) if x.get("kind") == "TypedefDecl"), None)
+        if td is None:
+            return None
+        # An anonymous enum's typedef "desugars" to its own name; its qualType says enum.
+        desugared = td["type"].get("desugaredQualType", td["type"]["qualType"])
+        spelling = td["type"]["qualType"] if desugared == name else desugared
+    return None
+
+
+# Arguments a function may take: past 6 they are on the stack, which a whole
+# function reads like the C does.
+MAX_ARGS = 12
+
+
+@dataclass
+class Signature:
+    args: list[IntType]  # pointers are u64
+    ret: IntType  # u64 for pointers and void
+    ret_c: str | None = None  # the C return type when `ret` stands in for void or a pointer
+    pointers: bool = False
+    bools: bool = False  # a bool argument: only 0 and 1 are valid, so random inputs aren't
+
+
+def _value(unit: _Unit, spelling: str) -> tuple[IntType | None, bool]:
+    """An argument or return type as passed in a register, and whether it is
+    a pointer (or a C++ reference, passed as one)."""
+    if re.sub(r"\b(const|volatile|restrict|__restrict)\b", "", spelling).rstrip().endswith(("*", "&")):
+        return "u64", True
+    return _resolve(unit, spelling), False
+
+
+def signature(unit: _Unit, d: dict, method: bool = False) -> Signature | str:
+    """How the function passes its arguments and result, or why it is out of scope:
+    integers or pointers (up to MAX_ARGS; more than 4 only as a whole function under
+    the project oracle), an integer, pointer or no result. A method's `this`
+    is its first argument."""
+    t = d["type"]
+    if "..." in t["qualType"]:
+        return "variadic"
+    parms = [x for x in d.get("inner", []) if x.get("kind") == "ParmVarDecl"]
+    if not 1 <= len(parms) + method <= MAX_ARGS:
+        return f"{len(parms) + method} arguments"
+    spellings = [p["type"].get("desugaredQualType", p["type"]["qualType"]) for p in parms]
+    vals = [("u64", True)] * method + [_value(unit, sp) for sp in spellings]
+    ret_spelling = t["qualType"].split("(")[0].strip()
+    if ret_spelling == "void":
+        ret, ret_ptr, ret_c = "u64", False, "void"
+    else:
+        ret, ret_ptr = _value(unit, ret_spelling)
+        ret_c = ret_spelling if ret_ptr else None
+    if ret is None or any(a is None for a, _ in vals):
+        return f"arguments or result not integers or pointers: {t['qualType']}"
+    bools = any(re.sub(r"\bconst\b", "", sp).strip() == "bool" for sp in spellings)
+    return Signature([a for a, _ in vals], ret, ret_c, ret_ptr or any(p for _, p in vals), bools)  # type: ignore[arg-type]
+
+
+def slice_source(unit: _Unit, d: dict, root: Path) -> tuple[str, bool]:
+    """func.c for definition `d`: the project declarations it needs, then the
+    function itself made external. Also whether it (or a helper) has a loop."""
+    need: dict[int, dict] = {}
+    loops = False
+    todo = [d]
+    while todo:
+        cur = todo.pop()
+        if cur["id"] in need:
+            continue
+        need[cur["id"]] = cur
+        if any(n.get("kind") in _LOOPS for n in _walk(cur)):
+            loops = True
+        for n in _walk(cur):
+            ref = n.get("referencedDecl")
+            if isinstance(ref, dict):
+                kind, name = ref.get("kind"), ref.get("name")
+                if kind == "FunctionDecl" and name in unit.defs:
+                    todo.append(unit.defs[name])
+                elif kind == "FunctionDecl" and ref["id"] in unit.by_id:
+                    todo.append(unit.by_id[ref["id"]])  # defined in another file: its prototype
+                elif kind == "VarDecl" and ref["id"] in unit.by_id:
+                    todo.append(unit.by_id[ref["id"]])
+                elif kind == "EnumConstantDecl" and ref["id"] in unit.enum_of:
+                    todo.append(unit.by_id[unit.enum_of[ref["id"]]])
+            # A typedef of an anonymous struct owns the record: walk its fields.
+            for key in ("ownedTagDecl", "decl"):
+                ref = n.get(key)
+                if isinstance(ref, dict) and ref.get("kind") in ("RecordDecl", "EnumDecl"):
+                    if ref.get("id") in unit.by_id:
+                        todo.append(unit.by_id[ref["id"]])
+            t = n.get("type")
+            if isinstance(t, dict):
+                for ident in re.findall(r"[A-Za-z_]\w*", t.get("qualType", "")):
+                    if ident not in _C_KEYWORDS:
+                        todo.extend(unit.types.get(ident, []))
+    # Declarations from system headers come from the prelude's includes instead.
+    spans = []
+    for x in need.values():
+        if x is d or root in unit.origin(_offset(x))[0].parents:  # type: ignore[arg-type]
+            spans.append((*unit.span(x), x))
+    # Prototypes of the helpers, so the order functions are defined in does not matter.
+    # The function's own prototype too: helpers may call it back (recursion).
+    protos = [
+        _STORAGE.sub("", unit.text[unit.span(x)[0] : _offset(_body(x))].decode()).strip() + ";"  # type: ignore[arg-type]
+        if x is d
+        else unit.text[unit.span(x)[0] : _offset(_body(x))].decode().strip() + ";"  # type: ignore[arg-type]
+        for _, _, x in sorted(spans, key=lambda s: s[0])
+        if x.get("kind") == "FunctionDecl" and _body(x)
+    ]
+    # Types first (they never depend on functions), then the prototypes, then
+    # globals and functions in source order: a prototype may name any type, and
+    # a global's initializer may take a function's address.
+    types, rest, last_end = [], [], -1
+    for a, b, x in sorted(spans, key=lambda s: s[0]):
+        if b <= last_end:
+            continue  # inside a declaration already copied (e.g. the struct in a typedef)
+        text = unit.text[a:b].decode()
+        if x is d:
+            body = _offset(_body(d))  # type: ignore[arg-type]
+            head = _STORAGE.sub("", unit.text[a:body].decode())
+            text = head + unit.text[body:b].decode()
+        elif x.get("kind") != "FunctionDecl" or not _body(x):
+            text += ";"
+        if x.get("kind") == "FunctionDecl" and not _body(x):
+            protos.append(text)
+            last_end = b
+            continue
+        (types if x.get("kind") in ("TypedefDecl", "RecordDecl", "EnumDecl") else rest).append(text)
+        last_end = b
+    out = types + (["\n".join(protos)] if protos else []) + rest
+    prelude = _PRELUDE + "".join(f"#include <{h}>\n" for h in unit.system_headers if f"<{h}>" not in _PRELUDE)
+    return prelude + "\n" + "\n\n".join(out) + "\n", loops
+
+
+_SYSTEM_CXX = re.compile(r"^(?:[\w-]+/)?c\+\+/[\d.]+/(?:backward/)?")
+
+
+def _wrap(unit: _Unit, x: dict, text: str) -> str:
+    """A declaration's text inside the namespaces and extern "C" blocks it sits in."""
+    for kind, name in reversed(unit.scope.get(x["id"], ())):
+        head = f'extern "{name}"' if kind == "extern" else f"namespace {name}".rstrip()
+        text = f"{head} {{\n{text}\n}}"
+    return text
+
+
+def slice_cxx(unit: _Unit, fn: _Fn, root: Path) -> tuple[str, bool]:
+    """func.cpp for a C++ definition: the project declarations it needs in
+    source order (the order the unit compiled in), each in its namespaces;
+    classes whole, with their members. The function keeps its linkage (so its
+    symbol is the project's) and is marked `used` so it is emitted."""
+    d = fn.decl
+    need: dict[str, dict] = {}
+    loops = False
+    todo = [fn.cls or d, d]
+    while todo:
+        cur = todo.pop()
+        if cur["id"] in need:
+            continue
+        need[cur["id"]] = cur
+        for mid in (cur["id"], cur.get("previousDecl")):  # a member, or a method defined out of line
+            if mid in unit.owner:
+                todo.append(unit.owner[mid])
+        if any(n.get("kind") in _LOOPS for n in _walk(cur)):
+            loops = True
+        for n in _walk(cur):
+            refs = []
+            ref = n.get("referencedDecl")
+            if isinstance(ref, dict) and "id" in ref:
+                refs.append(ref["id"])
+                if ref.get("kind") == "EnumConstantDecl" and ref["id"] in unit.enum_of:
+                    refs.append(unit.enum_of[ref["id"]])
+                if ref.get("kind") in ("FunctionDecl", "CXXMethodDecl") and ref["id"] not in unit.def_of:
+                    todo.extend(t for t in unit.types.get(ref.get("name", ""), []))
+            if isinstance(n.get("referencedMemberDecl"), str):
+                refs.append(n["referencedMemberDecl"])
+            for key in ("ownedTagDecl", "decl"):
+                r = n.get(key)
+                if isinstance(r, dict) and "id" in r:
+                    refs.append(r["id"])
+            for rid in refs:
+                for x in (unit.def_of.get(rid), unit.by_id.get(rid), unit.owner.get(rid)):
+                    if x is not None:
+                        todo.append(x)
+            t = n.get("type")
+            if isinstance(t, dict):
+                for ident in re.findall(r"[A-Za-z_]\w*", t.get("qualType", "")):
+                    if ident not in _C_KEYWORDS:
+                        todo.extend(unit.types.get(ident, []))
+    spans = sorted(
+        (*unit.span(x), x)
+        for x in need.values()
+        if x["id"] in unit.by_id and root in unit.origin(_offset(x))[0].parents  # type: ignore[arg-type]
+    )
+    used = _offset(d)
+    out, last_end = [], -1
+    for a, b, x in spans:
+        if b <= last_end:
+            continue  # inside a declaration already copied (a class's member, the struct in a typedef)
+        text = unit.text[a:b].decode()
+        if a <= used < b:  # the function, or the class it is defined in
+            k = used - a
+            text = text[:k] + "__attribute__((used)) " + text[k:]
+        if not (x.get("kind") in ("FunctionDecl", "CXXMethodDecl") and _body(x)):
+            text += ";"
+        out.append(_wrap(unit, x, text))
+        last_end = b
+    headers = [_SYSTEM_CXX.sub("", h) for h in unit.system_headers]
+    prelude = _PRELUDE + "".join(
+        f"#include <{h}>\n" for h in dict.fromkeys(headers) if f"<{h}>" not in _PRELUDE
+    )
+    return prelude + "\n" + "\n\n".join(out) + "\n", loops
+
+
+# Functions both compilers reduce to this many instructions (plus `ret`) aren't worth a search.
+MINIMAL = 2
+# Past this many instructions (from both compilers) a function is too big to
+# rewrite whole, and its listings alone would fill the prompt.
+MAXIMUM = 1500
+
+
+def _check(target: Target) -> tuple[str | None, bool]:
+    """Why oqed can't search this target, if it can't, and whether the
+    compiled code needs the project to run: it reads global data or calls
+    other functions (so the harness can't run it alone)."""
+    reads_globals = False
+    sizes = []
+    for compiler in ("clang", "gcc"):
+        try:
+            asm = compile_to_asm(target, compiler)
+        except ToolError as e:
+            lines = str(e).strip().splitlines()
+            first = next((ln for ln in lines if "error:" in ln), lines[-1])
+            return f"{compiler}: {first.split('error:', 1)[-1].strip()[:150]}", False
+        for line in asm.splitlines():
+            ins = line.strip()
+            # `call`, and `jmp name` (a tail call) leave the function;
+            # `jmp .L5` and `jmp rcx` (a switch's jump table) don't.
+            op = ins.split(None, 1)[-1] if ins.startswith(("jmp", "call")) else ""
+            if re.fullmatch(r"[A-Za-z_][\w.@]*", op) and not op.startswith(".L") and op not in _GPRS:
+                reads_globals = True
+            reads_globals |= "rip" in ins or ins.startswith("call")
+        sizes.append(len([ln for ln in instruction_lines(asm) if ln != "ret"]))
+    if max(sizes) <= MINIMAL:
+        return f"already minimal ({max(sizes)} instructions)", reads_globals
+    if min(sizes) > MAXIMUM:
+        return f"too big to rewrite ({min(sizes)} instructions)", reads_globals
+    return None, reads_globals
+
+
+def clang_unit(flags: list[str], src: str, cwd: Path, out: Path) -> _Unit | None:
+    """The source preprocessed by clang with these flags, whatever the build's
+    compiler (gcc's headers expand `assert` and friends differently)."""
+    lang = source_lang(src)
+    clang = cxx_driver("clang") if lang == "c++" else "clang"
+    pre = subprocess.run(
+        [clang, *flags, "-E", src, "-o", str(out)], cwd=cwd, capture_output=True, check=False
+    )
+    return _Unit(out, cwd, lang, flags) if pre.returncode == 0 else None
+
+
+def slice_of(unit: _Unit, fn: _Fn, root: Path) -> tuple[str, bool]:
+    if unit.lang == "c++":
+        return slice_cxx(unit, fn, root)
+    return slice_source(unit, fn.decl, root)
+
+
+def source_sha(unit: _Unit | None, function: str, root: Path) -> str | None:
+    """The hash a project-oracle lock entry records: the function's slice as
+    clang preprocesses it (`function`: its name, in C++ its qualified name).
+    oqed-cc substitutes only while it is unchanged."""
+    fn = unit.find(function) if unit else None
+    return None if fn is None else slice_sha(slice_of(unit, fn, root.resolve())[0], root)  # type: ignore[arg-type]
+
+
+def slice_sha(src: str, root: Path) -> str:
+    """Hash of a slice, the same however the build spells paths: line markers
+    are dropped and the project root (or `./`) is cut from string literals
+    (`assert` puts `__FILE__` in the code; `oqed scan` preprocesses with
+    absolute paths, a build usually with relative ones)."""
+    lines = [ln for ln in src.splitlines() if not re.match(r"#\s*\d+\s", ln)]
+    text = " ".join(" ".join(lines).split())
+    text = re.sub(r'"(?:' + re.escape(str(root.resolve())) + r"/|\./)", '"', text)
+    return hashlib.sha256(text.encode()).hexdigest()
+
+
+def _parts(qualified: str) -> list[str]:
+    return [p for p in qualified.split("::") if p != "(anonymous namespace)"]
+
+
+def _short(qualified: str, everyone: list[str]) -> str:
+    """The fewest trailing parts of a qualified name (anonymous namespaces
+    left out) that no other function with a different qualified name ends in."""
+    parts = _parts(qualified)
+    others = [_parts(q) for q in everyone if q != qualified]
+    for n in range(1, len(parts) + 1):
+        if not any(o[-n:] == parts[-n:] for o in others):
+            return ".".join(parts[-n:])
+    return ".".join(parts)
+
+
+@dataclass
+class _Found:
+    """A project function as one compile unit sees it, worked out in a scan
+    worker: everything the target needs, without the unit's AST."""
+
+    file: Path
+    line: int
+    name: str
+    qualified: str
+    symbol: str
+    params: int
+    lang: str
+    flags: list[str]
+    skipped: str | None = None
+    sig: Signature | None = None
+    source: str = ""
+    loops: bool = False
+    slice_sha: str | None = None
+
+
+def _code_sha() -> str:
+    """oqed's own code: a cached scan result from another version doesn't count."""
+    h = hashlib.sha256()
+    for f in sorted(Path(__file__).parent.glob("*.py")):
+        h.update(f.read_bytes())
+    return h.hexdigest()
+
+
+def _scan_unit(k: int, cmd: dict, src: str, work: Path, root: Path, cache: Path, code: str) -> list[_Found]:
+    """Preprocess one source of the build and describe each project function
+    defined in it (a worker process: the AST stays here). Cached by the
+    preprocessed text, the compiler and flags, and oqed's code."""
+    ipath = work / f"{k}.{Path(src).stem}.i"
+    pre = subprocess.run(
+        [cmd["cc"], *cmd["flags"], "-E", src, "-o", str(ipath)],
+        cwd=cmd["cwd"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if pre.returncode != 0:
+        return []
+    key = hashlib.sha256()
+    for part in (code, cmd["cc"], json.dumps(cmd["flags"]), str(root), cmd["cwd"], src):
+        key.update(part.encode() + b"\0")
+    key.update(ipath.read_bytes())
+    cached = cache / f"{key.hexdigest()}.pickle"
+    if cached.is_file():
+        try:
+            return pickle.loads(cached.read_bytes())
+        except Exception:  # noqa: BLE001 - a cache written by a killed scan
+            pass
+    out = _scan_text(k, cmd, src, ipath, work, root)
+    tmp = cached.with_suffix(f".{os.getpid()}.tmp")
+    tmp.write_bytes(pickle.dumps(out))
+    tmp.replace(cached)
+    return out
+
+
+def _scan_text(k: int, cmd: dict, src: str, ipath: Path, work: Path, root: Path) -> list[_Found]:
+    unit = _Unit(ipath, Path(cmd["cwd"]), source_lang(src), cmd["flags"])
+    hashed = unit if "clang" in Path(cmd["cc"]).name else None
+    out: list[_Found] = []
+    seen: set[tuple[str, int, str]] = set()
+    for fn in unit.functions:
+        file, line = unit.origin(_offset(fn.decl))  # type: ignore[arg-type]
+        if root not in file.parents or (str(file), line, fn.qualified) in seen:
+            continue
+        seen.add((str(file), line, fn.qualified))
+        d = fn.decl
+        f = _Found(
+            file, line, fn.name, fn.qualified, fn.symbol,
+            len([x for x in d.get("inner", []) if x.get("kind") == "ParmVarDecl"]), unit.lang, cmd["flags"],
+        )  # fmt: skip
+        out.append(f)
+        if fn.name == "main":
+            f.skipped = "main"
+            continue
+        if file.relative_to(root).parts[0] == SUPPORT:
+            f.skipped = "oqed init's own driver (measures the project, not part of it)"
+            continue
+        sig = signature(unit, d, fn.method is not None)
+        if isinstance(sig, str):
+            f.skipped = sig
+            continue
+        try:
+            f.source, f.loops = slice_of(unit, fn, root)
+        except (KeyError, ValueError) as e:
+            f.skipped = f"could not slice the source: {e}"
+            continue
+        f.sig = sig
+        if hashed is None:
+            hashed = clang_unit(cmd["flags"], src, Path(cmd["cwd"]), work / f"{k}.{Path(src).stem}.clang.i")
+        f.slice_sha = source_sha(hashed, fn.symbol if unit.lang == "c++" else fn.name, root)
+    return out
+
+
+def _unit_workers() -> int:
+    """Scan workers: each holds a unit's AST (up to ~2 GB for a C++ file
+    with the STL), so as many as the free memory takes, up to the cores."""
+    try:
+        meminfo = Path("/proc/meminfo").read_text()
+        free_gb = int(re.search(r"MemAvailable:\s+(\d+)", meminfo).group(1)) / 2**20  # type: ignore[union-attr]
+    except (OSError, AttributeError):
+        free_gb = 4.0
+    return max(1, min(os.cpu_count() or 1, int(free_gb // 2)))
+
+
+def discover(project: Project, rec: Path) -> Scan:
+    import concurrent.futures as cf
+    import multiprocessing
+
+    time, own = read_times(rec / "profile.txt")
+    targets_dir = project.state / "targets"
+    shutil.rmtree(targets_dir, ignore_errors=True)
+    targets_dir.mkdir(parents=True)
+    work = project.state / "work"
+    shutil.rmtree(work, ignore_errors=True)
+    work.mkdir(parents=True)
+
+    commands = [json.loads(ln) for ln in (rec / "commands.jsonl").read_text().splitlines() if ln.strip()]
+    jobs = [
+        (k, cmd, src)
+        for k, cmd in enumerate(commands)
+        # A configure check's scratch compile (CMake try_compile) may be deleted since.
+        if Path(cmd["cwd"]).is_dir()
+        for src in cmd["sources"]
+        if Path(src).is_file()
+    ]
+    # Every source in parallel; merged in build order, so the first unit to
+    # define a function (in a header, many do) is the one it is taken from.
+    workers = min(_unit_workers(), max(len(jobs), 1))
+    code = _code_sha()
+    cache = project.state / "cache"
+    (cache / "units").mkdir(parents=True, exist_ok=True)
+    (cache / "checks").mkdir(exist_ok=True)
+    with cf.ProcessPoolExecutor(workers, mp_context=multiprocessing.get_context("forkserver")) as pool:
+        futures = [
+            pool.submit(_scan_unit, k, c, s, work, project.root, cache / "units", code) for k, c, s in jobs
+        ]
+        per_unit = [fut.result() for fut in futures]
+    seen: dict[tuple[str, int, str], _Found] = {}
+    for found in per_unit:
+        for f in found:
+            seen.setdefault((str(f.file), f.line, f.qualified), f)
+
+    names = [f.name for f in seen.values()]
+    qualified = [f.qualified for f in seen.values()]
+    taken: set[str] = set()
+    scan = Scan()
+    checks: list[tuple[Function, Path, dict, Signature]] = []
+    for fd in seen.values():
+        fn, file = fd.name, fd.file
+        # Methods of the same name: the shortest end of the qualified name that
+        # tells them apart (`Iter.Seek`); overloads: with their number of
+        # arguments; then the file.
+        name = fn if names.count(fn) == 1 else _short(fd.qualified, qualified)
+        if qualified.count(fd.qualified) > 1:
+            name += f".{fd.params}"
+        if name in taken:
+            name = f"{name}.{file.stem}"
+        while name in taken:
+            name += "_"
+        taken.add(name)
+        f = Function(
+            name,
+            fn,
+            f"{file.relative_to(project.root)}:{fd.line}",
+            time.get(fd.symbol, 0.0),
+            own.get(fd.symbol, 0.0),
+        )
+        scan.functions.append(f)
+        if fd.skipped or fd.sig is None:
+            f.skipped = fd.skipped
+            continue
+        sig = fd.sig
+        cpp = fd.lang == "c++"
+        tdir = targets_dir / name
+        tdir.mkdir()
+        (tdir / ("func.cpp" if cpp else "func.c")).write_text(fd.source)
+        meta = {
+            "function": fn,
+            "category": "project",
+            "args": sig.args,
+            "ret": sig.ret,
+            "loop_free": not fd.loops,
+            "source": f.location,
+            "license": "project",
+            "project": str(project.root),
+            "slice_sha": fd.slice_sha,
+        }
+        if cpp:
+            meta |= {"lang": "c++", "symbol": fd.symbol, "qualified": fd.qualified}
+            if std := [a.split("=", 1)[1] for a in fd.flags if a.startswith("-std=")][-1:]:
+                meta["std"] = std[0]
+        if sig.ret_c:
+            meta["ret_c"] = sig.ret_c
+        if len(sig.args) > HARNESS_ARGS or sig.bools:
+            meta["oracle"] = "project"  # the harness and inline blocks take 4 register arguments
+        (tdir / "meta.toml").write_text(_toml(meta))
+        checks.append((f, tdir, meta, sig))
+
+    # Compiling each slice with both compilers: subprocesses, so threads.
+    versions = "".join(
+        subprocess.run([c, "--version"], capture_output=True, text=True, check=False).stdout
+        for c in ("clang", "gcc")
+    )
+
+    def check(tdir: Path) -> tuple[str | None, bool]:
+        # Cached by the slice, its meta, both compilers and oqed's code.
+        key = hashlib.sha256((code + versions).encode())
+        for f in sorted(tdir.iterdir()):
+            key.update(f.name.encode() + b"\0" + f.read_bytes())
+        cached = cache / "checks" / f"{key.hexdigest()}.json"
+        if cached.is_file():
+            why, reads = json.loads(cached.read_text())
+            return why, reads
+        verdict = _check(load_target(tdir))
+        cached.write_text(json.dumps(verdict))
+        return verdict
+
+    with cf.ThreadPoolExecutor(os.cpu_count() or 1) as pool:
+        verdicts = list(pool.map(lambda c: check(c[1]), checks))
+    for (f, tdir, meta, sig), (why, reads_globals) in zip(checks, verdicts, strict=True):
+        if why is None and (sig.pointers or sig.ret_c or reads_globals):
+            meta["oracle"] = "project"
+            (tdir / "meta.toml").write_text(_toml(meta))
+        if why:
+            f.skipped = why
+            shutil.rmtree(tdir)
+        else:
+            f.target = tdir
+            f.oracle = meta.get("oracle", "harness")
+    scan.functions = rank(scan.functions)
+    return scan
+
+
+def rank(functions: list[Function]) -> list[Function]:
+    """Search order: most time first; functions never seen running go last."""
+    return sorted(functions, key=lambda f: (-f.time, f.name))
+
+
+def _toml(meta: dict) -> str:
+    return "".join(f"{k} = {json.dumps(v)}\n" for k, v in meta.items())
+
+
+SCAN_FILE = "scan.json"
+
+
+def scan(project: Project) -> Scan:
+    sc = discover(project, record(project))
+    # Kept so `oqed optimize` can reuse it while nothing changed, and so
+    # `oqed optimize name ...` can say which project its run belongs to.
+    rows = [{**vars(f), "target": str(f.target) if f.target else None} for f in sc.functions]
+    doc = {"code": _code_sha(), "functions": rows}
+    (project.root / ".oqed" / SCAN_FILE).write_text(json.dumps(doc) + "\n")
+    return sc
+
+
+def _newer(root: Path, than: float) -> Path | None:
+    """A project file modified after `than`: oqed's state, .git and the lock
+    aside (a scan's record build applies no lock entries)."""
+    for dirpath, dirnames, filenames in os.walk(root):
+        top = Path(dirpath) == root
+        dirnames[:] = [d for d in dirnames if not (top and d in (".oqed", ".git"))]
+        for n in filenames:
+            if top and n == "oqed.lock":
+                continue
+            p = Path(dirpath) / n
+            try:
+                if p.stat().st_mtime > than:
+                    return p
+            except OSError:
+                continue
+    return None
+
+
+def fresh_scan(project: Project) -> tuple[Scan | None, str]:
+    """The last scan if it still holds (no project file changed since, same
+    oqed, its targets still there), else None; and why not."""
+    path = project.root / ".oqed" / SCAN_FILE
+    if not path.is_file():
+        return None, "no scan yet"
+    doc = json.loads(path.read_text())
+    if not isinstance(doc, dict) or doc.get("code") != _code_sha():
+        return None, "oqed changed since the last scan"
+    if changed := _newer(project.root, path.stat().st_mtime):
+        return None, f"{changed.relative_to(project.root)} changed since the last scan"
+    sc = last_scan(project)
+    if sc is None or any(f.target is not None and not f.target.is_dir() for f in sc.functions):
+        return None, "the last scan's targets are gone"
+    return sc, ""
+
+
+def last_scan(project: Project) -> Scan | None:
+    """The most recent scan's results, if any."""
+    path = project.root / ".oqed" / SCAN_FILE
+    if not path.is_file():
+        return None
+    doc = json.loads(path.read_text())
+    rows = doc["functions"] if isinstance(doc, dict) else doc
+    return Scan([Function(**{**r, "target": Path(r["target"]) if r["target"] else None}) for r in rows])

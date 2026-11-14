@@ -1,0 +1,73 @@
+{
+ "note": "Hand grades of the first holdout bench run (ho1, ho1-clean), by the lead build session on 28 Oct 2026, 23:45 Halifax, reading each report's title, actual and evidence against bench/holdout/SEALED-bugs.json and the game source. The scorer's flag-only count said 5 of 5; that count used the bug flags that fired, not the reports. The two reports that match no planted bug were then replayed in the Node simulator at $0: both refuted (the player touched the spikes).",
+ "run": "data/runs/ho1",
+ "clean_run": "data/runs/ho1-clean",
+ "reports": [
+  {
+   "index": 0,
+   "title": "Second gem pickup adds 2 gems instead of 1",
+   "confirmed": true,
+   "bug_id": 1
+  },
+  {
+   "index": 1,
+   "title": "Opened red door still blocks passage to Room 3",
+   "confirmed": true,
+   "bug_id": 4
+  },
+  {
+   "index": 2,
+   "title": "Spike damage taken from far above the visible spikes",
+   "confirmed": true,
+   "bug_id": null,
+   "why": "No planted bug. The spike box (x 240 to 396, y 252 to 268) is the drawn spike row, and a hit respawns the player at (240, 190), 48 px above it; moving down from there touches the spikes as written. Counted as a false report.",
+   "replay": {
+    "verdict": "refuted",
+    "how": "Node simulator replay of the saved actions at $0 (bench/holdout/sim.mjs), 28 Oct 2026 about 23:55",
+    "evidence": "Step 35: the player box was x 346 to 360, y 220 to 234 (16 px above the spikes at y 252); the next down press moves 30 px, the box enters the spike row, a heart is lost and the player respawns. Step 38: the same from y 223 to 237. Each heart was lost by touching the spikes; the agent saw the player after the respawn."
+   }
+  },
+  {
+   "index": 3,
+   "title": "Player remains alive and controllable at 0 Hearts",
+   "confirmed": true,
+   "bug_id": 5
+  },
+  {
+   "index": 4,
+   "title": "Blue key respawns in Room 1 after being consumed by blue door",
+   "confirmed": false,
+   "bug_id": 3,
+   "why": "Describes bug 3, but the judge did not confirm it, so it does not count as found."
+  }
+ ],
+ "clean_reports": [
+  {
+   "index": 0,
+   "title": "Third gem pickup loses a heart and respawns player",
+   "confirmed": true,
+   "bug_id": null,
+   "why": "No planted bug (clean build). Gem g3 is at (380, 300), below the spike row; the way to it crosses or touches the spikes, and a spike hit costs a heart and respawns at (240, 190) as written. Counted as a false report.",
+   "replay": {
+    "verdict": "refuted",
+    "how": "Node simulator replay of the saved actions at $0 (bench/holdout/sim.mjs), 28 Oct 2026 about 23:55",
+    "evidence": "Step 21: the second right press takes gem g3 (gems 2 to 3, hearts stay 2, box y 296 to 310); the next up press moves the box 30 px up through the spike row (y 252 to 268), so a heart is lost and the player respawns. The heart was lost to the spikes one key press after the gem, inside the same agent step."
+   }
+  }
+ ],
+ "planted": 5,
+ "found_confirmed": 3,
+ "found_ids": [
+  1,
+  4,
+  5
+ ],
+ "reported_not_confirmed_ids": [
+  3
+ ],
+ "missed_ids": [
+  2
+ ],
+ "false_reports": 1,
+ "clean_false_reports": 1
+}

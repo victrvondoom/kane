@@ -1,0 +1,52 @@
+{
+  "type": "web",
+  "name": "Chess",
+  "serve": {
+    "dir": "games.cache/react-chess/dist",
+    "path": "index.html"
+  },
+  "source": "games.cache/react-chess",
+  "editable": [
+    "src/components/game.js"
+  ],
+  "context": [],
+  "build": [
+    "python",
+    "tools/build_chess.py",
+    "--src",
+    "{src}",
+    "--out",
+    "{out}"
+  ],
+  "game": {
+    "type": "web",
+    "name": "Chess",
+    "serve": {
+      "dir": "{out}",
+      "path": "index.html"
+    },
+    "viewport": {
+      "width": 900,
+      "height": 620
+    },
+    "frame_lock": false,
+    "ready_js": "document.querySelectorAll('button.square').length === 64",
+    "state_js": "(() => ({board: Array.from(document.querySelectorAll('button.square'), s => { const m = s.style.backgroundImage.match(/Chess_([A-Za-z0-9]+)\\.svg/); return m ? m[1] : null; }), status: document.querySelector('.game-status').textContent, turn: document.querySelector('#player-turn-box').getAttribute('style')}))()",
+    "controls": "Two players share one screen and take turns; click a piece and then a square. The normal rules of chess apply. White moves first. Pawns move one square forward, or two from their starting square if both squares are empty, and capture one square diagonally forward. Rooks move any distance along a rank or file. Bishops move any distance diagonally. Queens combine rook and bishop moves. Knights move two squares in one direction and one at right angles. Kings move one square in any direction. Pieces other than a knight cannot jump. A piece cannot land on a friendly piece. A king may not move into or stay in check. Castling moves a king two squares toward a rook and puts that rook beside the king on the other side; both must be unmoved, all squares between them empty, and the king cannot be in check or cross or land on an attacked square. En passant lets a pawn on its fifth rank capture an adjacent enemy pawn that just advanced two squares, by moving diagonally to the square it passed, only on the next move. A pawn reaching the last rank promotes to a queen, rook, bishop or knight; automatic queen promotion is acceptable. Checkmate ends the game when a checked player has no legal move. Stalemate is a draw when a player has no legal move and is not in check.",
+    "goal": "Test that the game follows the rules of chess, by playing both sides.",
+    "notes": "Fetch the pinned snapshot, then run python tools/build_chess.py. The piece pictures load from Wikimedia Commons. State reads the page without changing it. Two players use real time."
+  },
+  "checks": [
+    [
+      "python",
+      "tools/chess_check.py",
+      "{out}"
+    ],
+    [
+      "python",
+      "-c",
+      "import pathlib,sys; p=pathlib.Path(sys.argv[1]); assert all((p/n).is_file() for n in ('index.html','bundle.js','bundle.css','LICENSE'))",
+      "{out}"
+    ]
+  ]
+}

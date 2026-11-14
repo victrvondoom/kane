@@ -1,0 +1,18 @@
+{
+ "type": "doom",
+ "name": "Freedoom (Doom engine) defend",
+ "scenario": "defend_the_center.cfg",
+ "win": "kill",
+ "shot_width": 640,
+ "hold_ticks": 9,
+ "seed": 1,
+ "vars": [
+  "HEALTH",
+  "AMMO2",
+  "KILLCOUNT",
+  "POSITION_X",
+  "POSITION_Y"
+ ],
+ "controls": "forward and back walk. left and right turn. strafe_left and strafe_right move sideways. space uses things or opens doors. f shoots.",
+ "goal": "Monsters are coming. Turn to face a monster and shoot it. Say in one short sentence what you see before each move."
+}

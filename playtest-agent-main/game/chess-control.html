@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chess</title>
+<style>
+body { background: #ececea; color: #222; font: 16px system-ui, sans-serif; margin: 20px; }
+main { display: flex; gap: 28px; align-items: flex-start; }
+#board { display: grid; grid-template-columns: repeat(8, 56px); border: 2px solid #444; }
+.square { width: 56px; height: 56px; padding: 0; border: 0; font: 42px "Segoe UI Symbol", "DejaVu Sans", serif; cursor: pointer; }
+.light-square { background: #eaf0ce; }
+.dark-square { background: #bbbe64; }
+.square.selected { box-shadow: inset 0 0 0 4px #256d3a; }
+.square:focus-visible { outline: 3px solid #235cca; outline-offset: -3px; }
+#player-turn-box { width: 32px; height: 32px; border: 1px solid #222; }
+aside { max-width: 320px; }
+h1 { margin: 0 0 16px; font-size: 26px; }
+.game-status { min-height: 48px; margin-top: 18px; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>Chess</h1>
+<main>
+<div id="board" aria-label="Chess board"></div>
+<aside>
+<h2>Turn</h2>
+<div id="player-turn-box"></div>
+<p id="turn-label"></p>
+<div class="game-status" role="status" aria-live="polite"></div>
+<p>Two players share one screen and take turns. Click a piece and then a square.</p>
+<p>Normal chess rules apply. Pawns promote to a queen automatically.</p>
+<button id="new-game" type="button">New game</button>
+</aside>
+</main>
+<script src="chess_control_engine.js"></script>
+<script>
+'use strict';
+let game = new ChessEngine.Chess(), selected = null;
+const glyphs = {K:'♔', Q:'♕', R:'♖', B:'♗', N:'♘', P:'♙', k:'♚', q:'♛', r:'♜', b:'♝', n:'♞', p:'♟'};
+const codes = {K:'klt45', Q:'qlt45', R:'rlt45', B:'blt45', N:'nlt45', P:'plt45', k:'kdt45', q:'qdt45', r:'rdt45', b:'bdt45', n:'ndt45', p:'pdt45'};
+const names = {k:'king', q:'queen', r:'rook', b:'bishop', n:'knight', p:'pawn'};
+const squareName = i => 'abcdefgh'[i % 8] + (8 - Math.floor(i / 8));
+const buttons = Array.from({length:64}, (_, i) => {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'square ' + ((Math.floor(i / 8) + i % 8) % 2 ? 'dark-square' : 'light-square');
+  button.addEventListener('click', () => clickSquare(i));
+  document.querySelector('#board').appendChild(button);
+  return button;
+});
+function draw(message = '') {
+  const status = game.status(), side = game.turn === 'w' ? 'White' : 'Black';
+  buttons.forEach((button, i) => {
+    const piece = game.board[i];
+    button.textContent = piece ? glyphs[piece] : '';
+    button.dataset.piece = piece ? codes[piece] : '';
+    button.classList.toggle('selected', selected === i);
+    button.setAttribute('aria-pressed', String(selected === i));
+    button.setAttribute('aria-label', squareName(i) + (piece ? ' ' + (piece === piece.toUpperCase() ? 'White ' : 'Black ') + names[piece.toLowerCase()] : ' empty'));
+  });
+  document.querySelector('#player-turn-box').style.backgroundColor = game.turn === 'w' ? 'white' : 'black';
+  document.querySelector('#turn-label').textContent = side;
+  document.querySelector('.game-status').textContent = status.type === 'checkmate'
+    ? 'Checkmate. ' + (status.winner === 'w' ? 'White' : 'Black') + ' wins.'
+    : status.type === 'stalemate' ? 'Stalemate'
+    : status.type === 'check' ? 'Check. ' + side + ' to move.' : message;
+}
+function clickSquare(i) {
+  if (['checkmate', 'stalemate'].includes(game.status().type)) return;
+  const p = game.board[i];
+  const own = p && (p === p.toUpperCase() ? 'w' : 'b') === game.turn;
+  if (selected === null || own) {
+    selected = own ? i : null;
+    draw(own ? 'Choose a destination.' : 'Choose your piece.');
+    return;
+  }
+  const moved = game.move(squareName(selected) + squareName(i));
+  selected = null;
+  draw(moved ? '' : 'Illegal move. Choose a piece and try again.');
+}
+document.querySelector('#new-game').addEventListener('click', () => {
+  game = new ChessEngine.Chess(); selected = null; draw();
+});
+draw();
+</script>
+</body>
+</html>

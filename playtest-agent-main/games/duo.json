@@ -1,0 +1,23 @@
+{
+ "type": "web",
+ "name": "Switch Partners",
+ "url": "game/duo.html",
+ "url_query": {"bugs": "{bugs}"},
+ "viewport": {"width": 800, "height": 440},
+ "ready_js": "window.__ready === true",
+ "frame_js": "window.__frame",
+ "frame_lock": true,
+ "hold_frames": 15,
+ "settle_frames": 4,
+ "state_js": "window.__state()",
+ "won_js": "window.__won === true",
+ "bug_js": "window.__bugHit",
+ "controls": "Player 1 uses arrows and Enter. Player 2 uses WASD and Q.",
+ "players": [
+  {"id": 1, "controls": "You are the blue player 1. Left and right arrows walk. Up jumps. Down stops. Enter holds or releases a nearby switch. Hold the left switch while your partner passes the gate, then cross while they hold the right switch. Both reach the exit.",
+   "keys": {"left": "ArrowLeft", "right": "ArrowRight", "up": "ArrowUp", "down": "ArrowDown", "enter": "Enter"}},
+  {"id": 2, "controls": "You are the gold player 2. A and D walk. W jumps. S stops. Q holds or releases a nearby switch. Cross while your partner holds the left switch, then hold the right switch for them. Both reach the exit.",
+   "keys": {"a": "a", "d": "d", "w": "w", "s": "s", "q": "q", "KeyA": "a", "KeyD": "d", "KeyW": "w", "KeyS": "s", "KeyQ": "q"}}
+ ],
+ "goal": "Work together: one player holds the left switch while the other crosses the gate and holds the right switch. Then both cross and reach the green exit. A switch stays held until its player moves or uses it again. Test the controls and file any bugs you see."
+}

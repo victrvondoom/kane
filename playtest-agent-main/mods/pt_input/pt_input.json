@@ -1,0 +1,10 @@
+{
+  "id": "pt_input",
+  "name": "Test input (unofficial)",
+  "author": "Playtest Agent",
+  "description": "An unofficial test tool, not made by or linked to the game's maker, and not shared or sold.",
+  "version": "0.1.0",
+  "has_pck": false,
+  "has_dll": true,
+  "affects_gameplay": false
+}

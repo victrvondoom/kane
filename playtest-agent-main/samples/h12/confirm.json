@@ -1,0 +1,140 @@
+[
+ {
+  "title": "Shed door says it opens but remains closed and blocks left coin",
+  "expected": "Pressing E next to orange shed door should visibly open/remove it so leftmost coin area is reachable.",
+  "actual": "Message 'The shed door opens.' appeared, but orange door sprite remained fully closed in place; repeated E and walking/jumping left could not pass it and leftmost coin remained unreachable behind it.",
+  "step": 14,
+  "reproducible": true,
+  "confirmed": true,
+  "evidence": "Frames 1-2 show 'The shed door opens.'; all 12 frames including final show orange vertical door on left still present; x: 71 -> 71 (unchanged), y: 226 -> 226 (unchanged), shedOpen: True -> True (unchanged)",
+  "judge": "{\"expected_change\": \"Pressing E next to orange shed door should visibly open/remove it so leftmost coin area is reachable.\", \"observed_change\": \"Message announced opening but orange door sprite remained fully closed in place through final frame and player position never advanced past it.\", \"gap\": \"Difference matches reported symptom: success message without visible opening/removal and continued bl",
+  "cost_usd": 0.009717,
+  "state_change": [
+   "x: 71 -> 71 (unchanged)",
+   "y: 226 -> 226 (unchanged)",
+   "coins: 0 -> 1",
+   "score: 0 -> 10",
+   "key: False -> False (unchanged)",
+   "boots: False -> False (unchanged)",
+   "won: False -> False (unchanged)",
+   "shedOpen: True -> True (unchanged)",
+   "doorOpen: False -> False (unchanged)"
+  ],
+  "status": "confirmed"
+ },
+ {
+  "title": "Character disappears/invisible after jumping toward low floating platform",
+  "expected": "Character should remain visible, land on platform or fall back to ground.",
+  "actual": "After walking right from boots shop and jumping (space/right+space), character sprite vanished completely from screen. HUD stayed Coins 1 Score 10. Left presses, jump, and even R restart did not make character reappear in screenshot.",
+  "step": 25,
+  "reproducible": true,
+  "confirmed": true,
+  "evidence": "early frames show character sprite by 'BOOTS 3c', middle to bottom row frames show empty ground with 'Coins 1 Score 10', state x: 71 -> 437 y: 226 -> 2000 coins 1->1 score 10->10",
+  "judge": "{\"expected_change\": \"Character should remain visible, land on platform or fall back to ground\", \"observed_change\": \"Character visible in early frames near boots shop then absent in later frames with HUD unchanged\", \"gap\": \"Difference matches reported symptom of persistent disappearance/invisibility\", \"verdict\": \"YES\", \"evidence\": \"early frames show character sprite by 'BOOTS 3c', middle to bottom ",
+  "cost_usd": 0.00661875,
+  "state_change": [
+   "x: 71 -> 437",
+   "y: 226 -> 2000",
+   "coins: 1 -> 1 (unchanged)",
+   "score: 10 -> 10 (unchanged)",
+   "key: False -> False (unchanged)",
+   "boots: False -> False (unchanged)",
+   "won: False -> False (unchanged)",
+   "shedOpen: True -> True (unchanged)",
+   "doorOpen: False -> False (unchanged)"
+  ],
+  "status": "confirmed"
+ },
+ {
+  "title": "R restart does not work after character disappears",
+  "expected": "Pressing R when stuck/invisible should restart level, resetting Coins/Score and respawning character.",
+  "actual": "After character vanished, pressing R left screen unchanged: Coins 1 Score 10, character still invisible, coins still collected.",
+  "step": 31,
+  "reproducible": true,
+  "confirmed": true,
+  "evidence": "Frame1 'Coins 0 Score 0' with visible character -> Frames2-4 'Coins 1 Score 10' with visible character -> final two frames 'Coins 1 Score 10' with character absent; state coins: 0 -> 1 score: 0 -> 10 with no reset to 0, x: 90 -> 315 y: 226 -> 844",
+  "judge": "{\"expected_change\": \"Pressing R should restart level, resetting Coins/Score to 0 and respawning visible character\", \"observed_change\": \"After disappearance, Coins stayed 1 Score 10 with character still invisible and coins still collected\", \"gap\": \"Matches reported symptom of R leaving screen unchanged\", \"verdict\": \"YES\", \"evidence\": \"Frame1 'Coins 0 Score 0' with visible character -> Frames2-4 'Co",
+  "cost_usd": 0.0067425,
+  "state_change": [
+   "x: 90 -> 315",
+   "y: 226 -> 844",
+   "coins: 0 -> 1",
+   "score: 0 -> 10",
+   "key: False -> False (unchanged)",
+   "boots: False -> False (unchanged)",
+   "won: False -> False (unchanged)",
+   "shedOpen: False -> False (unchanged)",
+   "doorOpen: False -> False (unchanged)"
+  ],
+  "status": "confirmed"
+ },
+ {
+  "title": "Platform coins give inconsistent score (11 instead of 10)",
+  "expected": "Every identical coin should give same reward: first ground coin gave +1 Coin, +10 Score (0->1, 0->10).",
+  "actual": "Collecting the two coins on low floating platform went from Coins 1 Score 10 to Coins 3 Score 21. That is +2 Coins but only +11 Score total for two coins, not +20 (expected Score 30). One of those coins gave non-standard score.",
+  "step": 37,
+  "reproducible": true,
+  "confirmed": true,
+  "evidence": "frame 3 shows 'Coins 1 Score 10' after first ground coin (0->1, 0->10); bottom-left frame still 'Coins 1 Score 10'; final frame shows 'Coins 3 Score 21'; state values coins: 0 -> 3 score: 0 -> 21",
+  "judge": "{\"expected_change\": \"2 platform coins should give +2 Coins and +20 Score (10 each), from Coins 1 Score 10 to Coins 3 Score 30\", \"observed_change\": \"replay goes from Coins 1 Score 10 to Coins 3 Score 21, i.e. +2 Coins but only +11 Score\", \"gap\": \"matches reported symptom of +11 total instead of +20, final Score 21 instead of 30\", \"verdict\": \"YES\", \"evidence\": \"frame 3 shows 'Coins 1 Score 10' after",
+  "cost_usd": 0.005903749999999999,
+  "state_change": [
+   "x: 90 -> 270",
+   "y: 226 -> 176",
+   "coins: 0 -> 3",
+   "score: 0 -> 21",
+   "key: False -> False (unchanged)",
+   "boots: False -> False (unchanged)",
+   "won: False -> False (unchanged)",
+   "shedOpen: False -> False (unchanged)",
+   "doorOpen: False -> False (unchanged)"
+  ],
+  "status": "confirmed"
+ },
+ {
+  "title": "Boots purchased but HUD still says Boots no",
+  "expected": "Buying boots for 3c should set Boots to yes and grant boots effect.",
+  "actual": "Paid 3 coins (Coins 3->0, message 'Thanks! Enjoy the boots!') but top bar still reads 'Boots no'.",
+  "step": 39,
+  "reproducible": true,
+  "confirmed": true,
+  "evidence": "Frame7 top bar 'Coins 3 Score 21 Key no Boots no' -> final frame top bar 'Coins 0 Score 21 Key no Boots no' with message 'Thanks! Enjoy the boots!'; state boots: False -> False unchanged, coins: 0 -> 0 hiding intermediate 3",
+  "judge": "{\"expected_change\": \"Buying boots for 3c should set Boots to yes\", \"observed_change\": \"Paid 3 coins with success message but Boots stayed no\", \"gap\": \"Missing Boots effect matches reported symptom\", \"verdict\": \"YES\", \"evidence\": \"Frame7 top bar 'Coins 3 Score 21 Key no Boots no' -> final frame top bar 'Coins 0 Score 21 Key no Boots no' with message 'Thanks! Enjoy the boots!'; state boots: False ->",
+  "cost_usd": 0.00582225,
+  "state_change": [
+   "x: 90 -> 180",
+   "y: 226 -> 226 (unchanged)",
+   "coins: 0 -> 0 (unchanged)",
+   "score: 0 -> 21",
+   "key: False -> False (unchanged)",
+   "boots: False -> False (unchanged)",
+   "won: False -> False (unchanged)",
+   "shedOpen: False -> False (unchanged)",
+   "doorOpen: False -> False (unchanged)"
+  ],
+  "status": "confirmed"
+ },
+ {
+  "title": "Character can fall through ground edge and disappears below platform",
+  "expected": "Character should stand on solid tiled ground and not sink through it.",
+  "actual": "After right+space from under low platform, character landed partially sunk, then disappeared below ground on subsequent move; screenshot shows no character on solid ground.",
+  "step": 54,
+  "reproducible": true,
+  "confirmed": true,
+  "evidence": "y: 226 -> 388 shows fall below ground level; x: 90 -> 307 shows move right; middle frames show character standing on tiled ground, frame 8 shows character at right edge of ground, final frame shows solid ground with no character visible",
+  "judge": "{\"expected_change\": \"Character should stand on solid tiled ground and not sink through it.\", \"observed_change\": \"Character moves right and jumps, collects coin, lands on ground, then sinks at right edge and disappears below platform\", \"gap\": \"Difference matches reported symptom of landing sunk then disappearing below ground\", \"verdict\": \"YES\", \"evidence\": \"y: 226 -> 388 shows fall below ground lev",
+  "cost_usd": 0.00668825,
+  "state_change": [
+   "x: 90 -> 307",
+   "y: 226 -> 388",
+   "coins: 0 -> 1",
+   "score: 0 -> 10",
+   "key: False -> False (unchanged)",
+   "boots: False -> False (unchanged)",
+   "won: False -> False (unchanged)",
+   "shedOpen: False -> False (unchanged)",
+   "doorOpen: False -> False (unchanged)"
+  ],
+  "status": "confirmed"
+ }
+]

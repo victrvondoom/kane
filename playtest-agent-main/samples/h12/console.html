@@ -1,0 +1,963 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Run console</title><style>
+:root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0 auto; padding: 16px; max-width: 960px; line-height: 1.5; }
+nav { position: sticky; top: 0; background: Canvas; padding: 12px 0; }
+button { padding: 12px; cursor: pointer; font: inherit; }
+progress { display: block; width: 100%; margin-top: 12px; }
+img { display: block; max-width: 100%; height: auto; border-radius: 8px; }
+pre, .model { white-space: pre-wrap; overflow-wrap: anywhere; }
+li, aside, .marker { overflow-wrap: anywhere; }
+aside, .marker { border: 1px solid GrayText; border-radius: 8px; padding: 12px; }
+.badge { font-weight: bold; }
+[hidden] { display: none; }
+@media (max-width: 480px) { body { padding: 8px; } button { padding: 10px; } }
+</style></head><body><h1>Run console</h1>
+<nav aria-label="Step controls"><button id="previous">Previous</button>
+<button id="next">Next</button><button id="play">Play to end</button>
+<span id="position" aria-live="polite"></span><progress id="progress" value="1" max="1"></progress></nav>
+<p>Vision: normal</p><section class="frame"><h2>Step 0</h2><img src="s000.jpg" alt="Screenshot for step 0"><p class="model">Starting your sweep — noting the shop, coins and doors, then testing the nearest pickups first.</p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.01018. Latency 9.625 s. Running cost $0.01018.</p><p class="marker">Diary: I started by scoping the shop, coins and doors and planned to test the nearest pickups first.</p></section><section class="frame" hidden><h2>Step 1</h2><img src="s001.jpg" alt="Screenshot for step 1"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;e&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00452. Latency 29.662 s. Running cost $0.01471.</p></section><section class="frame" hidden><h2>Step 2</h2><img src="s002.jpg" alt="Screenshot for step 2"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.01228. Latency 15.03 s. Running cost $0.02699.</p></section><section class="frame" hidden><h2>Step 3</h2><img src="s003.jpg" alt="Screenshot for step 3"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00635. Latency 16.377 s. Running cost $0.03334.</p></section><section class="frame" hidden><h2>Step 4</h2><img src="s004.jpg" alt="Screenshot for step 4"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;e&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.01932. Latency 15.826 s. Running cost $0.05267.</p></section><section class="frame" hidden><h2>Step 5</h2><img src="s005.jpg" alt="Screenshot for step 5"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;,
+        &quot;space&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00671. Latency 13.833 s. Running cost $0.05938.</p></section><section class="frame" hidden><h2>Step 6</h2><img src="s006.jpg" alt="Screenshot for step 6"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;,
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00380. Latency 13.488 s. Running cost $0.06318.</p></section><section class="frame" hidden><h2>Step 7</h2><img src="s007.jpg" alt="Screenshot for step 7"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;,
+        &quot;space&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.01163. Latency 12.636 s. Running cost $0.07481.</p></section><section class="frame" hidden><h2>Step 8</h2><img src="s008.jpg" alt="Screenshot for step 8"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00925. Latency 12.453 s. Running cost $0.08406.</p></section><section class="frame" hidden><h2>Step 9</h2><img src="s009.jpg" alt="Screenshot for step 9"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.01286. Latency 12.059 s. Running cost $0.09693.</p></section><section class="frame" hidden><h2>Step 10</h2><img src="s010.jpg" alt="Screenshot for step 10"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00400. Latency 12.773 s. Running cost $0.10093.</p></section><section class="frame" hidden><h2>Step 11</h2><img src="s011.jpg" alt="Screenshot for step 11"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.02601. Latency 8.145 s. Running cost $0.12694.</p></section><section class="frame" hidden><h2>Step 12</h2><img src="s012.jpg" alt="Screenshot for step 12"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00655. Latency 7.85 s. Running cost $0.13349.</p></section><section class="frame" hidden><h2>Step 13</h2><img src="s013.jpg" alt="Screenshot for step 13"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;e&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.01046. Latency 15.781 s. Running cost $0.14395.</p></section><section class="frame" hidden><h2>Step 14</h2><img src="s014.jpg" alt="Screenshot for step 14"><p class="model">The shed message says it opened but the door still blocks me, so I&#x27;ll log that and test the platforms.</p><ol><li><strong>report_bug</strong><pre>{
+  &quot;title&quot;: &quot;Shed door says it opens but remains closed and blocks left coin&quot;,
+  &quot;expected&quot;: &quot;Pressing E next to orange shed door should visibly open/remove it so leftmost coin area is reachable.&quot;,
+  &quot;actual&quot;: &quot;Message &#x27;The shed door opens.&#x27; appeared, but orange door sprite remained fully closed in place; repeated E and walking/jumping left could not pass it and leftmost coin remained unreachable behind it.&quot;
+}</pre><p>Output: noted</p></li></ol><p>Cost $0.03591. Latency 12.417 s. Running cost $0.17986.</p><p class="marker">Report: Shed door says it opens but remains closed and blocks left coin <span class="badge">Confirmed</span></p><p class="marker">Diary: I tried the shed door, it said it opened but still blocked me, so I logged it and moved to test the platforms.</p><p class="marker">Diary: I would tell the developer the shed door stays closed and blocks the left coin despite the open message.</p></section><section class="frame" hidden><h2>Step 14</h2><img src="s014.jpg" alt="Screenshot for step 14"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00867. Latency 11.652 s. Running cost $0.18853.</p><p class="marker">Report: Shed door says it opens but remains closed and blocks left coin <span class="badge">Confirmed</span></p><p class="marker">Diary: I tried the shed door, it said it opened but still blocked me, so I logged it and moved to test the platforms.</p><p class="marker">Diary: I would tell the developer the shed door stays closed and blocks the left coin despite the open message.</p></section><section class="frame" hidden><h2>Step 15</h2><img src="s015.jpg" alt="Screenshot for step 15"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;e&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00633. Latency 9.883 s. Running cost $0.19486.</p></section><section class="frame" hidden><h2>Step 16</h2><img src="s016.jpg" alt="Screenshot for step 16"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00644. Latency 9.562 s. Running cost $0.20130.</p></section><section class="frame" hidden><h2>Step 17</h2><img src="s017.jpg" alt="Screenshot for step 17"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;e&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00632. Latency 11.487 s. Running cost $0.20762.</p></section><section class="frame" hidden><h2>Step 18</h2><img src="s018.jpg" alt="Screenshot for step 18"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;,
+        &quot;space&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.03948. Latency 8.425 s. Running cost $0.24710.</p></section><section class="frame" hidden><h2>Step 19</h2><img src="s019.jpg" alt="Screenshot for step 19"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;,
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00659. Latency 9.842 s. Running cost $0.25369.</p></section><section class="frame" hidden><h2>Step 20</h2><img src="s020.jpg" alt="Screenshot for step 20"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00467. Latency 12.84 s. Running cost $0.25836.</p></section><section class="frame" hidden><h2>Step 21</h2><img src="s021.jpg" alt="Screenshot for step 21"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00893. Latency 6.836 s. Running cost $0.26730.</p></section><section class="frame" hidden><h2>Step 22</h2><img src="s022.jpg" alt="Screenshot for step 22"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;wait&quot;,
+      &quot;ms&quot;: 500
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00794. Latency 11.489 s. Running cost $0.27524.</p></section><section class="frame" hidden><h2>Step 23</h2><img src="s023.jpg" alt="Screenshot for step 23"><p class="model">The character vanished after jumping toward that low platform — checking where it went.</p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.02368. Latency 11.153 s. Running cost $0.29891.</p><p class="marker">Diary: I jumped toward the low platform and my character vanished, so I stopped to check where it went.</p></section><section class="frame" hidden><h2>Step 24</h2><img src="s024.jpg" alt="Screenshot for step 24"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;r&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00846. Latency 10.354 s. Running cost $0.30737.</p></section><section class="frame" hidden><h2>Step 25</h2><img src="s025.jpg" alt="Screenshot for step 25"><p class="model"></p><ol><li><strong>report_bug</strong><pre>{
+  &quot;title&quot;: &quot;Character disappears/invisible after jumping toward low floating platform&quot;,
+  &quot;expected&quot;: &quot;Character should remain visible, land on platform or fall back to ground.&quot;,
+  &quot;actual&quot;: &quot;After walking right from boots shop and jumping (space/right+space), character sprite vanished completely from screen. HUD stayed Coins 1 Score 10. Left presses, jump, and even R restart did not make character reappear in screenshot.&quot;
+}</pre><p>Output: noted</p></li></ol><p>Cost $0.00713. Latency 11.507 s. Running cost $0.31450.</p><p class="marker">Report: Character disappears/invisible after jumping toward low floating platform <span class="badge">Confirmed</span></p><p class="marker">Diary: I got stuck when jumping right from the boots shop made my character disappear completely with no way to bring him back.</p></section><section class="frame" hidden><h2>Step 25</h2><img src="s025.jpg" alt="Screenshot for step 25"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;reload&quot;
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.01008. Latency 10.176 s. Running cost $0.32458.</p><p class="marker">Report: Character disappears/invisible after jumping toward low floating platform <span class="badge">Confirmed</span></p><p class="marker">Diary: I got stuck when jumping right from the boots shop made my character disappear completely with no way to bring him back.</p></section><section class="frame" hidden><h2>Step 26</h2><img src="s026.jpg" alt="Screenshot for step 26"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00618. Latency 11.476 s. Running cost $0.33076.</p></section><section class="frame" hidden><h2>Step 27</h2><img src="s027.jpg" alt="Screenshot for step 27"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.05612. Latency 11.395 s. Running cost $0.38687.</p></section><section class="frame" hidden><h2>Step 28</h2><img src="s028.jpg" alt="Screenshot for step 28"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;,
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00723. Latency 20.3 s. Running cost $0.39410.</p></section><section class="frame" hidden><h2>Step 29</h2><img src="s029.jpg" alt="Screenshot for step 29"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.01238. Latency 10.836 s. Running cost $0.40649.</p></section><section class="frame" hidden><h2>Step 30</h2><img src="s030.jpg" alt="Screenshot for step 30"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;r&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00593. Latency 9.358 s. Running cost $0.41242.</p></section><section class="frame" hidden><h2>Step 31</h2><img src="s031.jpg" alt="Screenshot for step 31"><p class="model">After reloading I reproduced the vanishing, and R also failed to reset — I&#x27;ll report that separately.</p><ol><li><strong>report_bug</strong><pre>{
+  &quot;title&quot;: &quot;R restart does not work after character disappears&quot;,
+  &quot;expected&quot;: &quot;Pressing R when stuck/invisible should restart level, resetting Coins/Score and respawning character.&quot;,
+  &quot;actual&quot;: &quot;After character vanished, pressing R left screen unchanged: Coins 1 Score 10, character still invisible, coins still collected.&quot;
+}</pre><p>Output: noted</p></li></ol><p>Cost $0.01082. Latency 13.258 s. Running cost $0.42324.</p><p class="marker">Report: R restart does not work after character disappears <span class="badge">Confirmed</span></p><p class="marker">Diary: I reloaded and reproduced the vanishing, and found R also failed to reset, so I reported that separately.</p><p class="marker">Diary: I would tell the developer pressing R when invisible does not restart the level or reset Coins and Score.</p></section><section class="frame" hidden><h2>Step 31</h2><img src="s031.jpg" alt="Screenshot for step 31"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;reload&quot;
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00731. Latency 13.267 s. Running cost $0.43055.</p><p class="marker">Report: R restart does not work after character disappears <span class="badge">Confirmed</span></p><p class="marker">Diary: I reloaded and reproduced the vanishing, and found R also failed to reset, so I reported that separately.</p><p class="marker">Diary: I would tell the developer pressing R when invisible does not restart the level or reset Coins and Score.</p></section><section class="frame" hidden><h2>Step 32</h2><img src="s032.jpg" alt="Screenshot for step 32"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;r&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00604. Latency 11.661 s. Running cost $0.43659.</p></section><section class="frame" hidden><h2>Step 33</h2><img src="s033.jpg" alt="Screenshot for step 33"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00955. Latency 20.622 s. Running cost $0.44614.</p></section><section class="frame" hidden><h2>Step 34</h2><img src="s034.jpg" alt="Screenshot for step 34"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;,
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00636. Latency 11.205 s. Running cost $0.45250.</p></section><section class="frame" hidden><h2>Step 35</h2><img src="s035.jpg" alt="Screenshot for step 35"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.06905. Latency 3.978 s. Running cost $0.52155.</p></section><section class="frame" hidden><h2>Step 36</h2><img src="s036.jpg" alt="Screenshot for step 36"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.06554. Latency 15.761 s. Running cost $0.58709.</p></section><section class="frame" hidden><h2>Step 37</h2><img src="s037.jpg" alt="Screenshot for step 37"><p class="model"></p><ol><li><strong>report_bug</strong><pre>{
+  &quot;title&quot;: &quot;Platform coins give inconsistent score (11 instead of 10)&quot;,
+  &quot;expected&quot;: &quot;Every identical coin should give same reward: first ground coin gave +1 Coin, +10 Score (0-&gt;1, 0-&gt;10).&quot;,
+  &quot;actual&quot;: &quot;Collecting the two coins on low floating platform went from Coins 1 Score 10 to Coins 3 Score 21. That is +2 Coins but only +11 Score total for two coins, not +20 (expected Score 30). One of those coins gave non-standard score.&quot;
+}</pre><p>Output: noted</p></li></ol><p>Cost $0.07440. Latency 5.82 s. Running cost $0.66149.</p><p class="marker">Report: Platform coins give inconsistent score (11 instead of 10) <span class="badge">Confirmed</span></p><p class="marker">Diary: I collected the platform coins and noticed the score was off, but I had 3 coins so I went to buy the boots and check the deduction.</p><p class="marker">Diary: I would tell the developer the two platform coins only gave +11 Score total instead of +20.</p></section><section class="frame" hidden><h2>Step 37</h2><img src="s037.jpg" alt="Screenshot for step 37"><p class="model">Those platform coins paid inconsistent score — logged it. Now I have 3 coins, so I&#x27;ll buy the boots and check the deduction.</p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00999. Latency 1.981 s. Running cost $0.67148.</p><p class="marker">Report: Platform coins give inconsistent score (11 instead of 10) <span class="badge">Confirmed</span></p><p class="marker">Diary: I collected the platform coins and noticed the score was off, but I had 3 coins so I went to buy the boots and check the deduction.</p><p class="marker">Diary: I would tell the developer the two platform coins only gave +11 Score total instead of +20.</p></section><section class="frame" hidden><h2>Step 38</h2><img src="s038.jpg" alt="Screenshot for step 38"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;e&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.07589. Latency 2.893 s. Running cost $0.74737.</p></section><section class="frame" hidden><h2>Step 39</h2><img src="s039.jpg" alt="Screenshot for step 39"><p class="model"></p><ol><li><strong>report_bug</strong><pre>{
+  &quot;title&quot;: &quot;Boots purchased but HUD still says Boots no&quot;,
+  &quot;expected&quot;: &quot;Buying boots for 3c should set Boots to yes and grant boots effect.&quot;,
+  &quot;actual&quot;: &quot;Paid 3 coins (Coins 3-&gt;0, message &#x27;Thanks! Enjoy the boots!&#x27;) but top bar still reads &#x27;Boots no&#x27;.&quot;
+}</pre><p>Output: noted</p></li></ol><p>Cost $0.00784. Latency 1.469 s. Running cost $0.75520.</p><p class="marker">Report: Boots purchased but HUD still says Boots no <span class="badge">Confirmed</span></p><p class="marker">Diary: I bought the boots and the charge worked but the HUD still said no, so I tested if jumping changed anyway.</p><p class="marker">Diary: I would tell the developer buying boots takes the coins but leaves Boots as no.</p></section><section class="frame" hidden><h2>Step 39</h2><img src="s039.jpg" alt="Screenshot for step 39"><p class="model">Boots charged 3 coins but the HUD still says no — logged that. Now testing whether they change jumping anyway.</p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.01108. Latency 2.454 s. Running cost $0.76629.</p><p class="marker">Report: Boots purchased but HUD still says Boots no <span class="badge">Confirmed</span></p><p class="marker">Diary: I bought the boots and the charge worked but the HUD still said no, so I tested if jumping changed anyway.</p><p class="marker">Diary: I would tell the developer buying boots takes the coins but leaves Boots as no.</p></section><section class="frame" hidden><h2>Step 40</h2><img src="s040.jpg" alt="Screenshot for step 40"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.08090. Latency 2.418 s. Running cost $0.84719.</p></section><section class="frame" hidden><h2>Step 41</h2><img src="s041.jpg" alt="Screenshot for step 41"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;e&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.08244. Latency 1.46 s. Running cost $0.92963.</p></section><section class="frame" hidden><h2>Step 42</h2><img src="s042.jpg" alt="Screenshot for step 42"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;,
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00726. Latency 2.474 s. Running cost $0.93689.</p></section><section class="frame" hidden><h2>Step 43</h2><img src="s043.jpg" alt="Screenshot for step 43"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;,
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.01180. Latency 2.085 s. Running cost $0.94869.</p></section><section class="frame" hidden><h2>Step 44</h2><img src="s044.jpg" alt="Screenshot for step 44"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00775. Latency 4.476 s. Running cost $0.95644.</p></section><section class="frame" hidden><h2>Step 45</h2><img src="s045.jpg" alt="Screenshot for step 45"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;reload&quot;
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00706. Latency 1.963 s. Running cost $0.96350.</p></section><section class="frame" hidden><h2>Step 46</h2><img src="s046.jpg" alt="Screenshot for step 46"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.02622. Latency 2.961 s. Running cost $0.98972.</p></section><section class="frame" hidden><h2>Step 47</h2><img src="s047.jpg" alt="Screenshot for step 47"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.01342. Latency 2.379 s. Running cost $1.00314.</p></section><section class="frame" hidden><h2>Step 48</h2><img src="s048.jpg" alt="Screenshot for step 48"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;wait&quot;,
+      &quot;ms&quot;: 600
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.00941. Latency 3.246 s. Running cost $1.01255.</p></section><section class="frame" hidden><h2>Step 49</h2><img src="s049.jpg" alt="Screenshot for step 49"><p class="model">Reloaded for a cleaner route to the upper platforms — trying the jump up carefully.</p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.02715. Latency 4.987 s. Running cost $1.03970.</p><p class="marker">Diary: I reloaded for a cleaner route and tried the jump up to the upper platforms carefully.</p></section><section class="frame" hidden><h2>Step 50</h2><img src="s050.jpg" alt="Screenshot for step 50"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.01374. Latency 16.301 s. Running cost $1.05344.</p></section><section class="frame" hidden><h2>Step 51</h2><img src="s051.jpg" alt="Screenshot for step 51"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.01382. Latency 1.945 s. Running cost $1.06725.</p></section><section class="frame" hidden><h2>Step 52</h2><img src="s052.jpg" alt="Screenshot for step 52"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;,
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.01493. Latency 4.967 s. Running cost $1.08219.</p></section><section class="frame" hidden><h2>Step 53</h2><img src="s053.jpg" alt="Screenshot for step 53"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.01252. Latency 2.472 s. Running cost $1.09471.</p></section><section class="frame" hidden><h2>Step 54</h2><img src="s054.jpg" alt="Screenshot for step 54"><p class="model"></p><ol><li><strong>report_bug</strong><pre>{
+  &quot;title&quot;: &quot;Character can fall through ground edge and disappears below platform&quot;,
+  &quot;expected&quot;: &quot;Character should stand on solid tiled ground and not sink through it.&quot;,
+  &quot;actual&quot;: &quot;After right+space from under low platform, character landed partially sunk, then disappeared below ground on subsequent move; screenshot shows no character on solid ground.&quot;
+}</pre><p>Output: noted</p></li></ol><p>Cost $0.01345. Latency 5.874 s. Running cost $1.10816.</p><p class="marker">Report: Character can fall through ground edge and disappears below platform <span class="badge">Confirmed</span></p><p class="marker">Diary: I got stuck again when I fell through the ground edge and disappeared below the platform.</p></section><section class="frame" hidden><h2>Step 54</h2><img src="s054.jpg" alt="Screenshot for step 54"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;reload&quot;
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.01087. Latency 3.67 s. Running cost $1.11903.</p><p class="marker">Report: Character can fall through ground edge and disappears below platform <span class="badge">Confirmed</span></p><p class="marker">Diary: I got stuck again when I fell through the ground edge and disappeared below the platform.</p></section><section class="frame" hidden><h2>Step 55</h2><img src="s055.jpg" alt="Screenshot for step 55"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;right&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.04005. Latency 3.781 s. Running cost $1.15908.</p></section><section class="frame" hidden><h2>Step 56</h2><img src="s056.jpg" alt="Screenshot for step 56"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;left&quot;,
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.01135. Latency 2.493 s. Running cost $1.17043.</p></section><section class="frame" hidden><h2>Step 57</h2><img src="s057.jpg" alt="Screenshot for step 57"><p class="model"></p><ol><li><strong>act</strong><pre>{
+  &quot;actions&quot;: [
+    {
+      &quot;type&quot;: &quot;keypress&quot;,
+      &quot;keys&quot;: [
+        &quot;space&quot;
+      ]
+    }
+  ]
+}</pre><p>Output: done</p></li></ol><p>Cost $0.10959. Latency 6.545 s. Running cost $1.28002.</p></section>
+<script>
+const frames = Array.from(document.querySelectorAll('.frame'));
+const previous = document.getElementById('previous');
+const next = document.getElementById('next');
+const play = document.getElementById('play');
+const progress = document.getElementById('progress');
+const position = document.getElementById('position');
+let current = 0, timer = null;
+function stop() { clearInterval(timer); timer = null; play.textContent = 'Play to end'; }
+function show(index) {
+  current = Math.max(0, Math.min(frames.length - 1, index));
+  frames.forEach((frame, i) => { frame.hidden = i !== current; });
+  previous.disabled = current === 0;
+  next.disabled = current === frames.length - 1;
+  progress.max = frames.length;
+  progress.value = current + 1;
+  position.textContent = `${current + 1} / ${frames.length}`;
+  if (current === frames.length - 1) stop();
+}
+previous.onclick = () => { stop(); show(current - 1); };
+next.onclick = () => { stop(); show(current + 1); };
+play.onclick = () => {
+  if (timer) { stop(); return; }
+  if (current === frames.length - 1) show(0);
+  play.textContent = 'Pause';
+  timer = setInterval(() => show(current + 1), 1000);
+};
+document.addEventListener('keydown', event => {
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+    event.preventDefault(); stop(); show(current + (event.key === 'ArrowRight' ? 1 : -1));
+  }
+});
+show(0);
+</script></body></html>

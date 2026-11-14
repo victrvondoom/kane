@@ -1,0 +1,19 @@
+{
+  "type": "web",
+  "name": "Hextris",
+  "serve": {
+    "dir": "games.cache/hextris",
+    "path": "index.html"
+  },
+  "viewport": {
+    "width": 800,
+    "height": 800
+  },
+  "frame_lock": false,
+  "ready_js": "typeof window.score === 'number' && typeof window.MainHex === 'object' && typeof window.gameState === 'number'",
+  "state_js": "({score: window.score, gameState: window.gameState, sides: window.MainHex.blocks.map(side => side.map(b => ({color: b.color, deleted: b.deleted})))})",
+  "won_js": "typeof window.score === 'number' && window.score >= 9",
+  "controls": "Click the central play button to start. Left and right arrows rotate the hexagon. Match three touching blocks of one colour to clear them. Down speeds falling blocks. P pauses. Enter restarts.",
+  "goal": "Clear a group of at least three blocks of one colour and reach a score of at least 9.",
+  "notes": "Run python -m tools.fetch_games first. GPLv3 game, downloaded for local play only and never shipped in git. Reads score, gameState and MainHex without changing game files. Random blocks and no replay frame counter: reports show Not reproducible and recordings use real time. Browser proof within about 40 steps is owed. Upstream includes remote ads, analytics and fonts; use --offline with a local model to block these requests. The offline flag also blocks the paid model service."
+}

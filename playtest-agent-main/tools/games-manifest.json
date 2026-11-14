@@ -1,0 +1,37 @@
+[
+  {
+    "name": "2048",
+    "repo": "gabrielecirulli/2048",
+    "commit": "478b6ec346e3787f589e4af751378d06ded4cbbc",
+    "url": "https://codeload.github.com/gabrielecirulli/2048/zip/478b6ec346e3787f589e4af751378d06ded4cbbc",
+    "sha256": "aba89e4aa20419312f712d7f6d4d038f0e25096591120e2f483f7364108ced29"
+  },
+  {
+    "name": "hextris",
+    "repo": "Hextris/hextris",
+    "commit": "3f4847dc8fd7dab3d1c87e6324b9159d92fbd396",
+    "url": "https://codeload.github.com/Hextris/hextris/zip/3f4847dc8fd7dab3d1c87e6324b9159d92fbd396",
+    "sha256": "2f4df1172c91c475285fa5fd9a2d313d73e35fd6bb11fccafe47c8bec9e02268"
+  },
+  {
+    "name": "tetris",
+    "repo": "jakesgordon/javascript-tetris",
+    "commit": "e5c0c42f7dac0f3514a55eff656c6e22e95d68ed",
+    "url": "https://codeload.github.com/jakesgordon/javascript-tetris/zip/e5c0c42f7dac0f3514a55eff656c6e22e95d68ed",
+    "sha256": "0b22208ea3c60b14f84165161a4271cdc2e99a36e2cd997db5c6af26be92bf7c"
+  },
+  {
+    "name": "breakout",
+    "repo": "jakesgordon/javascript-breakout",
+    "commit": "eed59e2affa9423b93d2ac8ff93061bb88b33284",
+    "url": "https://codeload.github.com/jakesgordon/javascript-breakout/zip/eed59e2affa9423b93d2ac8ff93061bb88b33284",
+    "sha256": "7508372f6622c0430de6415091220f3201a504065514cc149be20d41e1183d70"
+  },
+  {
+    "name": "react-chess",
+    "repo": "TalhaAwan/react-chess",
+    "commit": "a2a7e0eff634d8375e80a94ff8d0558d8490d643",
+    "url": "https://codeload.github.com/TalhaAwan/react-chess/zip/a2a7e0eff634d8375e80a94ff8d0558d8490d643",
+    "sha256": "b37f31d086b0b82c9605ae99de9d9e200ed684c804c9e7f123ab784a54b5eedf"
+  }
+]

@@ -1,0 +1,1633 @@
+{
+ "bugs_on": "",
+ "steps": 10,
+ "cost_usd": 0.30484,
+ "reports": [],
+ "actions_by_step": [
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "space"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "right"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "right"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "right"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "right"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "right"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "right"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "right"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "right"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   }
+  ]
+ ],
+ "log": [
+  {
+   "step": 0,
+   "t": 4.51,
+   "shot_t": 0.0,
+   "cost": 0.012628,
+   "latency_s": 4.4,
+   "in": 1692,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "space"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"space\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "Starting the game — I'll lay the first pieces flat to build a full bottom row.",
+   "out": 293,
+   "reasoning_tokens": 209,
+   "spans": [
+    {
+     "from_s": 1793242363.0704963,
+     "to_s": 1793242363.4119153
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 1,
+   "t": 10.03,
+   "shot_t": 4.85,
+   "cost": 0.0120864,
+   "latency_s": 5.093,
+   "in": 2876,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 343,
+   "reasoning_tokens": 245,
+   "spans": [
+    {
+     "from_s": 1793242368.5932124,
+     "to_s": 1793242368.9273093
+    },
+    {
+     "from_s": 1793242368.927311,
+     "to_s": 1793242369.2668781
+    },
+    {
+     "from_s": 1793242369.2668817,
+     "to_s": 1793242369.6059363
+    },
+    {
+     "from_s": 1793242369.605938,
+     "to_s": 1793242369.9463894
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 2,
+   "t": 14.11,
+   "shot_t": 11.38,
+   "cost": 0.0085248,
+   "latency_s": 2.639,
+   "in": 4110,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 137,
+   "reasoning_tokens": 39,
+   "spans": [
+    {
+     "from_s": 1793242372.6741376,
+     "to_s": 1793242373.0077736
+    },
+    {
+     "from_s": 1793242373.007776,
+     "to_s": 1793242373.3472586
+    },
+    {
+     "from_s": 1793242373.3472612,
+     "to_s": 1793242373.6878085
+    },
+    {
+     "from_s": 1793242373.6878116,
+     "to_s": 1793242374.0277493
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 3,
+   "t": 23.74,
+   "shot_t": 15.47,
+   "cost": 0.0153128,
+   "latency_s": 8.163,
+   "in": 5138,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"down\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 514,
+   "reasoning_tokens": 416,
+   "spans": [
+    {
+     "from_s": 1793242382.3003151,
+     "to_s": 1793242382.6390848
+    },
+    {
+     "from_s": 1793242382.6390865,
+     "to_s": 1793242382.9782097
+    },
+    {
+     "from_s": 1793242382.9782114,
+     "to_s": 1793242383.3182988
+    },
+    {
+     "from_s": 1793242383.3183007,
+     "to_s": 1793242383.6567457
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 4,
+   "t": 38.9,
+   "shot_t": 25.09,
+   "cost": 0.0326216,
+   "latency_s": 13.728,
+   "in": 6943,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "The yellow square is in the corner and a blue piece filled columns 4–5. The orange L can fill columns 2–3, so I'll shift it left and drop it.",
+   "out": 1213,
+   "reasoning_tokens": 1069,
+   "spans": [
+    {
+     "from_s": 1793242397.4593203,
+     "to_s": 1793242397.8039799
+    },
+    {
+     "from_s": 1793242397.803982,
+     "to_s": 1793242398.1454127
+    },
+    {
+     "from_s": 1793242398.1454146,
+     "to_s": 1793242398.484732
+    },
+    {
+     "from_s": 1793242398.484734,
+     "to_s": 1793242398.8243642
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 5,
+   "t": 59.14,
+   "shot_t": 40.26,
+   "cost": 0.035452,
+   "latency_s": 18.765,
+   "in": 9563,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "right"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "right"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "right"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "right"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"right\"]},{\"type\":\"keypress\",\"keys\":[\"right\"]},{\"type\":\"keypress\",\"keys\":[\"right\"]},{\"type\":\"keypress\",\"keys\":[\"right\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 1171,
+   "reasoning_tokens": 1073,
+   "spans": [
+    {
+     "from_s": 1793242417.7089345,
+     "to_s": 1793242418.0517778
+    },
+    {
+     "from_s": 1793242418.0517795,
+     "to_s": 1793242418.3922205
+    },
+    {
+     "from_s": 1793242418.3922222,
+     "to_s": 1793242418.7331283
+    },
+    {
+     "from_s": 1793242418.73313,
+     "to_s": 1793242419.0736206
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 6,
+   "t": 71.32,
+   "shot_t": 60.51,
+   "cost": 0.03052,
+   "latency_s": 10.739,
+   "in": 12572,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 809,
+   "reasoning_tokens": 711,
+   "spans": [
+    {
+     "from_s": 1793242429.8876588,
+     "to_s": 1793242430.213791
+    },
+    {
+     "from_s": 1793242430.2137933,
+     "to_s": 1793242430.553062
+    },
+    {
+     "from_s": 1793242430.553064,
+     "to_s": 1793242430.877543
+    },
+    {
+     "from_s": 1793242430.877545,
+     "to_s": 1793242431.2029257
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 7,
+   "t": 88.53,
+   "shot_t": 72.64,
+   "cost": 0.08135200000000001,
+   "latency_s": 15.802,
+   "in": 15478,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"down\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 972,
+   "reasoning_tokens": 874,
+   "spans": [
+    {
+     "from_s": 1793242447.0941594,
+     "to_s": 1793242447.4265368
+    },
+    {
+     "from_s": 1793242447.426538,
+     "to_s": 1793242447.7504623
+    },
+    {
+     "from_s": 1793242447.750466,
+     "to_s": 1793242448.0917256
+    },
+    {
+     "from_s": 1793242448.0917282,
+     "to_s": 1793242448.417084
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 8,
+   "t": 96.18,
+   "shot_t": 89.85,
+   "cost": 0.0269232,
+   "latency_s": 6.227,
+   "in": 19123,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "right"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "right"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "right"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "right"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"right\"]},{\"type\":\"keypress\",\"keys\":[\"right\"]},{\"type\":\"keypress\",\"keys\":[\"right\"]},{\"type\":\"keypress\",\"keys\":[\"right\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 462,
+   "reasoning_tokens": 364,
+   "spans": [
+    {
+     "from_s": 1793242454.7471015,
+     "to_s": 1793242455.0952878
+    },
+    {
+     "from_s": 1793242455.0952904,
+     "to_s": 1793242455.4346135
+    },
+    {
+     "from_s": 1793242455.4346159,
+     "to_s": 1793242455.7737436
+    },
+    {
+     "from_s": 1793242455.7737467,
+     "to_s": 1793242456.0987403
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 9,
+   "t": 102.76,
+   "shot_t": 97.54,
+   "cost": 0.0494184,
+   "latency_s": 5.122,
+   "in": 22490,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 354,
+   "reasoning_tokens": 256,
+   "spans": [
+    {
+     "from_s": 1793242461.320685,
+     "to_s": 1793242461.6641216
+    },
+    {
+     "from_s": 1793242461.6641247,
+     "to_s": 1793242462.0044181
+    },
+    {
+     "from_s": 1793242462.00442,
+     "to_s": 1793242462.3286912
+    },
+    {
+     "from_s": 1793242462.328693,
+     "to_s": 1793242462.669024
+    }
+   ],
+   "checklist": []
+  }
+ ],
+ "fallbacks": 0,
+ "started_at": 1793242358.5641613,
+ "checklist": [],
+ "nudges": 0,
+ "final_tick": null,
+ "stop": "won",
+ "seconds": 104.1,
+ "final_text": "",
+ "won": true,
+ "bug_hits": null,
+ "final_state": {
+  "score": 270,
+  "rows": 1,
+  "playing": false,
+  "current": {
+   "type": {
+    "size": 4,
+    "blocks": [
+     3840,
+     8738,
+     240,
+     17476
+    ],
+    "color": "cyan"
+   },
+   "dir": 0,
+   "x": 2,
+   "y": 0
+  },
+  "next": {
+   "type": {
+    "size": 3,
+    "blocks": [
+     3648,
+     19520,
+     19968,
+     17984
+    ],
+    "color": "purple"
+   },
+   "dir": 0,
+   "x": 4,
+   "y": 0
+  },
+  "blocks": [
+   [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    {
+     "size": 3,
+     "blocks": [
+      3648,
+      19520,
+      19968,
+      17984
+     ],
+     "color": "purple"
+    },
+    null,
+    {
+     "size": 2,
+     "blocks": [
+      52224,
+      52224,
+      52224,
+      52224
+     ],
+     "color": "yellow"
+    },
+    {
+     "size": 2,
+     "blocks": [
+      52224,
+      52224,
+      52224,
+      52224
+     ],
+     "color": "yellow"
+    }
+   ],
+   [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    {
+     "size": 3,
+     "blocks": [
+      1728,
+      35904,
+      27648,
+      17952
+     ],
+     "color": "green"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      3168,
+      19584,
+      50688,
+      9792
+     ],
+     "color": "red"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      17504,
+      3712,
+      50240,
+      11776
+     ],
+     "color": "orange"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      17504,
+      3712,
+      50240,
+      11776
+     ],
+     "color": "orange"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      17504,
+      3712,
+      50240,
+      11776
+     ],
+     "color": "orange"
+    },
+    {
+     "size": 4,
+     "blocks": [
+      3840,
+      8738,
+      240,
+      17476
+     ],
+     "color": "cyan"
+    },
+    null,
+    null,
+    null,
+    {
+     "size": 3,
+     "blocks": [
+      3648,
+      19520,
+      19968,
+      17984
+     ],
+     "color": "purple"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      3648,
+      19520,
+      19968,
+      17984
+     ],
+     "color": "purple"
+    },
+    {
+     "size": 2,
+     "blocks": [
+      52224,
+      52224,
+      52224,
+      52224
+     ],
+     "color": "yellow"
+    },
+    {
+     "size": 2,
+     "blocks": [
+      52224,
+      52224,
+      52224,
+      52224
+     ],
+     "color": "yellow"
+    }
+   ],
+   [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    {
+     "size": 3,
+     "blocks": [
+      1728,
+      35904,
+      27648,
+      17952
+     ],
+     "color": "green"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      1728,
+      35904,
+      27648,
+      17952
+     ],
+     "color": "green"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      3168,
+      19584,
+      50688,
+      9792
+     ],
+     "color": "red"
+    },
+    null,
+    null,
+    {
+     "size": 3,
+     "blocks": [
+      17504,
+      3712,
+      50240,
+      11776
+     ],
+     "color": "orange"
+    },
+    {
+     "size": 4,
+     "blocks": [
+      3840,
+      8738,
+      240,
+      17476
+     ],
+     "color": "cyan"
+    },
+    null,
+    null,
+    null,
+    {
+     "size": 3,
+     "blocks": [
+      3648,
+      19520,
+      19968,
+      17984
+     ],
+     "color": "purple"
+    }
+   ],
+   [
+    null,
+    {
+     "size": 2,
+     "blocks": [
+      52224,
+      52224,
+      52224,
+      52224
+     ],
+     "color": "yellow"
+    },
+    {
+     "size": 2,
+     "blocks": [
+      52224,
+      52224,
+      52224,
+      52224
+     ],
+     "color": "yellow"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      17504,
+      3712,
+      50240,
+      11776
+     ],
+     "color": "orange"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      17504,
+      3712,
+      50240,
+      11776
+     ],
+     "color": "orange"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      17504,
+      3712,
+      50240,
+      11776
+     ],
+     "color": "orange"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      1728,
+      35904,
+      27648,
+      17952
+     ],
+     "color": "green"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      1728,
+      35904,
+      27648,
+      17952
+     ],
+     "color": "green"
+    },
+    null,
+    null,
+    null,
+    null,
+    {
+     "size": 4,
+     "blocks": [
+      3840,
+      8738,
+      240,
+      17476
+     ],
+     "color": "cyan"
+    }
+   ],
+   [
+    null,
+    {
+     "size": 2,
+     "blocks": [
+      52224,
+      52224,
+      52224,
+      52224
+     ],
+     "color": "yellow"
+    },
+    {
+     "size": 2,
+     "blocks": [
+      52224,
+      52224,
+      52224,
+      52224
+     ],
+     "color": "yellow"
+    },
+    null,
+    null,
+    {
+     "size": 3,
+     "blocks": [
+      17504,
+      3712,
+      50240,
+      11776
+     ],
+     "color": "orange"
+    },
+    null,
+    {
+     "size": 3,
+     "blocks": [
+      1728,
+      35904,
+      27648,
+      17952
+     ],
+     "color": "green"
+    },
+    null,
+    null,
+    {
+     "size": 3,
+     "blocks": [
+      17600,
+      36352,
+      25664,
+      3616
+     ],
+     "color": "blue"
+    },
+    null,
+    {
+     "size": 4,
+     "blocks": [
+      3840,
+      8738,
+      240,
+      17476
+     ],
+     "color": "cyan"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      3648,
+      19520,
+      19968,
+      17984
+     ],
+     "color": "purple"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      17504,
+      3712,
+      50240,
+      11776
+     ],
+     "color": "orange"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      17504,
+      3712,
+      50240,
+      11776
+     ],
+     "color": "orange"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      17504,
+      3712,
+      50240,
+      11776
+     ],
+     "color": "orange"
+    },
+    null,
+    null,
+    {
+     "size": 3,
+     "blocks": [
+      17600,
+      36352,
+      25664,
+      3616
+     ],
+     "color": "blue"
+    }
+   ],
+   [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    {
+     "size": 3,
+     "blocks": [
+      17600,
+      36352,
+      25664,
+      3616
+     ],
+     "color": "blue"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      17600,
+      36352,
+      25664,
+      3616
+     ],
+     "color": "blue"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      17600,
+      36352,
+      25664,
+      3616
+     ],
+     "color": "blue"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      3168,
+      19584,
+      50688,
+      9792
+     ],
+     "color": "red"
+    },
+    null,
+    {
+     "size": 3,
+     "blocks": [
+      3648,
+      19520,
+      19968,
+      17984
+     ],
+     "color": "purple"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      3648,
+      19520,
+      19968,
+      17984
+     ],
+     "color": "purple"
+    },
+    null,
+    {
+     "size": 3,
+     "blocks": [
+      17504,
+      3712,
+      50240,
+      11776
+     ],
+     "color": "orange"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      17600,
+      36352,
+      25664,
+      3616
+     ],
+     "color": "blue"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      17600,
+      36352,
+      25664,
+      3616
+     ],
+     "color": "blue"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      17600,
+      36352,
+      25664,
+      3616
+     ],
+     "color": "blue"
+    }
+   ],
+   [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    {
+     "size": 3,
+     "blocks": [
+      17600,
+      36352,
+      25664,
+      3616
+     ],
+     "color": "blue"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      3168,
+      19584,
+      50688,
+      9792
+     ],
+     "color": "red"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      3168,
+      19584,
+      50688,
+      9792
+     ],
+     "color": "red"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      3648,
+      19520,
+      19968,
+      17984
+     ],
+     "color": "purple"
+    }
+   ],
+   [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    {
+     "size": 3,
+     "blocks": [
+      3168,
+      19584,
+      50688,
+      9792
+     ],
+     "color": "red"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      17600,
+      36352,
+      25664,
+      3616
+     ],
+     "color": "blue"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      17600,
+      36352,
+      25664,
+      3616
+     ],
+     "color": "blue"
+    },
+    {
+     "size": 3,
+     "blocks": [
+      17600,
+      36352,
+      25664,
+      3616
+     ],
+     "color": "blue"
+    },
+    null,
+    {
+     "size": 3,
+     "blocks": [
+      3168,
+      19584,
+      50688,
+      9792
+     ],
+     "color": "red"
+    }
+   ],
+   [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    {
+     "size": 3,
+     "blocks": [
+      3168,
+      19584,
+      50688,
+      9792
+     ],
+     "color": "red"
+    }
+   ],
+   [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  ]
+ },
+ "kind": "goal",
+ "goal": "Clear at least one horizontal row.",
+ "game": "Javascript Tetris",
+ "game_id": "tetris",
+ "game_fps": 60,
+ "settings": {
+  "model": "wonder",
+  "effort": "low",
+  "max_out": 3000,
+  "state_text": true,
+  "checklist": false,
+  "narrate": false,
+  "escalate": false,
+  "history": "own",
+  "summary": null,
+  "look_plan": false,
+  "notes": false,
+  "vision": "normal"
+ }
+}

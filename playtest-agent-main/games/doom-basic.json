@@ -1,0 +1,13 @@
+{
+ "type": "doom",
+ "name": "Freedoom basic scenario",
+ "scenario": "basic.cfg",
+ "game_wad": "freedoom2.wad",
+ "win": "kill",
+ "shot_width": 640,
+ "hold_ticks": 9,
+ "seed": 1,
+ "vars": ["HEALTH", "AMMO2", "KILLCOUNT"],
+ "controls": "left and right turn. strafe_left and strafe_right move sideways. f shoots.",
+ "goal": "Turn to face the monster and shoot it."
+}

@@ -1,0 +1,12 @@
+{
+  "type": "android",
+  "name": "Android example",
+  "package": "com.example.game",
+  "clear_data": true,
+  "launch_wait_s": 6,
+  "setup": [
+    {"tap": [540, 1400]},
+    {"tap": [540, 1800]},
+    {"wait": 500}
+  ]
+}

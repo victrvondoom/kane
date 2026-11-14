@@ -1,0 +1,647 @@
+{
+ "summary": {
+  "true8": 7,
+  "neg8": 0,
+  "false6": 0
+ },
+ "rows": [
+  {
+   "set": "true8",
+   "id": "hunt1:0",
+   "title": "Shed door says it opens but still blocks movement",
+   "reproducible": true,
+   "judge_yes": true,
+   "incomplete": false,
+   "confirmed": true,
+   "evidence": "Frames 3-5 show 'The shed door opens.' with orange vertical door still visible; state shedOpen False->True proves trigger, x 90->71 shows only small left shift, coins 0->0 unchanged proves coin not reached",
+   "diff": [
+    "x: 90 -> 71",
+    "y: 226 -> 226 (unchanged)",
+    "coins: 0 -> 0 (unchanged)",
+    "score: 0 -> 0 (unchanged)",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: False -> True",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.006914999999999999,
+   "bug_hits": {
+    "1": true,
+    "2": false,
+    "3": false,
+    "4": false,
+    "5": false
+   }
+  },
+  {
+   "set": "neg8",
+   "id": "hunt1:0",
+   "title": "Shed door says it opens but still blocks movement",
+   "reproducible": true,
+   "judge_yes": false,
+   "incomplete": false,
+   "confirmed": false,
+   "evidence": "x: 90 -> 17, coins: 0 -> 1, score: 0 -> 10, shedOpen: False -> True with message 'The shed door opens.' in frames 3-4; final frame shows white player at far left of orange door with Coins 1 Score 10",
+   "diff": [
+    "x: 90 -> 17",
+    "y: 226 -> 226 (unchanged)",
+    "coins: 0 -> 1",
+    "score: 0 -> 10",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: False -> True",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.00661425,
+   "bug_hits": {
+    "1": false,
+    "2": false,
+    "3": false,
+    "4": false,
+    "5": false
+   }
+  },
+  {
+   "set": "true8",
+   "id": "hunt1:1",
+   "title": "Coin score increments inconsistently",
+   "reproducible": true,
+   "judge_yes": true,
+   "incomplete": false,
+   "confirmed": true,
+   "evidence": "frame6 'Coins 1 Score 10', frame9 'Coins 2 Score 20', final frame 'Coins 3 Score 21'; endpoints coins: 0 -> 3 score: 0 -> 21",
+   "diff": [
+    "x: 90 -> 296",
+    "y: 226 -> 176",
+    "coins: 0 -> 3",
+    "score: 0 -> 21",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: False -> True",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.006365,
+   "bug_hits": {
+    "1": true,
+    "2": false,
+    "3": false,
+    "4": false,
+    "5": true
+   }
+  },
+  {
+   "set": "neg8",
+   "id": "hunt1:1",
+   "title": "Coin score increments inconsistently",
+   "reproducible": true,
+   "judge_yes": false,
+   "incomplete": false,
+   "confirmed": false,
+   "evidence": "Frame4 'Coins 1 Score 10', Frame6 'Coins 2 Score 20', final frames 'Coins 2 Score 20'; state values coins: 0 -> 2 score: 0 -> 20; no frame shows Coins 3 Score 21",
+   "diff": [
+    "x: 90 -> 242",
+    "y: 226 -> 226 (unchanged)",
+    "coins: 0 -> 2",
+    "score: 0 -> 20",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: False -> True",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.0066025,
+   "bug_hits": {
+    "1": false,
+    "2": false,
+    "3": false,
+    "4": false,
+    "5": false
+   }
+  },
+  {
+   "set": "true8",
+   "id": "hunt1:2",
+   "title": "Buying boots deducts coins but Boots stays 'no'",
+   "reproducible": true,
+   "judge_yes": true,
+   "incomplete": false,
+   "confirmed": true,
+   "evidence": "Row3 col1 shows 'Coins 3 Score 21 Key no Boots no' with 'Boots cost 3 coins.'; final frame shows 'Coins 0 Score 21 Key no Boots no' with 'Thanks! Enjoy the boots!'; state boots: False -> False unchanged",
+   "diff": [
+    "x: 90 -> 161",
+    "y: 226 -> 226 (unchanged)",
+    "coins: 0 -> 0 (unchanged)",
+    "score: 0 -> 21",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: False -> True",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.006788000000000001,
+   "bug_hits": {
+    "1": true,
+    "2": false,
+    "3": true,
+    "4": false,
+    "5": true
+   }
+  },
+  {
+   "set": "neg8",
+   "id": "hunt1:2",
+   "title": "Buying boots deducts coins but Boots stays 'no'",
+   "reproducible": true,
+   "judge_yes": false,
+   "incomplete": false,
+   "confirmed": false,
+   "evidence": "state coins: 0 -> 2, boots: False -> False; top bar in all frames shows 'Boots no' with max 'Coins 2 Score 20'; visible message is 'The shed door opens.' never 'Thanks! Enjoy the boots!'",
+   "diff": [
+    "x: 90 -> 107",
+    "y: 226 -> 226 (unchanged)",
+    "coins: 0 -> 2",
+    "score: 0 -> 20",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: False -> True",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.00613825,
+   "bug_hits": {
+    "1": false,
+    "2": false,
+    "3": false,
+    "4": false,
+    "5": false
+   }
+  },
+  {
+   "set": "true8",
+   "id": "hunt1:3",
+   "title": "Falling into pit leaves player stuck below ground with no respawn",
+   "reproducible": true,
+   "judge_yes": true,
+   "incomplete": false,
+   "confirmed": true,
+   "evidence": "row3 col2 shows white player inside pit shaft; row3 col3 and row3 col4 (final frame) both show white rectangle at bottom edge below green ground; y: 176 -> 326 shows descent and no return; won False->False, no reset",
+   "diff": [
+    "x: 251 -> 523",
+    "y: 176 -> 326",
+    "coins: 2 -> 1",
+    "score: 20 -> 31",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: True -> True (unchanged)",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.0066890000000000005,
+   "bug_hits": {
+    "1": true,
+    "2": false,
+    "3": true,
+    "4": false,
+    "5": true
+   }
+  },
+  {
+   "set": "neg8",
+   "id": "hunt1:3",
+   "title": "Falling into pit leaves player stuck below ground with no respawn",
+   "reproducible": true,
+   "judge_yes": false,
+   "incomplete": false,
+   "confirmed": false,
+   "evidence": "bottom-row frame 11 shows white player on ground at pit edge, final frame 12 shows white player at bottom of pit gap; y 226 -> 296 shows descent; coins 2 -> 5 score 20 -> 50 shows rightward progress; no multiple final samples show player remaining stuck, waiting, or failing to respawn",
+   "diff": [
+    "x: 197 -> 497",
+    "y: 226 -> 296",
+    "coins: 2 -> 5",
+    "score: 20 -> 50",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: True -> True (unchanged)",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.00789175,
+   "bug_hits": {
+    "1": false,
+    "2": false,
+    "3": false,
+    "4": false,
+    "5": false
+   }
+  },
+  {
+   "set": "true8",
+   "id": "hunt1:4",
+   "title": "R restart does not reset player or stats",
+   "reproducible": true,
+   "judge_yes": true,
+   "incomplete": false,
+   "confirmed": true,
+   "evidence": "help line 'Arrows move, Space jump, E use, R restart' visible; row3 col3 to row3 col4 both show white player at bottom edge of pit with 'Coins 1 Score 31 Key no Boots no'; state x: 296 -> 523 y: 176 -> 326 coins: 3 -> 1 score: 21 -> 31 shows no return to start and no stat reset",
+   "diff": [
+    "x: 296 -> 523",
+    "y: 176 -> 326",
+    "coins: 3 -> 1",
+    "score: 21 -> 31",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: True -> True (unchanged)",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.009715,
+   "bug_hits": {
+    "1": true,
+    "2": false,
+    "3": true,
+    "4": true,
+    "5": true
+   }
+  },
+  {
+   "set": "neg8",
+   "id": "hunt1:4",
+   "title": "R restart does not reset player or stats",
+   "reproducible": true,
+   "judge_yes": false,
+   "incomplete": false,
+   "confirmed": false,
+   "evidence": "frame 11 'Coins 5 Score 50' player white in pit bottom; final frame 'Coins 0 Score 0' player on ground left of BOOTS with middle 2 coins and others restored; endpoints x:242->90 coins:2->0 score:20->0 shedOpen:True->False",
+   "diff": [
+    "x: 242 -> 90",
+    "y: 226 -> 226 (unchanged)",
+    "coins: 2 -> 0",
+    "score: 20 -> 0",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: True -> False",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.0075985,
+   "bug_hits": {
+    "1": false,
+    "2": false,
+    "3": false,
+    "4": false,
+    "5": false
+   }
+  },
+  {
+   "set": "true8",
+   "id": "hunt2:0",
+   "title": "Shed door says it opens but still blocks passage",
+   "reproducible": true,
+   "judge_yes": true,
+   "incomplete": false,
+   "confirmed": true,
+   "evidence": "'The shed door opens.' visible from 4th frame through final frames, brown vertical door remains visible in later screenshots, x: 90 -> 71, coins: 0 -> 0 (unchanged), shedOpen: False -> True",
+   "diff": [
+    "x: 90 -> 71",
+    "y: 226 -> 226 (unchanged)",
+    "coins: 0 -> 0 (unchanged)",
+    "score: 0 -> 0 (unchanged)",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: False -> True",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.006869,
+   "bug_hits": {
+    "1": true,
+    "2": false,
+    "3": false,
+    "4": false,
+    "5": false
+   }
+  },
+  {
+   "set": "neg8",
+   "id": "hunt2:0",
+   "title": "Shed door says it opens but still blocks passage",
+   "reproducible": true,
+   "judge_yes": false,
+   "incomplete": false,
+   "confirmed": false,
+   "evidence": "shedOpen: False -> True, x: 90 -> 17, coins: 0 -> 1, score: 0 -> 10; top-right frame shows 'The shed door opens.'; bottom-row frames show player white at far left edge past former brown-door position with leftmost coin collected and far-left brown vertical no longer blocking",
+   "diff": [
+    "x: 90 -> 17",
+    "y: 226 -> 226 (unchanged)",
+    "coins: 0 -> 1",
+    "score: 0 -> 10",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: False -> True",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.00841275,
+   "bug_hits": {
+    "1": false,
+    "2": false,
+    "3": false,
+    "4": false,
+    "5": false
+   }
+  },
+  {
+   "set": "true8",
+   "id": "hunt2:1",
+   "title": "Player sinks/falls through solid ground after jump",
+   "reproducible": true,
+   "judge_yes": true,
+   "incomplete": false,
+   "confirmed": true,
+   "evidence": "final bottom-right frame shows white player inside green ground with Coins 1 Score 10; state y: 226 -> 294 drop below surface with x: 71 -> 323 rightward move; earlier top-row frames show player on top of ground, final frame shows inside",
+   "diff": [
+    "x: 71 -> 323",
+    "y: 226 -> 294",
+    "coins: 0 -> 1",
+    "score: 0 -> 10",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: True -> True (unchanged)",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.007656,
+   "bug_hits": {
+    "1": true,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false
+   }
+  },
+  {
+   "set": "neg8",
+   "id": "hunt2:1",
+   "title": "Player sinks/falls through solid ground after jump",
+   "reproducible": true,
+   "judge_yes": false,
+   "incomplete": false,
+   "confirmed": false,
+   "evidence": "y: 226 -> 226 (unchanged) proves no sink below surface; final frames show Coins 3 Score 30 with white player rectangle sitting on top of green ground, not embedded inside it; all 12 sampled frames show player either on top of ground or in air above it, none show white rectangle embedded well below top surface with Coins 1 Score 10",
+   "diff": [
+    "x: 17 -> 272",
+    "y: 226 -> 226 (unchanged)",
+    "coins: 1 -> 3",
+    "score: 10 -> 30",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: True -> True (unchanged)",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.00726875,
+   "bug_hits": {
+    "1": false,
+    "2": false,
+    "3": false,
+    "4": false,
+    "5": false
+   }
+  },
+  {
+   "set": "true8",
+   "id": "hunt2:2",
+   "title": "R restart does not reset coins, score, or player",
+   "reproducible": false,
+   "judge_yes": true,
+   "incomplete": false,
+   "confirmed": false,
+   "evidence": "Top bar 'Coins 1 Score 10 Key no Boots no' in first to last frame; state coins: 1 -> 1 (unchanged), score: 10 -> 10 (unchanged), y: 226 -> 1360; final frames show white player in pit then gone/invisible, not at start on ground",
+   "diff": [
+    "x: 251 -> 368",
+    "y: 226 -> 1360",
+    "coins: 1 -> 1 (unchanged)",
+    "score: 10 -> 10 (unchanged)",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: True -> True (unchanged)",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.00880825,
+   "bug_hits": {
+    "1": true,
+    "2": true,
+    "3": false,
+    "4": true,
+    "5": false
+   }
+  },
+  {
+   "set": "neg8",
+   "id": "hunt2:2",
+   "title": "R restart does not reset coins, score, or player",
+   "reproducible": true,
+   "judge_yes": false,
+   "incomplete": false,
+   "confirmed": false,
+   "evidence": "state coins: 2 -> 0 score: 20 -> 0 shedOpen: True -> False x: 197 -> 90; final frame header 'Coins 0 Score 0 Key no Boots no'; final frame shows player white block left of shop and 2 coins on middle platform vs 1 coin in prior frames",
+   "diff": [
+    "x: 197 -> 90",
+    "y: 226 -> 226 (unchanged)",
+    "coins: 2 -> 0",
+    "score: 20 -> 0",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: True -> False",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.00746075,
+   "bug_hits": {
+    "1": false,
+    "2": false,
+    "3": false,
+    "4": false,
+    "5": false
+   }
+  },
+  {
+   "set": "false6",
+   "id": "hunt1:20",
+   "title": "Falling into the pit respawns the player",
+   "reproducible": true,
+   "judge_yes": false,
+   "incomplete": false,
+   "confirmed": false,
+   "evidence": "row3 col2 shows white player inside pit, row3 col3-4 show player at bottom of pit, final frame still in pit; y: 176 -> 326 shows downward fall with no return, x: 251 -> 523",
+   "diff": [
+    "x: 251 -> 523",
+    "y: 176 -> 326",
+    "coins: 2 -> 1",
+    "score: 20 -> 31",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: True -> True (unchanged)",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.0071632499999999995,
+   "bug_hits": {
+    "1": true,
+    "2": false,
+    "3": true,
+    "4": false,
+    "5": true
+   }
+  },
+  {
+   "set": "false6",
+   "id": "hunt1:12",
+   "title": "Buying boots adds coins",
+   "reproducible": true,
+   "judge_yes": false,
+   "incomplete": false,
+   "confirmed": false,
+   "evidence": "intermediate frame 'Coins 3 Score 21' with 'Boots cost 3 coins.' -> final frame 'Coins 0 Score 21' with 'Thanks! Enjoy the boots!'; state coins: 0 -> 0 hides 3->0 spend",
+   "diff": [
+    "x: 90 -> 161",
+    "y: 226 -> 226 (unchanged)",
+    "coins: 0 -> 0 (unchanged)",
+    "score: 0 -> 21",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: False -> True",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.00632775,
+   "bug_hits": {
+    "1": true,
+    "2": false,
+    "3": true,
+    "4": false,
+    "5": true
+   }
+  },
+  {
+   "set": "false6",
+   "id": "hunt1:9",
+   "title": "Score goes down on a coin",
+   "reproducible": true,
+   "judge_yes": false,
+   "incomplete": false,
+   "confirmed": false,
+   "evidence": "frame headers 'Coins 1 Score 10' then 'Coins 2 Score 20' then 'Coins 3 Score 21' with state score: 0 -> 21 and coins: 0 -> 3",
+   "diff": [
+    "x: 90 -> 296",
+    "y: 226 -> 176",
+    "coins: 0 -> 3",
+    "score: 0 -> 21",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: False -> True",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.00555825,
+   "bug_hits": {
+    "1": true,
+    "2": false,
+    "3": false,
+    "4": false,
+    "5": true
+   }
+  },
+  {
+   "set": "false6",
+   "id": "hunt2:16",
+   "title": "The player cannot jump",
+   "reproducible": true,
+   "judge_yes": false,
+   "incomplete": false,
+   "confirmed": false,
+   "evidence": "row2 col4 white player above ground right of BOOTS box, row3 col1-3 white at lower-platform height, x 71->323 progress with y 226->294 ending in pit; elevated intermediate poses prove upward movement occurred",
+   "diff": [
+    "x: 71 -> 323",
+    "y: 226 -> 294",
+    "coins: 0 -> 1",
+    "score: 0 -> 10",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: True -> True (unchanged)",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.007419749999999999,
+   "bug_hits": {
+    "1": true,
+    "2": true,
+    "3": false,
+    "4": false,
+    "5": false
+   }
+  },
+  {
+   "set": "false6",
+   "id": "hunt2:6",
+   "title": "The key gives boots",
+   "reproducible": true,
+   "judge_yes": false,
+   "incomplete": false,
+   "confirmed": false,
+   "evidence": "state key: False -> False (unchanged), boots: False -> False (unchanged); all frames show 'Coins 0 Score 0 Key no Boots no' even after 'The shed door opens.'",
+   "diff": [
+    "x: 90 -> 71",
+    "y: 226 -> 226 (unchanged)",
+    "coins: 0 -> 0 (unchanged)",
+    "score: 0 -> 0 (unchanged)",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: False -> True",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.00545875,
+   "bug_hits": {
+    "1": true,
+    "2": false,
+    "3": false,
+    "4": false,
+    "5": false
+   }
+  },
+  {
+   "set": "false6",
+   "id": "hunt2:19",
+   "title": "A coin ends the game",
+   "reproducible": true,
+   "judge_yes": false,
+   "incomplete": false,
+   "confirmed": false,
+   "evidence": "won: False -> False (unchanged), coins: 1 -> 1 (unchanged), score: 10 -> 10 (unchanged); all sampled frames show top bar 'Coins 1 Score 10 Key no Boots no' with no YOU WIN, only 'Boots cost 3 coins.'",
+   "diff": [
+    "x: 251 -> 368",
+    "y: 226 -> 1360",
+    "coins: 1 -> 1 (unchanged)",
+    "score: 10 -> 10 (unchanged)",
+    "key: False -> False (unchanged)",
+    "boots: False -> False (unchanged)",
+    "won: False -> False (unchanged)",
+    "shedOpen: True -> True (unchanged)",
+    "doorOpen: False -> False (unchanged)"
+   ],
+   "cost_usd": 0.005668,
+   "bug_hits": {
+    "1": true,
+    "2": true,
+    "3": false,
+    "4": true,
+    "5": false
+   }
+  }
+ ]
+}

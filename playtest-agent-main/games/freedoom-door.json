@@ -1,0 +1,22 @@
+{
+ "type": "doom",
+ "name": "Freedoom (Doom engine)",
+ "scenario": "freedoom2.cfg",
+ "doom_map": "map01",
+ "game_wad": "freedoom2.wad",
+ "win": "finished",
+ "shot_width": 640,
+ "hold_ticks": 9,
+ "seed": 1,
+ "vars": [
+  "HEALTH",
+  "AMMO2",
+  "KILLCOUNT",
+  "POSITION_X",
+  "POSITION_Y"
+ ],
+ "use_walks": true,
+ "map_key": true,
+ "controls": "forward and back walk. left and right turn. strafe_left and strafe_right move sideways. space walks you forward until you touch something (at most 1 second), then uses it. Doors open this way. e is the same key as space. tab opens or closes the map: the walls you have seen, red walls on black, you are the white arrow in the middle, north is up. when you are lost or a room is cleared, open the map. f shoots.",
+ "goal": "Walk down the corridor to the door at the end. Get close until it fills the screen, press space to open it, then walk through. Say in one short sentence what you see before each move."
+}

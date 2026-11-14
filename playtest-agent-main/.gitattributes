@@ -1,0 +1,5 @@
+*.sh text eol=lf
+game/index-buggy.html text eol=lf
+game/index-buggy-view.html text eol=lf
+game/hostile.html text eol=lf
+game/shop.html text eol=lf

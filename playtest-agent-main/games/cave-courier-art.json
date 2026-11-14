@@ -1,0 +1,25 @@
+{
+ "type": "web",
+ "name": "Cave Courier",
+ "url": "game/index.html",
+ "url_query": {
+  "bugs": "{bugs}",
+  "debug": "{debug}",
+  "art": "1"
+ },
+ "viewport": {
+  "width": 640,
+  "height": 360
+ },
+ "ready_js": "window.__ready === true",
+ "hud_boxes": [[8, 4, 380, 16]],
+ "frame_js": "window.__frame",
+ "frame_lock": true,
+ "hold_frames": 15,
+ "settle_frames": 4,
+ "state_js": "window.__state()",
+ "won_js": "window.__won === true",
+ "bug_js": "window.__bugHit",
+ "controls": "Left and right arrows walk. Space jumps. E uses the thing next to you. R restarts.",
+ "goal": "Pick up the key, open the big door, and touch the red flag."
+}

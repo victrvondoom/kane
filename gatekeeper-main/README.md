@@ -1,0 +1,261 @@
+# Gatekeeper
+
+[![CI](https://github.com/lb2002/gatekeeper/actions/workflows/ci.yml/badge.svg)](https://github.com/lb2002/gatekeeper/actions/workflows/ci.yml)
+
+Open-source malware detection for npm, built on Meta's models. It never runs package code.
+
+| Use it | What it does | Try it |
+|---|---|---|
+| **Investigator** | A Muse agent reads a package like an analyst: picks files, searches, has strings decoded, compares with the previous version or the original of a fork. Code checks its claims. | [**Watch it work on any npm package**](https://lb2002--gatekeeper-api.us-east.modal.run/try), no account |
+| **Audit** | Am I already affected? Checks every version in your lockfile, and finds poisoned lockfiles. | [Paste a lockfile](https://lb2002--gatekeeper-api.us-east.modal.run/try), or `gk audit`, or the [GitHub Action](#check-your-project) |
+| **Install guard** | Sits in front of `npm install` and `npx`, for you or your AI coding agent, and stops malware before any install script runs. No GPU needed. | [Three commands](#try-the-install-guard), under a minute |
+| **Live monitor** | Reads every new npm release (~250 changes a minute), has Meta models judge the suspicious ones with cited lines, and reports to OpenSSF. | [Live numbers](https://lb2002--gatekeeper-api.us-east.modal.run/) |
+
+It never runs package code.
+
+**So far (Oct 27 - Nov 3):** 48 malicious packages flagged that were later confirmed by OSV / GitHub / npm, about a minute after publication. **Every release was flagged before anyone reported it, by a median of 14 hours, and a median of 25 hours before OSV, GitHub or npm listed it** ([how that is counted](#live-results)). Of the malware published while the monitor was running, it flagged 48%; half of what it missed is one campaign of 24 probe packages that never reached it ([what it missed](#live-results)). Every flag time is in a public, timestamped ledger.
+
+**The find we are proudest of:** [a campaign that ships no malware at all](#a-package-with-no-malware-in-it). Every scanner passes its packages, because the payload sits in a private dependency nobody can read. Gatekeeper now flags that gap, and following it turned up [8 unreported packages and 5 new private scopes](https://github.com/ossf/malicious-packages/pull/1694), 4 of them published the same day.
+
+The live page updates every 2 minutes and names a detection only once it is independently confirmed. **Public ledger:** https://github.com/lb2002/gatekeeper-ledger
+
+Built for the Meta Global AI Developer Hackathon (Oct 26 - Nov 4, 2026). See [PRIOR_WORK.md](PRIOR_WORK.md) for what we reuse.
+
+**Contents:** [How it works](#how-it-works) · [Investigator](#the-investigator) · [Check your project](#check-your-project) · [Install guard](#install-guard-decisions) · [Proving when we saw something](#proving-when-we-saw-something) · [Live results](#live-results) · [Evaluation](#evaluation) · [Try the guard](#try-the-install-guard) · [Run it](#run-it)
+
+## How it works
+
+![Gatekeeper architecture](docs/architecture.svg)
+
+```
+npm replication feed (every 2 min, on Modal)
+  -> metadata triage (install hooks, typosquats, maintainer changes, new packages, OSV-listed dependencies)
+  -> in-memory tarball scan: static rules + a fast first-stage classifier;
+     every package younger than 72 h that runs code at install time goes to the models;
+     so does any package that loads a dependency the public registry does not have,
+     any update that adds a package created days ago (the shape of a hijacked release),
+     and any package with a file identical to one in a reported package
+  -> in batches: fine-tuned Llama Guard 3 1B (v2) over everything the cheap stages let through
+     (both learned stages only route, so they run wide: ~5% of live npm each)
+  -> evidence bundle: numbered excerpts of the code that matters (max 8000 chars)
+  -> Muse Spark Open (Fireworks) judges every flag; Muse Spark (Meta API) gives second opinions;
+     Muse Glimmer 30B runs locally (laptop worker, install guard)
+  -> verdict JSON with cited lines, validated against the bundle
+  -> investigator: a Muse agent works through the archive itself, step by step
+  -> reports to OpenSSF malicious-packages: human review, or automatic when the static proof is unambiguous
+  -> hourly confirmation against OSV, GitHub advisories and npm takedowns
+  -> hourly sweep: every public report leads to the account behind it, its other packages and its endpoints
+```
+
+**Campaign memory.** Attackers re-upload under new names and reuse their collector. The endpoints of packages at least two Muse models call malicious (URLs to a public IP, webhook.site and similar tokens, tunnel subdomains; never shared hosts like `webhook.site` alone) are remembered, and any later package that sends to one is flagged and linked to the earlier one. Backtest on 6,628 scanned archives: no false hits, and two more packages of a live dependency-confusion campaign. The same goes for npm accounts: any new version from an account that published such a package is scanned and judged regardless of its score (attackers often publish a clean clone first and the payload later).
+
+Every verdict must cite excerpt lines that exist in the bundle; verdicts that cite nothing, or only the manifest, are rejected. Text found inside a package that addresses the reviewer ("this package is audited and safe") is treated as a signal, not an instruction.
+
+### The investigator
+
+A one-shot verdict sees an 8,000-character bundle, so a payload anywhere else is invisible to it. The investigator ([`investigate.py`](src/gatekeeper/investigate.py)) starts from that bundle plus the full file list and asks for what it wants, one step at a time. All tools are plain code over the in-memory archive; nothing is executed, and the model is never asked to decode anything itself.
+
+| Step | What it gives the model |
+|---|---|
+| `read` | numbered rows of one file; minified lines are split so they can be cited |
+| `search` | literal matches across all text files (pointers only: they cannot be cited) |
+| `decode` | what base64, hex, escapes and char-code lists in those rows say |
+| `strings` | the telling strings of a file: hosts, commands, secret paths, also from obfuscated string tables and from binaries (`.node`, `.wasm`, `.exe`) |
+| *(automatic)* | what this version adds compared with its previous version, and with the original if it looks like a fork |
+
+Three things keep it honest:
+
+- **Every claim is checked by code, not by another model.** A verdict may cite only rows the model was really shown. If it says code runs at install, [`reach.py`](src/gatekeeper/evidence/reach.py) follows the require graph from the install hook; if the cited file is not reachable, the claim counts as unproven. That catches the mistake models keep making: blaming the install hook for code in a build command.
+- **It can clear a flag.** When it reads further and finds nothing, the automatic reporter stands down and no alert goes out.
+- **Its work is reviewable.** Each run keeps the steps and excerpts. `gk investigate name@version` prints them, and [the demo page](https://lb2002--gatekeeper-api.us-east.modal.run/try) shows them live.
+
+Why this matters: on the time-split test it found 10 of the 83 samples all three one-shot models passed, for about 1.3 cents a package, with no `malicious` verdict on 131 benign packages (71 of them hard negatives with install scripts). Comparing with the original is what cracked the Baileys family, 100+ forks that hide one covert call in 100 KB of WhatsApp socket code: 6 of the 8 in the test set are now found, up from 2 by the one-shot models, and the model names the hidden channel subscription.
+
+### A package with no malware in it
+
+The fake job interview campaign ships Tailwind CSS plugins that contain nothing bad: no install script, no network code, no obfuscation. Line 5 of one file requires a private scoped package, and only the victim has the token, committed to the `.npmrc` of the fake take-home assignment. OSV's own automated review of these packages finds nothing. Our models called them benign too.
+
+But the absence is visible. [`phantom.py`](src/gatekeeper/triage/phantom.py) flags any public package whose code or manifest loads a package that does not exist on the public registry, or that npm has replaced with a security holder. With that signal the investigator rates all 6 campaign packages we tested as suspicious, naming the dependency it cannot see.
+
+Following the campaign's fingerprint through npm then found what nobody had reported: **8 new packages and 2 new versions, still live, 4 of the packages published that same day** (one borrows the name of a famous animation library), using **5 private scopes unknown until then**. The attackers had rotated to new scopes after the first reports. Reported as [ossf/malicious-packages#1694](https://github.com/ossf/malicious-packages/pull/1694). The first of them is already confirmed: 90 minutes after our flag, GitHub published an advisory for `tailwindcss-visual-kit` 1.3.7 and npm removed the package.
+
+The same absence shows in a dependency that comes from a URL. `hs-framework` is one log line; its only dependency is a file on cloud storage whose install script sends the machine's hostname and home directory to a Burp Collaborator address. No registry ever saw that file, so nothing else scans it. Small packages with such a dependency are now flagged, and the investigator gets the archive behind the URL (public addresses only, every redirect checked, in memory, never run). It finds this class on its own: `hs-framework` malicious at 0.95, `dependencykfeg` at 0.98.
+
+The install guard applies the same check: a public package that loads something nobody can read is blocked before it reaches your machine.
+
+**Sweep.** Reports are also leads. Every hour, each new OSV report and each package two Muse models agree on is traced to its npm account; the endpoints it names join the campaign memory, the code files of the reported archive become fingerprints (the campaign above shares one `plugin.js` byte for byte across dozens of packages, so a new copy is flagged within two minutes), and the account's other packages are read at once, because campaigns keep clean-looking siblings. Shared publishers (`GitHub Actions` for trusted publishing) are excluded: remembering one flagged 600 automated releases in 25 minutes before we caught it.
+
+### Install guard decisions
+
+```
+npm install X  ->  ask the installed npm what it would install or run (its own option parsing, aliases,
+                   .npmrc, registries, tags), resolving X with the 24 h waiting period applied
+  X comes from git or a URL                                   -> blocked (nothing to check before it runs)
+  the project's package-lock.json pins a package outside the registry, or the project's .npmrc sets
+    another registry, a proxy or TLS settings (a cloned repo controls both files;
+    GK_TRUST_PROJECT_REGISTRY=1 trusts the project's .npmrc)  -> blocked
+  X is listed as malicious by OSV (asked live; offline: a local copy of OSV's 222k malicious npm names),
+    or a dependency of X is on that list                      -> blocked
+  download the tarball, verify sha512, read it in memory
+  rules clean AND local classifier clean                      -> clean
+  otherwise Muse Glimmer on your machine judges, citing lines
+  malicious, or suspicious with confidence >= 0.6, or any error -> blocked, nothing installed
+  X requested as an exact version younger than 24 h           -> held, newest older version suggested
+    (a tag or range simply resolves to the newest version older than 24 h, and that one is checked)
+  run the real npm with --before=<24 h ago>: the whole dependency tree resolves to versions older than
+    the waiting period (a hijacked patch release of a dependency is not installed on day one)
+```
+
+The waiting period is there because the rest of the ecosystem catches up quickly. Of 742 npm malware reports in OSV for October 2026, measured from the npm publish time of the malicious version to the report's import into OSV, 33% were public within an hour, 58% within a day, 74% within three days (median 10 h). A model catches what is new; the waiting period plus the live OSV lookup catch much of what the model misses. As a rough estimate (assuming the two are independent), the model's ~57% plus a 24 h wait block about 4 in 5 malicious versions, and a 72 h wait (`GK_MIN_AGE_HOURS=72`) about 9 in 10. `GK_MIN_AGE_HOURS=0` turns the wait off, `--gk-allow` overrides one install, and `GK_OFFLINE=1` never contacts OSV (the live lookup sends only the package name and version).
+
+A note on OSV timestamps: an entry's `published` field is set by the reporter and is often backdated to the package's own publish time (301 of the 742 entries above look like that), so it says nothing about when the warning became public. Gatekeeper uses the import time into OSV (or the first commit to OpenSSF malicious-packages) everywhere, including for its own lead times below.
+
+`gk guard update-osv` refreshes the offline list (a 3 MB copy the monitor rebuilds daily; `--from-osv` builds it yourself from OSV's `npm/all.zip`).
+
+The guard does not re-implement npm's command line: it asks the installed npm, through npm's own config loader, command aliases, `npm-package-arg` and `pacote`, which packages a command would install or run and which exact versions (so `npm -p install x`, `npm it x`, `npm create x`, `npx --package=x`, `.npmrc` registries and `--tag` all resolve as npm resolves them). What the guard covers and what it deliberately does not: [docs/guard-threat-model.md](docs/guard-threat-model.md). Decisions are cached per exact tarball integrity. The classifier ships as plain JSON numbers (no pickle), so loading it cannot run code.
+
+### Proving when we saw something
+
+A flag is never named before it is confirmed. Instead, within two minutes, the monitor publishes `sha256(salt || package, version, flag time)` to [gatekeeper-ledger](https://github.com/lb2002/gatekeeper-ledger), one new file per batch, each with an [OpenTimestamps](https://opentimestamps.org) proof anchored in Bitcoin. Once OSV, GitHub or npm independently confirm a detection, its salt is published and anyone can run `gk verify-flag <salt> <line>` and `ots verify` to check that we had it first.
+
+Worked example: `spectral-core@3.0.7` was flagged at 20:30:20 UTC on Oct 28. Its revealed line and salt (in `revealed/2026-10.jsonl`) hash to a digest in `commitments/2026-10-28/203107-67c23a.txt`; `ots upgrade` + `ots verify` on that batch's proof point to Bitcoin block 973597, mined at 20:42:17 UTC that evening (its merkle root `db5b3791…` matches any block explorer). OSV listed it (MAL-2026-18377) 18.5 hours later.
+
+## Live results
+
+By Nov 3 the monitor had read about 633,000 new npm versions, scanned about 175,000 archives and queued about 16,700 for the models, counting the backfill described below and leaving out the Oct 31 mistake described under "Two traps". **48 packages (117 versions) it flagged have since been independently confirmed as malware** by OSV / OpenSSF malicious-packages, GitHub or npm. Median time from npm publication to our flag: about 1 minute; to the first Muse verdict with cited lines: about 9 minutes more.
+
+**Two ways to count the lead.** Against the listing in OSV, GitHub or npm, which is what scanners and lockfile checks read, every package came first, by a **median of 25 hours**. That number includes review queues: a report can wait days as an open pull request, and on Nov 2 the OpenSSF maintainers merged a backlog of them. So we also count the first report of any kind we can see, including pull requests to `ossf/malicious-packages`: every release still came first, by a **median of 14 hours** ([`scripts/first_report.py`](scripts/first_report.py) recomputes this from that repository's history). Reports elsewhere, such as vendor feeds, would not show up in either count. Until Nov 2 this README claimed 20 hours ahead of "any public report", which only held for the listings. For `@zmtcdn/ui` and `tailwindcss-visual-kit` another version had already been reported before we flagged ours, so for those two the lead is on the release, not on the package.
+
+![Flagged by Gatekeeper vs. first listing in OSV, GitHub or npm](docs/lead-times.svg)
+
+The first 16 are below; the [live page](https://lb2002--gatekeeper-api.us-east.modal.run/) lists all of them.
+
+| Package (versions) | What it does | Flagged after publish | Ahead of OSV / GitHub / npm |
+|---|---|---|---|
+| `@webapp-shared/login-vmok` (5) | dependency confusion: postinstall beacons host data to a raw IP | 1.0-1.6 min | 13 h ([MAL-2026-18356](https://osv.dev/vulnerability/MAL-2026-18356)) |
+| `identity-two-factor` | dependency confusion aimed at one company: postinstall POSTs host, user and CI data to webhook.site | 1.8 min | 26 h ([MAL-2026-18367](https://osv.dev/vulnerability/MAL-2026-18367)) |
+| `spectral-net-probe` | postinstall calls a Cloudflare quick tunnel | 1.6 min | 25 h ([MAL-2026-18368](https://osv.dev/vulnerability/MAL-2026-18368)) |
+| `cjlowuxbnexkhgpzq` | random-name package with an install-time network call (GitHub malware advisory) | 0.1 min | 29 h ([MAL-2026-18381](https://osv.dev/vulnerability/MAL-2026-18381)) |
+| `@zmtcdn/components`, `@zmtcdn/ui` | dependency confusion: postinstall POSTs hostname, user, platform and env | 0-2 min | 23 h ([MAL-2026-18372](https://osv.dev/vulnerability/MAL-2026-18372), [-18373](https://osv.dev/vulnerability/MAL-2026-18373)) |
+| `black-spindle`, `black-spindle-2` (4) | postinstall runs `curl` against a throwaway host | 0-1.8 min | 1-22 h ([MAL-2026-18359](https://osv.dev/vulnerability/MAL-2026-18359), [-18376](https://osv.dev/vulnerability/MAL-2026-18376)) |
+| `spectral-core` (10) | no install script at all: a `binding.gyp` action (run by node-gyp on install) reads process environments and AWS instance metadata and POSTs them to webhook.site; a new version every ~15 min | 0.2-3.3 min | 18-20 h ([MAL-2026-18377](https://osv.dev/vulnerability/MAL-2026-18377)) |
+| `@dmangal/curse-dependent-ecto` (3) | the same `binding.gyp` trick: greps the machine for secrets and POSTs every env var | 0.3-1.5 min | 17 h ([MAL-2026-18375](https://osv.dev/vulnerability/MAL-2026-18375)) |
+| `dependencykfeg` (6) | preinstall hook sends the working directory out through DNS lookups; later versions pull code from a URL dependency | 1.7-8.4 min, three older versions 13-15 h later by following the account | 7-20 h ([GHSA-7p3p-8gfg-8grq](https://github.com/advisories/GHSA-7p3p-8gfg-8grq)) |
+| `@pcb-dp/qa-commons` (2), `@sxm-content-creators/tools-ds`, `ssite-mock-server` | dependency confusion: postinstall POSTs hostname, home directory, platform and CI provider to a raw IP | 0.4-29 min | 18-26 h ([GHSA-w4v4-fj9q-cfj5](https://github.com/advisories/GHSA-w4v4-fj9q-cfj5), [GHSA-x4jx-pc3h-93v6](https://github.com/advisories/GHSA-x4jx-pc3h-93v6), [GHSA-h5wr-6cx4-x5v4](https://github.com/advisories/GHSA-h5wr-6cx4-x5v4)) |
+| `claims-acct-unlock` | contacts a domain tied to malicious activity and runs commands (OpenSSF Package Analysis) | 0.8 min | 41 min ([MAL-2026-18404](https://osv.dev/vulnerability/MAL-2026-18404)) |
+| `tailwindcss-visual-kit` 1.3.7 | a new version of a reported package, with a new private dependency: found by following the campaign, not on publication | 14.7 h | 1.5 h ([GHSA-f37w-2g4f-58r3](https://github.com/advisories/GHSA-f37w-2g4f-58r3); npm removed it the same minute) |
+
+"Ahead of the public report" uses the report's import time into OSV, not the backdated `published` field (see above). Every flag time is committed to the public ledger before confirmation. Only flags at least one model called malicious or suspicious count; packages that sat in the queue but were judged benign do not, even when OSV listed them later. For two of them (`spectral-core`, `@dmangal/curse-dependent-ecto`) we opened OpenSSF reports ([#1681](https://github.com/ossf/malicious-packages/pull/1681), [#1682](https://github.com/ossf/malicious-packages/pull/1682)) about 15 hours before another scanner's entries for the same packages landed.
+
+**From flags to verdicts.** Of the 1,813 versions the cheap stages sent to the models in the week up to Oct 30, at least one Muse model called 44 malicious and at least two called 33 malicious. 21 of those 33 have since been independently confirmed; most of the other 12 are still on npm and under manual review (on reading the code, some are not malware: a self-run "stealth assistant", and an old package whose build commands post to the author's own Telegram chats, which the models attributed to its install hook; this is why reports go through a human or a strict static check).
+
+**Live recall.** Every hour the monitor takes each new OSV npm malware report and checks it against its own logs. Since it started (Oct 27, 14:02 UTC), OSV reported 96 malicious npm packages whose malware was published while it was watching: **it flagged 46 (48%).** 31 it never saw. 24 of those are one campaign of dependency-confusion probes under `@goparrot-dashboard` and `@goparrot-dashboard-api` (Nov 1-2), of which it caught only `@goparrot-dashboard/app`; why the others never reached it is not explained yet. Of the remaining seven, two came out on Oct 29 around the time the monitor hung and were past its window when it recovered, and the rest show no real version on npm or are not explained yet either. A backfill read the outage later, about 28,000 versions; anything found that way counts as neither a catch nor recall. Seven more reports name packages whose only public version was a placeholder with no code in it, so there was nothing to read. The monitor watched those appear hours before the report, and they are left out of the recall above; counted as misses, it would be 46 of 103 (45%). Of the 19 misses, 4 were never downloaded because their metadata looked harmless, 9 were scanned but scored below the 9 needed (0 to 8), 4 reached the models and every model said benign, and 2 were archives of 38 MB, over the 5 MB the monitor reads. Eleven of the 19 were published by Oct 29. Since Oct 30, every package younger than 72 hours that runs code at install time goes to a model regardless of its score: about 100-150 versions a day, under $1 a day with Muse Spark Open. Of the 36 published since that change it flagged 21 (58%). Of the 15 it did not flag, 6 are from the probe campaign above and 1 more it never saw; the 8 it saw and missed are listed on the live page (until Nov 2 this README said 11 of 12, before the latest reports arrived).
+
+Two traps in measuring this: OSV's `published` date is often backdated (see above), and most of the 86 reports about older malware list npm's own placeholder versions (`0.0.0-stage`, `0.0.1-security`, published by npm when it removes a package). Seeing only those means the malware came out before the monitor started, so they are excluded rather than counted as misses, and the monitor no longer scans them. On Oct 31 a report on a package released through trusted publishing put the shared account "GitHub Actions" on the list of known bad publishers for about 13 hours, which queued about 15,000 automated releases by mistake. No model called any of them malicious, and the check is fixed; it used up that day's model budgets, so other packages that day got fewer model reads. The outage on Oct 29 happened when it stalled on packages with hundreds of new versions (fixed, with alerts since).
+
+### Evaluation
+
+Time-split evaluation: train on samples discovered up to May 2026, test on samples discovered from July 2026 (June left out as a gap; campaign clusters deduplicated, no test cluster in training). Test set: 212 malicious, 590 benign packages including 71 hard negatives with install scripts. Thresholds are fixed on training data before the test set is scored once.
+
+| System | PR-AUC (95% CI) | Recall at 1% FP (test) | False positives on live npm (later days) |
+|---|---|---|---|
+| Static rules | 0.48 (0.42-0.54) | 18% | - |
+| **Muse Glimmer 30B, zero-shot** | **0.88 (0.84-0.91)** | **66%** | as a blocker: 0 of 590 false blocks; explains with cited lines |
+| Muse Spark 1.3, zero-shot (Meta API) | 0.87 (0.84-0.91) | 59% | as a blocker: 1 of 590 false blocks |
+| Muse Spark Open, zero-shot (Baseten) | 0.88 (0.84-0.91) | 60% | as a blocker: 1 of 590 false blocks |
+| TF-IDF + logistic regression (real npm negatives) | 0.87 (0.83-0.90) | 62% | 2.0% |
+| Llama Guard 3 1B fine-tuned, v1 (popular packages as negatives) | 0.97 (0.95-0.98) | 87% | **37%**: unusable |
+| [Llama Guard 3 1B fine-tuned, v2](https://huggingface.co/lbaumberger/Llama-Guard-3-1B-Gatekeeper-npm) (real npm negatives) | 0.86 (0.82-0.89) | 61% | 1.2% at threshold 0.3 (0.2% on the monitor's own stream) |
+
+**What changed the system's recall, measured on the same test set:**
+
+| Stage | Result |
+|---|---|
+| Any one-shot Muse model | 61% of malware (129 of 212), 3 of 590 benign |
+| + investigator (Muse Spark Open, up to 8 steps, about 1.3 cents a package) | **66%** (139 of 212); on 131 benign packages no `malicious` verdict and one weak `suspicious` (0.55) |
+| First-stage gate, old setting (1-2% of live npm goes on) | reaches 51-60% of the malware |
+| First-stage gate, new setting (~5% of live npm each) | reaches 83% |
+
+The gate was never the limit, and neither was money: the models are precise, and most of our credits were unused. So the cheap stages now only route, and the models see several times more.
+
+**What the remaining misses are.** We checked the 83 samples no one-shot model caught against OSV. 18 have no OSV entry at all (mostly prebuilt native binaries). 19 are `@toptal/picasso-*` packages labelled for contacting a domain, with no visible malicious code in the sampled archive. Others are sleeper versions: `vs-modules` 1.2.1 really does ship `// leave blank for now` as its install script; the payload arrives in another version, and the label covers the package. So a share of the test set cannot be found from the archive by anyone, which is why the live numbers matter more than this table.
+
+Live false positives are measured on 1,459 npm releases from days the models never saw (published 2026-10-22, labelled with a week of OSV hindsight, plus the monitor's own sample from 2026-10-28). Most remaining false positives there are SEO spam packages.
+
+**Meta models agree on what they see.** Muse Spark, Muse Spark Open and Muse Glimmer reach the same level (PR-AUC 0.87-0.88) and block 55-57% of the test malware. When Spark and Spark Open both say malicious or suspicious, not one of the 590 benign test packages is blocked; any one of the three catches 60%. The 85 samples all three miss are mostly not a model problem: 78 have no suspicious line in their evidence at all (the payload sits in a dependency, a native binary, or a file over the 1 MB read cap). Gatekeeper therefore also checks every new version's dependencies against the 222k npm names OSV lists as malicious (a clean wrapper that installs known malware is flagged on that alone; 0 hits on 17,768 ordinary npm releases).
+
+**Lesson: cap the free text.** Spark Open first lost 35% of its test answers (and 20% of live verdicts): under strict JSON output it sometimes repeated itself inside the free-text `summary` until the 4,000-token limit. Length caps in the JSON schema (enforced by constrained decoding) fixed it: answers dropped from up to 4,000 to ~250 tokens, and PR-AUC rose from 0.78 to 0.88.
+
+**Lesson: test on real traffic.** Llama Guard v1 looked excellent offline but flagged 37% of live npm releases. Its benign training data were popular, well-maintained packages, so it learned "unpolished = malicious", and the offline test shared that bias. Retrained with real npm releases as negatives (v2), it is usable as a safety net, and the honest ranking changes: zero-shot Muse Glimmer is the strongest detector, and the small models serve as fast pre-filters in front of it. The thresholds of the small models are fixed on training data; the monitor's Llama Guard threshold (0.3, stricter than validation) was chosen after looking at the 2026-10-22 slice, so the monitor's own stream is the cleaner check. Fine-tuned models were trained only on ground truth (never on Muse Spark outputs).
+
+## Safety
+
+Gatekeeper never executes package code. Package archives are read in memory; malware samples are only unpacked inside isolated cloud containers. This repository contains no malware: only package identifiers and scripts to rebuild datasets. The demo package in `demo/villain-pkg` is a harmless imitation that only talks to localhost.
+
+## Try the investigator
+
+Open [the demo](https://lb2002--gatekeeper-api.us-east.modal.run/try), type any npm package, and watch the steps come in. No account. With a Modal login, `uv run gk investigate name@version` does the same in a terminal.
+
+Open weights: every-flag verdicts run on **Muse Spark Open** through partner inference (Fireworks, and Baseten until those credits ran out on Nov 1). The investigator ran there too and every number above was measured on Spark Open; since Nov 2 the live investigator and the demo run on Muse Spark instead. That is not an equal swap: side by side on 11 recent packages the two agreed on 6, and Muse Spark cleared one package Spark Open had called malicious, at about three times the cost. **Muse Glimmer 30B** runs on a laptop GPU through llama.cpp; the fine-tuned **Llama Guard 3 1B** runs on a Modal GPU. Muse Spark (Meta Model API) gives second opinions.
+
+## Check your project
+
+`gk audit` answers the question after every incident: am I already affected? It reads the lockfile (`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`) and nothing else, so nothing is installed or run.
+
+```bash
+gk guard setup      # once: downloads the list of known malware
+gk audit            # in your project; --offline sends nothing, --json for scripts
+```
+
+`gk audit --since main` also asks what a change brought in. Nobody has reported a package that came out this morning, so the check of known malware cannot help there: up to 5 added public versions go to the hosted investigator, which reads them, install scripts first (the registry says which, not the lockfile). A known version whose source or hash changed counts as added, and a hash that differs from the published one fails the check. Only names and versions leave your machine, and only for versions the public registry has. If something stays unread the result says so and is not called clean; `--strict` fails the build on it. In a workflow, the action does this on every pull request:
+
+```yaml
+- uses: actions/checkout@v4
+- uses: lb2002/gatekeeper@v2.3
+```
+
+[This draft pull request](https://github.com/lb2002/gatekeeper/pull/1) shows it stopping a reported package on GitHub.
+
+The same check runs [on the demo page](https://lb2002--gatekeeper-api.us-east.modal.run/try) without installing anything. It flags an entry that points to another package's file on the registry, the usual way to poison a lockfile. It flags versions OSV lists as malware, npm's placeholders for removed packages, and locked packages that come from a server other than the registry (a poisoned lockfile); code hosts like GitHub are shown as a note. Tested on the lockfiles of Next.js, VS Code, React and Babel (9,000 packages): no false alarms. Exit code 1 means something needs a look, so it also works in CI:
+
+```yaml
+- uses: lb2002/gatekeeper@v2.3
+```
+
+## Try the install guard
+
+Needs [uv](https://docs.astral.sh/uv/) and Node/npm. No account or API key, under a minute:
+
+```bash
+uv tool install git+https://github.com/lb2002/gatekeeper
+gk guard setup                # shims, list of 222k malicious npm names (3 MB), local classifier (6 MB)
+gk guard shell                # Windows: a PowerShell with the shims first on PATH
+# macOS/Linux instead: export PATH="$HOME/.gatekeeper/bin:$PATH"
+npm install <package>         # checked before anything is installed
+```
+
+Known-malicious packages and dependencies are blocked and brand-new versions are held without any model. **No GPU needed:** an archive the static rules flag goes to the hosted investigator (about 30 seconds; it sends the package name and version, nothing about your machine, and `GK_NO_CLOUD=1` turns it off). For full privacy and offline use, run Muse Glimmer on your own machine instead: such archives then go to a local [llama.cpp](https://github.com/ggml-org/llama.cpp) server (`llama-server -m Muse-Glimmer-30B-KQuant-17GB-Q4_K_M.gguf --jinja -fa on -c 8192 --port 8080 --reasoning-format deepseek --reasoning-budget 48 --alias muse-glimmer`, the [official GGUF](https://huggingface.co/meta-models/Muse-Glimmer-30B-GGUF); `GK_LOCAL_URL` points elsewhere). With neither available, those installs fail closed (blocked, `--gk-allow` to override). `demo/` has a harmless typosquat and a local registry to see a block end to end.
+
+## Meta models and where each runs
+
+| Model | Job | Where it runs |
+|---|---|---|
+| **Muse Spark Open** (`meta-models/muse-spark-open-1026`) | A verdict with cited lines on every flag; the evaluation, and the investigator until Nov 1 | Fireworks; Baseten until its credits ran out |
+| **Muse Spark** (`muse-spark-1.3`) | Second opinion on what the first models accuse; since Nov 2 the investigator agent and the public demo | Meta Model API, standard mode |
+| **Muse Glimmer 30B** | Offline verdicts in the install guard, and the laptop worker | Your machine, through llama.cpp |
+| **Llama Guard 3 1B**, fine-tuned ([adapter](https://huggingface.co/lbaumberger/Llama-Guard-3-1B-Gatekeeper-npm)) | Narrows the stream before the Muse models | Modal GPU |
+| **Muse Code** | Demo agent, with the guard's npm first on PATH | Your terminal, on `muse-spark-1.3` |
+
+Nothing here needs a key to try: the hosted demo, the install guard's rules and `gk audit` run without one. To call the models yourself, copy `.env.example` to `.env`, add a Meta Model API key or a partner key, and run `uv run --env-file .env gk check <package>@<version> --backend spark`. Never commit `.env`.
+
+## Run it
+
+```bash
+uv sync
+uv run pytest
+uv run gk watch                                          # live view of new npm releases (metadata only)
+uv run gk check <package>@<version> --backend local      # needs llama-server with Muse Glimmer
+uv run gk guard enable                                   # npm/npx shims
+uv run gk guard update-osv                               # offline list of 222k malicious npm names
+uv run modal deploy modal_app/app.py                     # the live monitor
+```

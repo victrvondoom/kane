@@ -24,7 +24,7 @@ async function req(method, p, form) {
 const end = (ok, summary, step) => {
   if (!ok) out({ step, status: 'failed', remark: summary });
   out({ type: 'run_end', status: ok ? 'passed' : 'failed', summary, session_dir: sessionDir });
-  process.exit(ok ? 0 : 1);
+  process.exitCode = ok ? 0 : 1;
 };
 out({ type: 'stream_start', cli_version: 'fixture-store-check' });
 try {
@@ -38,7 +38,8 @@ try {
     const total = /data-testid="order-total">([^<]+)</.exec(cart.html)?.[1];
     out({ step: 2, status: 'done', remark: `Applied SAVE10; order total reads ${total}` });
     end(total === '$72.00', total === '$72.00' ? 'Order total shows $72.00 after SAVE10' : `Order total shows ${total}, expected $72.00`, 3);
+  } else {
+    fs.writeFileSync(path.join(sessionDir, 'home.txt'), home.html.replace(/<style[\s\S]*?<\/style>/, ''));
+    end(home.status === 200 && /Trail Backpack/.test(home.html), 'Catalogue page loaded', 2);
   }
-  fs.writeFileSync(path.join(sessionDir, 'home.txt'), home.html.replace(/<style[\s\S]*?<\/style>/, ''));
-  end(home.status === 200 && /Trail Backpack/.test(home.html), 'Catalogue page loaded', 2);
-} catch (e) { process.stderr.write(`fetch failed: ${e.message}\n`); process.exit(2); }
+} catch (e) { process.stderr.write(`fetch failed: ${e.message}\n`); process.exitCode = 2; }

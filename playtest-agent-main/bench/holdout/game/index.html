@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lantern Rooms</title>
+<style>html,body{margin:0;background:#0c0f14;overflow:hidden}canvas{display:block}</style></head>
+<body><canvas id="c" width="640" height="360"></canvas>
+<script>
+(() => {
+  const q = new URLSearchParams(location.search);
+  const BUGS = new Set((q.get('bugs') || '').split(',').filter(Boolean).map(Number));
+  window.__bugHit = {1: false, 2: false, 3: false, 4: false, 5: false};
+  window.__won = false;
+  const g = document.getElementById('c').getContext('2d');
+
+  const P = 14, SPEED = 2, TOP = 40;
+  const WALLS = [
+    {x: 0, y: 28, w: 640, h: 12}, {x: 0, y: 344, w: 640, h: 16}, {x: 0, y: 28, w: 12, h: 332}, {x: 628, y: 28, w: 12, h: 332},
+    {x: 210, y: 40, w: 12, h: 130}, {x: 210, y: 210, w: 12, h: 134},
+    {x: 420, y: 40, w: 12, h: 130}, {x: 420, y: 210, w: 12, h: 134},
+  ];
+  const PILLAR = {x: 120, y: 230, w: 30, h: 50};
+  const SPIKES = {x: 240, y: 252, w: 156, h: 16};
+  const DOORS = {blue: {x: 210, y: 170, w: 12, h: 40}, red: {x: 420, y: 170, w: 12, h: 40}};
+  const EXIT = {x: 560, y: 190, r: 16};
+  let st, keys = {}, queue = [], msg = '', msgT = 0;
+
+  function reset() {
+    st = {x: 40, y: 183, room: 1, held: [], used: [], open: {blue: false, red: false}, gems: 0, hearts: 2, over: false, won: false,
+          items: [
+            {id: 'blue', kind: 'key', x: 160, y: 80, taken: false},
+            {id: 'red', kind: 'key', x: 320, y: 312, taken: false},
+            {id: 'g1', kind: 'gem', x: 60, y: 300, taken: false},
+            {id: 'g2', kind: 'gem', x: 300, y: 80, taken: false},
+            {id: 'g3', kind: 'gem', x: 380, y: 300, taken: false},
+          ]};
+    window.__won = false;
+    msg = ''; msgT = 0;
+  }
+  reset();
+  const say = (t) => { msg = t; msgT = 120; };
+
+  addEventListener('keydown', (e) => {
+    if (e.repeat) return;
+    keys[e.code] = true;
+    if (e.code === 'KeyE') queue.push('use');
+    if (e.code === 'KeyR') queue.push('restart');
+    if (e.code.startsWith('Arrow')) e.preventDefault();
+  });
+  addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+  const hit = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  const box = (x, y) => ({x: x - P / 2, y: y - P / 2, w: P, h: P});
+  const near = (d) => Math.abs(st.x - (d.x + d.w / 2)) < 30 && Math.abs(st.y - (d.y + d.h / 2)) < 30;
+
+  function solid(b) {
+    if (WALLS.some((w) => hit(b, w))) return true;
+    if (!BUGS.has(2) && hit(b, PILLAR)) return true;
+    for (const name of ['blue', 'red']) {
+      const d = DOORS[name];
+      if (!hit(b, d)) continue;
+      if (!st.open[name]) return true;
+      if (name === 'red' && BUGS.has(4)) { window.__bugHit[4] = true; return true; }
+    }
+    return false;
+  }
+
+  function use() {
+    for (const name of ['blue', 'red']) {
+      const d = DOORS[name];
+      if (!near(d) || st.open[name]) continue;
+      if (!st.held.includes(name)) return say('Locked.');
+      st.open[name] = true;
+      st.held = st.held.filter((k) => k !== name);
+      st.used.push(name);
+      if (name === 'blue' && BUGS.has(3)) { st.items[0].taken = false; window.__bugHit[3] = true; }
+      return;
+    }
+  }
+
+  function step() {
+    while (queue.length) {
+      const a = queue.shift();
+      if (a === 'restart') { reset(); continue; }
+      if (a === 'use' && !st.over && !st.won) use();
+    }
+    if (msgT > 0) msgT--;
+    if (st.over || st.won) return;
+    const dx = (keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0);
+    const dy = (keys.ArrowDown ? 1 : 0) - (keys.ArrowUp ? 1 : 0);
+    for (let i = 0; i < SPEED; i++) {
+      if (dx && !solid(box(st.x + dx, st.y))) st.x += dx;
+      if (dy && !solid(box(st.x, st.y + dy))) st.y += dy;
+    }
+    const me = box(st.x, st.y);
+    if (BUGS.has(2) && hit(me, PILLAR)) window.__bugHit[2] = true;
+    for (const it of st.items) {
+      if (it.taken || !hit(me, {x: it.x - 8, y: it.y - 8, w: 16, h: 16})) continue;
+      it.taken = true;
+      if (it.kind === 'key') st.held.push(it.id);
+      else {
+        st.gems += it.id === 'g2' && BUGS.has(1) ? 2 : 1;
+        if (it.id === 'g2' && BUGS.has(1)) window.__bugHit[1] = true;
+      }
+    }
+    if (hit(me, SPIKES)) {
+      st.hearts -= 1;
+      st.x = 240; st.y = 190;
+      if (st.hearts <= 0) {
+        if (BUGS.has(5)) window.__bugHit[5] = true;
+        else { st.hearts = 0; st.over = true; }
+      }
+    }
+    st.room = st.x < 216 ? 1 : st.x < 426 ? 2 : 3;
+    if (Math.hypot(st.x - EXIT.x, st.y - EXIT.y) < EXIT.r + P / 2) { st.won = true; window.__won = true; }
+  }
+
+  const FLOORS = ['#2b3442', '#33303f', '#2c3a35'];
+  function drawKey(x, y, color) {
+    g.fillStyle = color;
+    g.beginPath(); g.arc(x - 4, y, 5, 0, Math.PI * 2); g.fill();
+    g.fillRect(x - 1, y - 2, 11, 4); g.fillRect(x + 6, y + 2, 3, 4);
+  }
+  function draw() {
+    g.fillStyle = FLOORS[0]; g.fillRect(0, 28, 216, 332);
+    g.fillStyle = FLOORS[1]; g.fillRect(216, 28, 210, 332);
+    g.fillStyle = FLOORS[2]; g.fillRect(426, 28, 214, 332);
+    g.fillStyle = 'rgba(255,255,255,0.04)';
+    for (let x = 12; x < 628; x += 24) for (let y = TOP; y < 344; y += 24) if ((x + y) % 48 === 4) g.fillRect(x, y, 24, 24);
+    g.fillStyle = '#151a22';
+    for (const w of WALLS) g.fillRect(w.x, w.y, w.w, w.h);
+    g.fillRect(PILLAR.x, PILLAR.y, PILLAR.w, PILLAR.h);
+    g.fillStyle = '#232a35'; g.fillRect(PILLAR.x + 3, PILLAR.y + 3, PILLAR.w - 6, PILLAR.h - 6);
+    for (const [name, color] of [['blue', '#3d7bf0'], ['red', '#e0473f']]) {
+      const d = DOORS[name];
+      g.fillStyle = color;
+      if (st.open[name]) { g.fillRect(d.x, d.y, d.w, 3); g.fillRect(d.x, d.y + d.h - 3, d.w, 3); }
+      else { g.fillRect(d.x, d.y, d.w, d.h); g.fillStyle = '#f2d16b'; g.fillRect(d.x + 4, d.y + 17, 4, 6); }
+    }
+    g.fillStyle = '#c9ccd4';
+    for (let x = SPIKES.x; x < SPIKES.x + SPIKES.w; x += 12) {
+      g.beginPath(); g.moveTo(x, SPIKES.y + SPIKES.h); g.lineTo(x + 6, SPIKES.y); g.lineTo(x + 12, SPIKES.y + SPIKES.h); g.fill();
+    }
+    const glow = 0.6 + 0.4 * Math.sin(window.__frame / 10);
+    g.strokeStyle = `rgba(250, 210, 90, ${glow})`; g.lineWidth = 4;
+    g.beginPath(); g.arc(EXIT.x, EXIT.y, EXIT.r, 0, Math.PI * 2); g.stroke();
+    g.fillStyle = 'rgba(250, 210, 90, 0.25)'; g.beginPath(); g.arc(EXIT.x, EXIT.y, EXIT.r - 4, 0, Math.PI * 2); g.fill();
+    for (const it of st.items) {
+      if (it.taken) continue;
+      if (it.kind === 'key') drawKey(it.x, it.y, it.id === 'blue' ? '#3d7bf0' : '#e0473f');
+      else { g.fillStyle = '#5ee0c4'; g.beginPath(); g.moveTo(it.x, it.y - 7); g.lineTo(it.x + 6, it.y); g.lineTo(it.x, it.y + 7); g.lineTo(it.x - 6, it.y); g.fill(); }
+    }
+    g.fillStyle = '#f4e4a0'; g.beginPath(); g.arc(st.x, st.y, P / 2, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#3a2f12'; g.fillRect(st.x - 3, st.y - 2, 2, 2); g.fillRect(st.x + 1, st.y - 2, 2, 2);
+
+    g.fillStyle = '#0c0f14'; g.fillRect(0, 0, 640, 28);
+    g.font = '14px system-ui, sans-serif'; g.textBaseline = 'middle'; g.fillStyle = '#e8ecf2';
+    g.fillText(`Gems ${st.gems} / 3`, 10, 14);
+    g.fillText(`Hearts ${st.hearts}`, 110, 14);
+    g.fillText('Keys', 210, 14);
+    st.held.forEach((k, i) => drawKey(262 + i * 26, 14, k === 'blue' ? '#3d7bf0' : '#e0473f'));
+    g.fillText(`Room ${st.room}`, 560, 14);
+    if (msgT > 0) { g.fillStyle = 'rgba(12,15,20,0.85)'; g.fillRect(220, 300, 200, 30); g.fillStyle = '#e8ecf2'; g.fillText(msg, 232, 315); }
+    if (st.over || st.won) {
+      g.fillStyle = 'rgba(12,15,20,0.8)'; g.fillRect(170, 140, 300, 80);
+      g.fillStyle = '#e8ecf2'; g.font = '20px system-ui, sans-serif';
+      g.fillText(st.won ? 'You found the way out' : 'Out of hearts', 200, 170);
+      g.font = '14px system-ui, sans-serif'; g.fillText('Press R to play again', 200, 200);
+    }
+  }
+
+  window.__frame = 0;
+  function frame() {
+    step(); window.__frame++;
+    draw();
+    window.__ready = true;
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  window.__state = () => ({x: st.x, y: st.y, room: st.room, keys: st.held.slice(), doors: {...st.open}, gems: st.gems, hearts: st.hearts,
+                           over: st.over, won: st.won});
+})();
+</script></body></html>

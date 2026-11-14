@@ -1,0 +1,54 @@
+from oqed import fixup
+
+
+def test_errors_come_with_their_line_and_rule():
+    errs = fixup.errors("\tmov eax, edi\n\tadd r10, edx\n\tlea rsi, [r9+rcx+rsi]\n\tret\n")
+    assert [(e.line, e.text) for e in errs] == [(2, "add r10, edx"), (3, "lea rsi, [r9+rcx+rsi]")]
+    assert "same width" in errs[0].describe() and "at most two" in errs[1].describe()
+    assert fixup.errors("\tmov eax, edi\n\tret\n") == []
+
+
+def test_only_unambiguous_errors_are_fixed():
+    body = (
+        "\tshl rax, rcx\n\tbzhi rax, rbx, r11d\n\tshrx ecx, ecx, rax\n\tmov word ptr [rdx], eax\n"
+        "\tadd r10, edx\n\tmov rcx, dword ptr [rdi]\n\tret\n"
+    )
+    fixed, notes = fixup.fix(body)
+    assert fixed.splitlines()[:4] == [
+        "\tshl rax, cl",
+        "\tbzhi rax, rbx, r11",
+        "\tshrx ecx, ecx, eax",
+        "\tmov word ptr [rdx], ax",
+    ]
+    # Zero- or sign-extend? A load of which width? Left to the model.
+    assert "\tadd r10, edx" in fixed and "\tmov rcx, dword ptr [rdi]" in fixed
+    assert len(notes) == 4
+    assert fixup.fix("\tmov eax, edi\n\tret\n") == ("\tmov eax, edi\n\tret\n", [])
+
+
+def test_gcc_addresses_take_the_usual_form():
+    from oqed.toolchain import gcc_addresses
+
+    body = (
+        "\tmov QWORD PTR 8[rsp], r10\n\tmov eax, DWORD PTR -4[rbp+rcx*4]\n"
+        "\tlea rax, table.3[rip]\n\tcall [QWORD PTR 32[r10]]\n\tmov eax, [rdi]\n"
+    )
+    assert gcc_addresses(body).splitlines() == [
+        "\tmov QWORD PTR [rsp+8], r10",
+        "\tmov eax, DWORD PTR [rbp+rcx*4-4]",
+        "\tlea rax, [rip+table.3]",
+        "\tcall QWORD PTR [r10+32]",
+        "\tmov eax, [rdi]",
+    ]
+
+
+def test_vector_move_sizes_and_reference_style_labels():
+    body = "\tvmovdqu ymm0, BYTE PTR [rdi]\n\tvmovdqa xmmword ptr [rsi], xmm1\n8f:\n\tret\n"
+    fixed, notes = fixup.fix(body)
+    assert fixed.splitlines() == [
+        "\tvmovdqu ymm0, ymmword ptr [rdi]",
+        "\tvmovdqa xmmword ptr [rsi], xmm1",
+        "8:",
+        "\tret",
+    ]
+    assert len(notes) == 2

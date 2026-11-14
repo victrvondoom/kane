@@ -1,0 +1,26 @@
+{
+ "type": "web",
+ "name": "Cave Courier",
+ "url": "game/index.html",
+ "url_query": {
+  "bugs": "{bugs}",
+  "debug": "{debug}"
+ },
+ "viewport": {
+  "width": 640,
+  "height": 360
+ },
+ "ready_js": "window.__ready === true",
+ "frame_js": "window.__frame",
+ "hold_frames": 15,
+ "settle_frames": 4,
+ "state_js": "window.__state()",
+ "won_js": "window.__won === true",
+ "bug_js": "window.__bugHit",
+ "controls": "Left and right arrows walk. Space jumps. E uses the thing next to you. R restarts.",
+ "goal": "Explore the cave. Try every object and watch the numbers. If something looks wrong, call report_bug. Say in one short sentence what you see before each move.",
+ "serve": {
+  "dir": "game",
+  "path": "index.html"
+ }
+}

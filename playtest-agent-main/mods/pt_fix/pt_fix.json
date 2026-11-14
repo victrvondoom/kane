@@ -1,0 +1,10 @@
+{
+  "id": "pt_fix",
+  "name": "Test fix (unofficial)",
+  "author": "Adrian Ferguson",
+  "description": "An unofficial test patch, not made by or linked to the game's maker, and not shared or sold.",
+  "version": "0.1.0",
+  "has_pck": false,
+  "has_dll": true,
+  "affects_gameplay": true
+}

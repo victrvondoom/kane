@@ -1,5 +1,6 @@
 // SHIPPROOF single-page app. No build step; every value on screen is fetched from the API.
 import { ProofTab, BuildsTab, IntelligenceTab, CITab, DossierTab } from './proof.js';
+import { AutonomousLoopTab, StepsWriterTab, GatekeeperTab, OqedTab } from './autonomous.js';
 const $app = document.getElementById('app');
 let me = null, system = null, cleanup = [];
 
@@ -85,7 +86,13 @@ function shell(...content) {
     h('header', { class: 'top' }, h('div', { class: 'wrap' },
       h('a', { class: 'brand', href: me ? '#/app' : '#/' }, h('i'), 'SHIPPROOF'),
       h('nav', {}, engine,
-        me ? [h('a', { href: '#/app' }, 'Projects'), h('a', { href: '#/new', class: 'opt' }, 'New project'),
+        me ? [h('a', { href: '#/app' }, 'Projects'),
+          h('button', { class: 'linkbtn', style: { color: 'var(--info)', 'font-weight': '600' }, onclick: act(async () => {
+            const demo = await api('POST', '/demo/judge-scenario');
+            toast('Judge demo loaded! Opening autonomous loop...');
+            location.hash = `#/p/${demo.project.id}/loop`;
+          }) }, '⚡ Judge Demo (1-Click)'),
+          h('a', { href: '#/new', class: 'opt' }, 'New project'),
           h('button', { class: 'linkbtn', onclick: act(async () => { await api('POST', '/auth/logout'); me = null; location.hash = '#/'; render(); }) }, 'Sign out')]
           : [h('a', { href: '#/login' }, 'Sign in'), h('a', { class: 'btn primary sm', href: '#/signup' }, 'Get started')]))),
     h('main', { class: 'wrap' }, content));
@@ -156,8 +163,15 @@ async function Dashboard() {
   if (live) { const t = setTimeout(render, 3000); cleanup.push(() => clearTimeout(t)); }
   const totals = projects.reduce((a, p) => { for (const k of ['total', 'verified', 'failed', 'blocked', 'untested']) a[k] += p.gate.totals[k]; return a; }, { total: 0, verified: 0, failed: 0, blocked: 0, untested: 0 });
   return shell(h('div', { class: 'page stack-l' },
-    h('div', { class: 'row spread' }, h('div', { class: 'stack-s' }, h('h3', {}, `${me.name}’s workspace`), h('h1', {}, 'Verification projects')),
-      h('a', { class: 'btn primary', href: '#/new' }, 'New verification project')),
+    h('div', { class: 'row spread' },
+      h('div', { class: 'stack-s' }, h('h3', {}, `${me.name}’s workspace`), h('h1', {}, 'Verification projects')),
+      h('div', { class: 'row' },
+        h('button', { class: 'btn', style: { background: 'var(--panel2)', border: '1px solid var(--info)', color: 'var(--info)', 'font-weight': '600' }, onclick: act(async () => {
+          const demo = await api('POST', '/demo/judge-scenario');
+          toast('Judge demo loaded! Opening autonomous loop...');
+          location.hash = `#/p/${demo.project.id}/loop`;
+        }) }, '⚡ Judge Demo (1-Click)'),
+        h('a', { class: 'btn primary', href: '#/new' }, 'New verification project'))),
     engineCallout(),
     projects.length ? h('div', { class: 'stats' },
       h('div', { class: 'stat' }, h('b', {}, `${m.releaseReady}/${m.projects}`), h('span', {}, 'Projects release-verified')),
@@ -249,10 +263,38 @@ async function Project(id, tab = 'requirements', sub) {
     try { const { run } = await api('POST', `/projects/${id}/runs`, body); toast(msg); location.hash = `#/run/${run.id}`; }
     catch (e) { if (e.data?.activeRunId) { toast(e.message, true); location.hash = `#/run/${e.data.activeRunId}`; } else throw e; }
   });
-  const tabs = [['requirements', 'Requirements', criteria.length], ['failures', 'Failure analysis', openTasks.length + blocked.length, true], ['history', 'History', d.runCount],
-    ['proof', 'Proof explorer'], ['builds', 'Builds & impact'], ['intelligence', 'Release intelligence', g.reasons.length, true], ['ci', 'CI'], ['dossier', 'Dossier'], ['report', 'Release report'], ['settings', 'Settings']];
-  const body = { requirements: () => RequirementsTab(d), failures: () => FailuresTab(d, start), history: () => HistoryTab(d), report: () => ReportTab(d), settings: () => SettingsTab(d),
-    proof: () => ProofTab(d, sub), builds: () => BuildsTab(d, sub), intelligence: () => IntelligenceTab(d), ci: () => CITab(d), dossier: () => DossierTab(d, sub) }[tab] || (() => RequirementsTab(d));
+  const tabs = [
+    ['loop', '⚡ Autonomous Loop'],
+    ['requirements', 'Requirements', criteria.length],
+    ['specs', 'Steps Writer'],
+    ['security', 'Gatekeeper'],
+    ['failures', 'Failure analysis', openTasks.length + blocked.length, true],
+    ['history', 'History', d.runCount],
+    ['proof', 'Proof explorer'],
+    ['builds', 'Builds & impact'],
+    ['intelligence', 'Release intelligence', g.reasons.length, true],
+    ['oqed', 'OQED'],
+    ['ci', 'CI'],
+    ['dossier', 'Dossier'],
+    ['report', 'Release report'],
+    ['settings', 'Settings']
+  ];
+  const body = {
+    loop: () => AutonomousLoopTab(d, sub),
+    specs: () => StepsWriterTab(d),
+    security: () => GatekeeperTab(d),
+    oqed: () => OqedTab(d),
+    requirements: () => RequirementsTab(d),
+    failures: () => FailuresTab(d, start),
+    history: () => HistoryTab(d),
+    report: () => ReportTab(d),
+    settings: () => SettingsTab(d),
+    proof: () => ProofTab(d, sub),
+    builds: () => BuildsTab(d, sub),
+    intelligence: () => IntelligenceTab(d),
+    ci: () => CITab(d),
+    dossier: () => DossierTab(d, sub)
+  }[tab] || (() => AutonomousLoopTab(d, sub));
   return shell(h('div', { class: 'page stack-l' },
     h('div', { class: 'row spread', style: { 'align-items': 'flex-start' } },
       h('div', { class: 'stack-s grow' }, h('h3', {}, h('a', { href: '#/app', style: { 'text-decoration': 'none' } }, '← Projects')), h('h1', {}, p.name),
@@ -270,6 +312,7 @@ async function Project(id, tab = 'requirements', sub) {
       h('a', { class: 'stat', href: `#/p/${id}/intelligence`, style: { 'text-decoration': 'none' } }, h('b', { class: g.freshness.STALE ? 's-blocked' : '' }, g.freshness.STALE), h('span', {}, 'Stale evidence')),
       h('div', { class: 'stat' }, p.lastRun ? [h('div', {}, tag(p.lastRun.status)), h('span', {}, `Latest run · ${fmtDur(p.lastRun.durationMs)}`)] : [h('b', { class: 'mute' }, '—'), h('span', {}, 'Latest run')])),
     h('div', { class: 'row' },
+      h('a', { class: 'btn', style: { background: 'var(--panel2)', border: '1px solid var(--info)', color: 'var(--info)', 'font-weight': '600' }, href: `#/p/${id}/loop` }, '⚡ Autonomous Loop Demo'),
       activeRun ? h('a', { class: 'btn primary', href: `#/run/${activeRun.id}` }, h('i', { class: 'dot live' }), `Watch run #${activeRun.id}`)
         : h('button', { class: 'btn primary', disabled: !criteria.length, onclick: start({}, 'Verification queued') }, 'Run full verification'),
       !activeRun && (t.failed + t.blocked) ? h('button', { class: 'btn', onclick: start({ mode: 'failed' }, 'Re-run queued') }, `Re-run ${t.failed + t.blocked} failed / unproven`) : null,

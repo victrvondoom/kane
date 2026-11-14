@@ -1,0 +1,1048 @@
+{
+ "bugs_on": "",
+ "steps": 12,
+ "cost_usd": 0.23052,
+ "reports": [],
+ "actions_by_step": [
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "down"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   }
+  ]
+ ],
+ "log": [
+  {
+   "step": 0,
+   "t": 6.3,
+   "shot_t": 0.0,
+   "cost": 0.016504,
+   "latency_s": 6.207,
+   "in": 1661,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "Starting a 2048 run toward a 64 tile — I'll build up merges in a corner.",
+   "out": 493,
+   "reasoning_tokens": 367,
+   "spans": [
+    {
+     "from_s": 1793242206.5845394,
+     "to_s": 1793242206.9106922
+    },
+    {
+     "from_s": 1793242206.9106953,
+     "to_s": 1793242207.2449298
+    },
+    {
+     "from_s": 1793242207.2449322,
+     "to_s": 1793242207.5618467
+    },
+    {
+     "from_s": 1793242207.5618494,
+     "to_s": 1793242207.8999517
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 1,
+   "t": 12.97,
+   "shot_t": 7.62,
+   "cost": 0.0239,
+   "latency_s": 5.26,
+   "in": 3030,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 589,
+   "reasoning_tokens": 491,
+   "spans": [
+    {
+     "from_s": 1793242213.2540488,
+     "to_s": 1793242213.574206
+    },
+    {
+     "from_s": 1793242213.5742095,
+     "to_s": 1793242213.8947365
+    },
+    {
+     "from_s": 1793242213.8947382,
+     "to_s": 1793242214.2227507
+    },
+    {
+     "from_s": 1793242214.2227526,
+     "to_s": 1793242214.544356
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 2,
+   "t": 24.87,
+   "shot_t": 14.27,
+   "cost": 0.0190384,
+   "latency_s": 10.516,
+   "in": 4495,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 610,
+   "reasoning_tokens": 512,
+   "spans": [
+    {
+     "from_s": 1793242225.1544976,
+     "to_s": 1793242225.4764242
+    },
+    {
+     "from_s": 1793242225.47643,
+     "to_s": 1793242225.805928
+    },
+    {
+     "from_s": 1793242225.8059294,
+     "to_s": 1793242226.1260314
+    },
+    {
+     "from_s": 1793242226.1260328,
+     "to_s": 1793242226.4427454
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 3,
+   "t": 32.17,
+   "shot_t": 26.16,
+   "cost": 0.022926400000000003,
+   "latency_s": 5.922,
+   "in": 5981,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"down\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 264,
+   "reasoning_tokens": 166,
+   "spans": [
+    {
+     "from_s": 1793242232.4494476,
+     "to_s": 1793242232.7816265
+    },
+    {
+     "from_s": 1793242232.7816298,
+     "to_s": 1793242233.1101558
+    },
+    {
+     "from_s": 1793242233.1101575,
+     "to_s": 1793242233.4447243
+    },
+    {
+     "from_s": 1793242233.4447258,
+     "to_s": 1793242233.77769
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 4,
+   "t": 37.98,
+   "shot_t": 33.5,
+   "cost": 0.0115152,
+   "latency_s": 4.373,
+   "in": 7121,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "I have a 16 in the corner with an 8 beside it; I'll keep consolidating tiles there.",
+   "out": 268,
+   "reasoning_tokens": 140,
+   "spans": [
+    {
+     "from_s": 1793242238.2607384,
+     "to_s": 1793242238.6021147
+    },
+    {
+     "from_s": 1793242238.6021166,
+     "to_s": 1793242238.9264758
+    },
+    {
+     "from_s": 1793242238.926478,
+     "to_s": 1793242239.2602527
+    },
+    {
+     "from_s": 1793242239.2602546,
+     "to_s": 1793242239.5758133
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 5,
+   "t": 44.41,
+   "shot_t": 39.3,
+   "cost": 0.0148136,
+   "latency_s": 5.009,
+   "in": 8265,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 423,
+   "reasoning_tokens": 338,
+   "spans": [
+    {
+     "from_s": 1793242244.6916997,
+     "to_s": 1793242245.0267444
+    },
+    {
+     "from_s": 1793242245.026746,
+     "to_s": 1793242245.3586967
+    },
+    {
+     "from_s": 1793242245.3586996,
+     "to_s": 1793242245.6926796
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 6,
+   "t": 52.48,
+   "shot_t": 45.41,
+   "cost": 0.010072000000000001,
+   "latency_s": 6.983,
+   "in": 9564,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 145,
+   "reasoning_tokens": 47,
+   "spans": [
+    {
+     "from_s": 1793242252.7642362,
+     "to_s": 1793242253.0937395
+    },
+    {
+     "from_s": 1793242253.0937417,
+     "to_s": 1793242253.424117
+    },
+    {
+     "from_s": 1793242253.4241185,
+     "to_s": 1793242253.7598915
+    },
+    {
+     "from_s": 1793242253.7598944,
+     "to_s": 1793242254.0896451
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 7,
+   "t": 58.31,
+   "shot_t": 53.81,
+   "cost": 0.0325216,
+   "latency_s": 4.406,
+   "in": 10585,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"down\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 358,
+   "reasoning_tokens": 260,
+   "spans": [
+    {
+     "from_s": 1793242258.586902,
+     "to_s": 1793242258.9112556
+    },
+    {
+     "from_s": 1793242258.9112582,
+     "to_s": 1793242259.244672
+    },
+    {
+     "from_s": 1793242259.2446756,
+     "to_s": 1793242259.577655
+    },
+    {
+     "from_s": 1793242259.5776575,
+     "to_s": 1793242259.9094715
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 8,
+   "t": 64.76,
+   "shot_t": 59.63,
+   "cost": 0.015296800000000001,
+   "latency_s": 5.032,
+   "in": 11819,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"down\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "Now at 32 — I need a second 32 next to it, so I'll build the neighboring column up.",
+   "out": 393,
+   "reasoning_tokens": 290,
+   "spans": [
+    {
+     "from_s": 1793242265.0380955,
+     "to_s": 1793242265.359182
+    },
+    {
+     "from_s": 1793242265.3591843,
+     "to_s": 1793242265.69296
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 9,
+   "t": 71.74,
+   "shot_t": 65.41,
+   "cost": 0.025944000000000002,
+   "latency_s": 6.232,
+   "in": 13088,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 477,
+   "reasoning_tokens": 405,
+   "spans": [
+    {
+     "from_s": 1793242272.0174298,
+     "to_s": 1793242272.3425484
+    },
+    {
+     "from_s": 1793242272.3425505,
+     "to_s": 1793242272.6757808
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 10,
+   "t": 82.22,
+   "shot_t": 72.4,
+   "cost": 0.0246008,
+   "latency_s": 9.739,
+   "in": 14441,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "down"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"down\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"down\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 577,
+   "reasoning_tokens": 479,
+   "spans": [
+    {
+     "from_s": 1793242282.4993758,
+     "to_s": 1793242282.8264844
+    },
+    {
+     "from_s": 1793242282.8264885,
+     "to_s": 1793242283.1494672
+    },
+    {
+     "from_s": 1793242283.1494691,
+     "to_s": 1793242283.4736633
+    },
+    {
+     "from_s": 1793242283.4736652,
+     "to_s": 1793242283.792552
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 11,
+   "t": 88.8,
+   "shot_t": 83.51,
+   "cost": 0.013384799999999999,
+   "latency_s": 5.198,
+   "in": 15894,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "The bottom row now has 32, 16, 16 — two left moves should chain them into 64.",
+   "out": 212,
+   "reasoning_tokens": 108,
+   "spans": [
+    {
+     "from_s": 1793242289.0786347,
+     "to_s": 1793242289.408267
+    },
+    {
+     "from_s": 1793242289.4082706,
+     "to_s": 1793242289.742869
+    }
+   ],
+   "checklist": []
+  }
+ ],
+ "fallbacks": 0,
+ "started_at": 1793242200.2807484,
+ "checklist": [],
+ "nudges": 0,
+ "final_tick": null,
+ "stop": "won",
+ "seconds": 89.5,
+ "final_text": "",
+ "won": true,
+ "bug_hits": null,
+ "final_state": {
+  "score": 356,
+  "cells": [
+   [
+    4,
+    4,
+    16,
+    64
+   ],
+   [
+    0,
+    0,
+    4,
+    2
+   ],
+   [
+    2,
+    0,
+    2,
+    0
+   ],
+   [
+    0,
+    0,
+    0,
+    0
+   ]
+  ]
+ },
+ "kind": "goal",
+ "goal": "Make a tile worth at least 64.",
+ "game": "2048",
+ "game_id": "2048",
+ "game_fps": 60,
+ "settings": {
+  "model": "wonder",
+  "effort": "low",
+  "max_out": 3000,
+  "state_text": true,
+  "checklist": false,
+  "narrate": false,
+  "escalate": false,
+  "history": "own",
+  "summary": null,
+  "look_plan": false,
+  "notes": false,
+  "vision": "normal"
+ }
+}

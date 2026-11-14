@@ -1,0 +1,26 @@
+{
+ "note": "SEALED answer key of the holdout game. Only the scorer reads it, and only after a run ends. The agent's code and prompt never read it.",
+ "game": "bench/holdout/game/index.html",
+ "bugs": [
+  {"id": 1, "title": "Middle room gem adds two",
+   "seen": "The top gem in the middle room raises the Gems counter by 2 instead of 1 (Gems can read 4 / 3 at the end).",
+   "where": "Room 2, the gem near the top wall",
+   "trigger": "Open the blue door, walk into room 2 and pick up the gem near its top wall."},
+  {"id": 2, "title": "Walk through the dark pillar",
+   "seen": "The player passes over the dark stone pillar in the first room as if it were floor.",
+   "where": "Room 1, the pillar in the lower part of the room",
+   "trigger": "From the start, go down two steps and then walk right into the pillar."},
+  {"id": 3, "title": "Blue key back after use",
+   "seen": "After the blue door opens, the blue key lies on the floor at its first place again, while the key bar is empty.",
+   "where": "Room 1, the blue key's first place",
+   "trigger": "Take the blue key and open the blue door with E."},
+  {"id": 4, "title": "Open red door still blocks",
+   "seen": "The red door is drawn open after E with the red key, but the player cannot walk through it, so the exit cannot be reached.",
+   "where": "The red door between room 2 and room 3",
+   "trigger": "Open the red door with the red key and walk right into it."},
+  {"id": 5, "title": "Hearts below zero with no end",
+   "seen": "After the second spike hit the game does not end: Hearts reads 0 and then goes below 0, and play carries on.",
+   "where": "Room 2, the row of spikes",
+   "trigger": "Walk into the spikes two times."}
+ ]
+}

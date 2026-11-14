@@ -1,0 +1,329 @@
+{
+ "bugs_on": "",
+ "steps": 5,
+ "cost_usd": 0.08124,
+ "reports": [],
+ "actions_by_step": [
+  [
+   {
+    "type": "click",
+    "x": 400,
+    "y": 399
+   }
+  ],
+  [
+   {
+    "type": "wait",
+    "ms": 1000
+   }
+  ],
+  [
+   {
+    "type": "wait",
+    "ms": 1000
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "right"
+    ]
+   }
+  ],
+  [
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   },
+   {
+    "type": "keypress",
+    "keys": [
+     "left"
+    ]
+   }
+  ]
+ ],
+ "log": [
+  {
+   "step": 0,
+   "t": 2.09,
+   "shot_t": 0.0,
+   "cost": 0.009252,
+   "latency_s": 1.974,
+   "in": 1728,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "click",
+        "x": 400,
+        "y": 399
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"click\",\"x\":400,\"y\":399}]}",
+     "output": "done"
+    }
+   ],
+   "text": "Starting the game, then I'll line up three matching blocks to clear them.",
+   "out": 117,
+   "reasoning_tokens": 30,
+   "spans": [
+    {
+     "from_s": 1793242303.5585978,
+     "to_s": 1793242303.5653603
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 1,
+   "t": 10.36,
+   "shot_t": 2.1,
+   "cost": 0.0065704,
+   "latency_s": 8.148,
+   "in": 2717,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "wait",
+        "ms": 1000
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"wait\",\"ms\":1000}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 99,
+   "reasoning_tokens": 40,
+   "spans": [
+    {
+     "from_s": 1793242311.8232846,
+     "to_s": 1793242312.837247
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 2,
+   "t": 18.72,
+   "shot_t": 11.37,
+   "cost": 0.023892,
+   "latency_s": 7.246,
+   "in": 3703,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "wait",
+        "ms": 1000
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"wait\",\"ms\":1000}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 454,
+   "reasoning_tokens": 395,
+   "spans": [
+    {
+     "from_s": 1793242320.188028,
+     "to_s": 1793242321.199774
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 3,
+   "t": 26.32,
+   "shot_t": 19.74,
+   "cost": 0.014136,
+   "latency_s": 6.478,
+   "in": 5099,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "right"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"right\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "",
+   "out": 390,
+   "reasoning_tokens": 331,
+   "spans": [
+    {
+     "from_s": 1793242327.7903645,
+     "to_s": 1793242328.122218
+    }
+   ],
+   "checklist": []
+  },
+  {
+   "step": 4,
+   "t": 46.44,
+   "shot_t": 26.66,
+   "cost": 0.027388,
+   "latency_s": 19.678,
+   "in": 6463,
+   "calls": [
+    {
+     "name": "act",
+     "args": {
+      "actions": [
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       },
+       {
+        "type": "keypress",
+        "keys": [
+         "left"
+        ]
+       }
+      ]
+     },
+     "raw": "{\"actions\":[{\"type\":\"keypress\",\"keys\":[\"left\"]},{\"type\":\"keypress\",\"keys\":[\"left\"]}]}",
+     "output": "done"
+    }
+   ],
+   "text": "There's a stack of two greens and a green block falling at the bottom — I'll rotate that stack into its path to make three.",
+   "out": 1023,
+   "reasoning_tokens": 917,
+   "spans": [
+    {
+     "from_s": 1793242347.905897,
+     "to_s": 1793242348.238081
+    },
+    {
+     "from_s": 1793242348.2380826,
+     "to_s": 1793242348.5696683
+    }
+   ],
+   "checklist": []
+  }
+ ],
+ "fallbacks": 0,
+ "started_at": 1793242301.465728,
+ "checklist": [],
+ "nudges": 0,
+ "final_tick": null,
+ "stop": "won",
+ "seconds": 47.1,
+ "final_text": "",
+ "won": true,
+ "bug_hits": null,
+ "final_state": {
+  "score": 36,
+  "gameState": 1,
+  "sides": [
+   [
+    {
+     "color": "#f1c40f",
+     "deleted": 0
+    }
+   ],
+   [
+    {
+     "color": "#e74c3c",
+     "deleted": 0
+    },
+    {
+     "color": "#2ecc71",
+     "deleted": 0
+    },
+    {
+     "color": "#f1c40f",
+     "deleted": 0
+    },
+    {
+     "color": "#e74c3c",
+     "deleted": 0
+    },
+    {
+     "color": "#2ecc71",
+     "deleted": 0
+    },
+    {
+     "color": "#2ecc71",
+     "deleted": 0
+    },
+    {
+     "color": "#e74c3c",
+     "deleted": 0
+    },
+    {
+     "color": "#3498db",
+     "deleted": 0
+    }
+   ],
+   [
+    {
+     "color": "#f1c40f",
+     "deleted": 0
+    }
+   ],
+   [],
+   [
+    {
+     "color": "#e74c3c",
+     "deleted": 0
+    },
+    {
+     "color": "#2ecc71",
+     "deleted": 0
+    }
+   ],
+   [
+    {
+     "color": "#f1c40f",
+     "deleted": 0
+    }
+   ]
+  ]
+ },
+ "kind": "goal",
+ "goal": "Clear a group of at least three blocks of one colour and reach a score of at least 9.",
+ "game": "Hextris",
+ "game_id": "hextris",
+ "game_fps": 60,
+ "settings": {
+  "model": "wonder",
+  "effort": "low",
+  "max_out": 3000,
+  "state_text": true,
+  "checklist": false,
+  "narrate": false,
+  "escalate": false,
+  "history": "own",
+  "summary": null,
+  "look_plan": false,
+  "notes": false,
+  "vision": "normal"
+ }
+}

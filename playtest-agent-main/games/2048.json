@@ -1,0 +1,13 @@
+{
+  "type": "web",
+  "name": "2048",
+  "serve": {"dir": "games.cache/2048", "path": "index.html"},
+  "viewport": {"width": 800, "height": 800},
+  "frame_lock": false,
+  "ready_js": "typeof LocalStorageManager === 'function' && new LocalStorageManager().getGameState() !== null",
+  "state_js": "(() => { const s = new LocalStorageManager().getGameState(); return s ? {score: s.score, cells: s.grid.cells.map(col => col.map(t => t ? t.value : 0))} : null; })()",
+  "won_js": "(() => { const s = new LocalStorageManager().getGameState(); return !!s && s.grid.cells.some(col => col.some(t => t && t.value >= 64)); })()",
+  "controls": "Arrow keys slide all tiles. Equal tiles merge. R or the New Game button starts a fresh board.",
+  "goal": "Make a tile worth at least 64.",
+  "notes": "Run python -m tools.fetch_games first. Reads the game's saved board through LocalStorageManager without changing game files. The game clears this board on loss, so state is null after a loss. Random tiles and no replay frame counter: reports show Not reproducible and recordings use real time. The goal is a small milestone, not the full 2048 win. Browser proof within about 40 steps is owed."
+}

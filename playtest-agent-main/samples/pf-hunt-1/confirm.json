@@ -1,0 +1,778 @@
+[
+ {
+  "title": "Reminders toggle stays ON after denying notification permission",
+  "expected": "After tapping \"Don't allow\" on the notification permission prompt triggered by enabling Reminders, the Reminders toggle should revert to OFF (or show permission denied), since notifications cannot be sent.",
+  "actual": "Permission was denied, but Settings shows Reminders toggle still green/ON.",
+  "step": 26,
+  "reproducible": true,
+  "confirmed": true,
+  "evidence": "Replay1: frames show 'Allow Purr-fect Fit to send you notifications? Allow / Don't allow' then final Settings shows Reminders ON green; Replay2: frames show 'Allow Purr-fect Fit to send you notifications? Allow / Don't allow' then final Settings shows Reminders ON green",
+  "judge": "{\"expected_change\": \"After tapping Don't allow on notification prompt, Reminders toggle should revert to OFF\", \"observed_change\": \"Both replays show notification prompt then final Settings with Reminders toggle green/ON\", \"gap\": \"Difference matches reported symptom of toggle staying ON after denial\", \"verdict\": \"YES\", \"evidence\": \"Replay1: frames show 'Allow Purr-fect Fit to send you notifications",
+  "cost_usd": 0.01583325,
+  "state_change": [],
+  "judge_input": "strip",
+  "comparison": {
+   "compared": true,
+   "method": "pictures",
+   "same": true,
+   "difference": 0.0
+  },
+  "refused_inputs": [],
+  "pacing": {
+   "a": [
+    {
+     "step": 0,
+     "gap": 4.68,
+     "pause": 2.24
+    },
+    {
+     "step": 1,
+     "gap": 2.78,
+     "pause": 2.24
+    },
+    {
+     "step": 2,
+     "gap": 1.97,
+     "pause": 1.92
+    },
+    {
+     "step": 3,
+     "gap": 3.68,
+     "pause": 2.13
+    },
+    {
+     "step": 4,
+     "gap": 3.87,
+     "pause": 2.81
+    },
+    {
+     "step": 5,
+     "gap": 2.72,
+     "pause": 2.67
+    },
+    {
+     "step": 6,
+     "gap": 4.77,
+     "pause": 3.72
+    },
+    {
+     "step": 7,
+     "gap": 2.87,
+     "pause": 2.02
+    },
+    {
+     "step": 8,
+     "gap": 3.32,
+     "pause": 2.48
+    },
+    {
+     "step": 9,
+     "gap": 4.76,
+     "pause": 3.91
+    },
+    {
+     "step": 10,
+     "gap": 2.97,
+     "pause": 2.13
+    },
+    {
+     "step": 11,
+     "gap": 2.79,
+     "pause": 1.95
+    },
+    {
+     "step": 12,
+     "gap": 3.13,
+     "pause": 2.29
+    },
+    {
+     "step": 13,
+     "gap": 3.13,
+     "pause": 2.29
+    },
+    {
+     "step": 14,
+     "gap": 3.46,
+     "pause": 2.9
+    },
+    {
+     "step": 15,
+     "gap": 2.89,
+     "pause": 2.24
+    },
+    {
+     "step": 16,
+     "gap": 3.11,
+     "pause": 2.0
+    },
+    {
+     "step": 17,
+     "gap": 3.04,
+     "pause": 1.93
+    },
+    {
+     "step": 18,
+     "gap": 4.16,
+     "pause": 3.04
+    },
+    {
+     "step": 19,
+     "gap": 2.94,
+     "pause": 1.83
+    },
+    {
+     "step": 20,
+     "gap": 3.7,
+     "pause": 2.83
+    },
+    {
+     "step": 21,
+     "gap": 2.98,
+     "pause": 2.42
+    },
+    {
+     "step": 22,
+     "gap": 3.89,
+     "pause": 3.34
+    },
+    {
+     "step": 23,
+     "gap": 4.78,
+     "pause": 3.2
+    },
+    {
+     "step": 24,
+     "gap": 4.02,
+     "pause": 2.48
+    }
+   ],
+   "b": [
+    {
+     "step": 0,
+     "gap": 4.68,
+     "pause": 2.28
+    },
+    {
+     "step": 1,
+     "gap": 2.78,
+     "pause": 2.22
+    },
+    {
+     "step": 2,
+     "gap": 1.97,
+     "pause": 1.92
+    },
+    {
+     "step": 3,
+     "gap": 3.68,
+     "pause": 2.14
+    },
+    {
+     "step": 4,
+     "gap": 3.87,
+     "pause": 2.83
+    },
+    {
+     "step": 5,
+     "gap": 2.72,
+     "pause": 2.67
+    },
+    {
+     "step": 6,
+     "gap": 4.77,
+     "pause": 3.73
+    },
+    {
+     "step": 7,
+     "gap": 2.87,
+     "pause": 2.02
+    },
+    {
+     "step": 8,
+     "gap": 3.32,
+     "pause": 2.47
+    },
+    {
+     "step": 9,
+     "gap": 4.76,
+     "pause": 3.91
+    },
+    {
+     "step": 10,
+     "gap": 2.97,
+     "pause": 2.13
+    },
+    {
+     "step": 11,
+     "gap": 2.79,
+     "pause": 1.94
+    },
+    {
+     "step": 12,
+     "gap": 3.13,
+     "pause": 2.29
+    },
+    {
+     "step": 13,
+     "gap": 3.13,
+     "pause": 2.29
+    },
+    {
+     "step": 14,
+     "gap": 3.46,
+     "pause": 2.9
+    },
+    {
+     "step": 15,
+     "gap": 2.89,
+     "pause": 2.23
+    },
+    {
+     "step": 16,
+     "gap": 3.11,
+     "pause": 2.01
+    },
+    {
+     "step": 17,
+     "gap": 3.04,
+     "pause": 1.92
+    },
+    {
+     "step": 18,
+     "gap": 4.16,
+     "pause": 3.06
+    },
+    {
+     "step": 19,
+     "gap": 2.94,
+     "pause": 1.84
+    },
+    {
+     "step": 20,
+     "gap": 3.7,
+     "pause": 2.85
+    },
+    {
+     "step": 21,
+     "gap": 2.98,
+     "pause": 2.43
+    },
+    {
+     "step": 22,
+     "gap": 3.89,
+     "pause": 3.33
+    },
+    {
+     "step": 23,
+     "gap": 4.78,
+     "pause": 3.18
+    },
+    {
+     "step": 24,
+     "gap": 4.02,
+     "pause": 2.48
+    }
+   ]
+  },
+  "status": "confirmed",
+  "seconds": 214.6
+ },
+ {
+  "title": "Toy Shop button disappeared from main menu",
+  "expected": "Main menu should show both bottom buttons: Toy Shop (left, yarn icon) and Free milk! (right), as it did on first arrival at the main menu.",
+  "actual": "After returning from Settings/Terms, the Toy Shop button is gone; only the Free milk! button remains on the right and the left side is empty.",
+  "step": 48,
+  "reproducible": true,
+  "confirmed": true,
+  "evidence": "Replay1 final frame: 'Purr-fect Fit' main menu shows 'Dress Up Popita', 'Settings', and bottom row with only 'Free milk!' on right, left side empty, no Toy Shop yarn icon. Replay2 final frame: same 'Purr-fect Fit' main menu shows 'Dress Up Popita', 'Settings', and only 'Free milk!' on right, left empty, no Toy Shop.",
+  "judge": "{\"expected_change\": \"Main menu should show both bottom buttons: Toy Shop (left, yarn icon) and Free milk! (right)\", \"observed_change\": \"Both replays end on main menu Purr-fect Fit with only Free milk! on the right and empty left, no Toy Shop\", \"gap\": \"Difference matches reported symptom of missing Toy Shop button\", \"verdict\": \"YES\", \"evidence\": \"Replay1 final frame: 'Purr-fect Fit' main menu shows",
+  "cost_usd": 0.01512875,
+  "state_change": [],
+  "judge_input": "strip",
+  "comparison": {
+   "compared": true,
+   "method": "pictures",
+   "same": true,
+   "difference": 0.01
+  },
+  "refused_inputs": [],
+  "pacing": {
+   "a": [
+    {
+     "step": 0,
+     "gap": 4.68,
+     "pause": 2.29
+    },
+    {
+     "step": 1,
+     "gap": 2.78,
+     "pause": 2.24
+    },
+    {
+     "step": 2,
+     "gap": 1.97,
+     "pause": 1.93
+    },
+    {
+     "step": 3,
+     "gap": 3.68,
+     "pause": 2.14
+    },
+    {
+     "step": 4,
+     "gap": 3.87,
+     "pause": 2.83
+    },
+    {
+     "step": 5,
+     "gap": 2.72,
+     "pause": 2.68
+    },
+    {
+     "step": 6,
+     "gap": 4.77,
+     "pause": 3.73
+    },
+    {
+     "step": 7,
+     "gap": 2.87,
+     "pause": 2.03
+    },
+    {
+     "step": 8,
+     "gap": 3.32,
+     "pause": 2.48
+    },
+    {
+     "step": 9,
+     "gap": 4.76,
+     "pause": 3.92
+    },
+    {
+     "step": 10,
+     "gap": 2.97,
+     "pause": 2.13
+    },
+    {
+     "step": 11,
+     "gap": 2.79,
+     "pause": 1.95
+    },
+    {
+     "step": 12,
+     "gap": 3.13,
+     "pause": 2.29
+    },
+    {
+     "step": 13,
+     "gap": 3.13,
+     "pause": 2.29
+    },
+    {
+     "step": 14,
+     "gap": 3.46,
+     "pause": 2.92
+    },
+    {
+     "step": 15,
+     "gap": 2.89,
+     "pause": 2.25
+    },
+    {
+     "step": 16,
+     "gap": 3.11,
+     "pause": 2.01
+    },
+    {
+     "step": 17,
+     "gap": 3.04,
+     "pause": 1.96
+    },
+    {
+     "step": 18,
+     "gap": 4.16,
+     "pause": 3.08
+    },
+    {
+     "step": 19,
+     "gap": 2.94,
+     "pause": 1.86
+    },
+    {
+     "step": 20,
+     "gap": 3.7,
+     "pause": 2.85
+    },
+    {
+     "step": 21,
+     "gap": 2.98,
+     "pause": 2.44
+    },
+    {
+     "step": 22,
+     "gap": 3.89,
+     "pause": 3.35
+    },
+    {
+     "step": 23,
+     "gap": 4.78,
+     "pause": 3.23
+    },
+    {
+     "step": 24,
+     "gap": 4.02,
+     "pause": 2.49
+    },
+    {
+     "step": 25,
+     "gap": 4.95,
+     "pause": 4.12
+    },
+    {
+     "step": 26,
+     "gap": 7.66,
+     "pause": 5.69
+    },
+    {
+     "step": 27,
+     "gap": 3.93,
+     "pause": 3.09
+    },
+    {
+     "step": 28,
+     "gap": 5.36,
+     "pause": 4.52
+    },
+    {
+     "step": 29,
+     "gap": 3.89,
+     "pause": 3.25
+    },
+    {
+     "step": 30,
+     "gap": 3.99,
+     "pause": 2.72
+    },
+    {
+     "step": 31,
+     "gap": 3.73,
+     "pause": 2.89
+    },
+    {
+     "step": 32,
+     "gap": 4.29,
+     "pause": 3.65
+    },
+    {
+     "step": 33,
+     "gap": 3.7,
+     "pause": 2.86
+    },
+    {
+     "step": 34,
+     "gap": 5.99,
+     "pause": 5.35
+    },
+    {
+     "step": 35,
+     "gap": 3.35,
+     "pause": 2.71
+    },
+    {
+     "step": 36,
+     "gap": 4.48,
+     "pause": 3.62
+    },
+    {
+     "step": 37,
+     "gap": 4.02,
+     "pause": 3.06
+    },
+    {
+     "step": 38,
+     "gap": 3.75,
+     "pause": 2.79
+    },
+    {
+     "step": 39,
+     "gap": 4.13,
+     "pause": 3.16
+    },
+    {
+     "step": 40,
+     "gap": 5.09,
+     "pause": 3.58
+    },
+    {
+     "step": 41,
+     "gap": 3.92,
+     "pause": 2.87
+    },
+    {
+     "step": 42,
+     "gap": 3.25,
+     "pause": 2.39
+    },
+    {
+     "step": 43,
+     "gap": 3.38,
+     "pause": 2.34
+    },
+    {
+     "step": 44,
+     "gap": 4.5,
+     "pause": 3.65
+    },
+    {
+     "step": 45,
+     "gap": 8.35,
+     "pause": 7.39
+    },
+    {
+     "step": 46,
+     "gap": 4.27,
+     "pause": 3.31
+    }
+   ],
+   "b": [
+    {
+     "step": 0,
+     "gap": 4.68,
+     "pause": 2.3
+    },
+    {
+     "step": 1,
+     "gap": 2.78,
+     "pause": 2.24
+    },
+    {
+     "step": 2,
+     "gap": 1.97,
+     "pause": 1.93
+    },
+    {
+     "step": 3,
+     "gap": 3.68,
+     "pause": 2.13
+    },
+    {
+     "step": 4,
+     "gap": 3.87,
+     "pause": 2.82
+    },
+    {
+     "step": 5,
+     "gap": 2.72,
+     "pause": 2.67
+    },
+    {
+     "step": 6,
+     "gap": 4.77,
+     "pause": 3.73
+    },
+    {
+     "step": 7,
+     "gap": 2.87,
+     "pause": 2.03
+    },
+    {
+     "step": 8,
+     "gap": 3.32,
+     "pause": 2.47
+    },
+    {
+     "step": 9,
+     "gap": 4.76,
+     "pause": 3.92
+    },
+    {
+     "step": 10,
+     "gap": 2.97,
+     "pause": 2.13
+    },
+    {
+     "step": 11,
+     "gap": 2.79,
+     "pause": 1.95
+    },
+    {
+     "step": 12,
+     "gap": 3.13,
+     "pause": 2.29
+    },
+    {
+     "step": 13,
+     "gap": 3.13,
+     "pause": 2.29
+    },
+    {
+     "step": 14,
+     "gap": 3.46,
+     "pause": 2.92
+    },
+    {
+     "step": 15,
+     "gap": 2.89,
+     "pause": 2.25
+    },
+    {
+     "step": 16,
+     "gap": 3.11,
+     "pause": 2.03
+    },
+    {
+     "step": 17,
+     "gap": 3.04,
+     "pause": 1.95
+    },
+    {
+     "step": 18,
+     "gap": 4.16,
+     "pause": 3.08
+    },
+    {
+     "step": 19,
+     "gap": 2.94,
+     "pause": 1.86
+    },
+    {
+     "step": 20,
+     "gap": 3.7,
+     "pause": 2.85
+    },
+    {
+     "step": 21,
+     "gap": 2.98,
+     "pause": 2.44
+    },
+    {
+     "step": 22,
+     "gap": 3.89,
+     "pause": 3.35
+    },
+    {
+     "step": 23,
+     "gap": 4.78,
+     "pause": 3.22
+    },
+    {
+     "step": 24,
+     "gap": 4.02,
+     "pause": 2.49
+    },
+    {
+     "step": 25,
+     "gap": 4.95,
+     "pause": 4.12
+    },
+    {
+     "step": 26,
+     "gap": 7.66,
+     "pause": 5.67
+    },
+    {
+     "step": 27,
+     "gap": 3.93,
+     "pause": 3.09
+    },
+    {
+     "step": 28,
+     "gap": 5.36,
+     "pause": 4.52
+    },
+    {
+     "step": 29,
+     "gap": 3.89,
+     "pause": 3.25
+    },
+    {
+     "step": 30,
+     "gap": 3.99,
+     "pause": 2.71
+    },
+    {
+     "step": 31,
+     "gap": 3.73,
+     "pause": 2.88
+    },
+    {
+     "step": 32,
+     "gap": 4.29,
+     "pause": 3.65
+    },
+    {
+     "step": 33,
+     "gap": 3.7,
+     "pause": 2.86
+    },
+    {
+     "step": 34,
+     "gap": 5.99,
+     "pause": 5.35
+    },
+    {
+     "step": 35,
+     "gap": 3.35,
+     "pause": 2.71
+    },
+    {
+     "step": 36,
+     "gap": 4.48,
+     "pause": 3.62
+    },
+    {
+     "step": 37,
+     "gap": 4.02,
+     "pause": 3.05
+    },
+    {
+     "step": 38,
+     "gap": 3.75,
+     "pause": 2.79
+    },
+    {
+     "step": 39,
+     "gap": 4.13,
+     "pause": 3.18
+    },
+    {
+     "step": 40,
+     "gap": 5.09,
+     "pause": 3.58
+    },
+    {
+     "step": 41,
+     "gap": 3.92,
+     "pause": 2.87
+    },
+    {
+     "step": 42,
+     "gap": 3.25,
+     "pause": 2.39
+    },
+    {
+     "step": 43,
+     "gap": 3.38,
+     "pause": 2.33
+    },
+    {
+     "step": 44,
+     "gap": 4.5,
+     "pause": 3.65
+    },
+    {
+     "step": 45,
+     "gap": 8.35,
+     "pause": 7.4
+    },
+    {
+     "step": 46,
+     "gap": 4.27,
+     "pause": 3.32
+    }
+   ]
+  },
+  "status": "confirmed",
+  "seconds": 417.4
+ }
+]

@@ -68,7 +68,7 @@ test('migrations upgrade a v1 database in place and keep existing data', () => {
     INSERT INTO repair_tasks (id,project_id,criterion_id,source_result_id,status,expected,observed,diagnosis,created_at,updated_at) VALUES (1,1,1,1,'open','e','o','d','t','t');`);
   raw.close();
   const db = openDb(dir);
-  assert.deepEqual(db.all('SELECT name FROM _migrations ORDER BY name').map((r) => r.name), ['001_init.sql', '002_hardening.sql', '003_proof_intelligence.sql']);
+  assert.deepEqual(db.all('SELECT name FROM _migrations ORDER BY name').map((r) => r.name), ['001_init.sql', '002_hardening.sql', '003_proof_intelligence.sql', '004_autonomous_loop.sql']);
   const ver = db.get('SELECT * FROM criterion_versions WHERE criterion_id = 1');
   assert.equal(ver.text, 'Old criterion.'); assert.equal(db.get('SELECT version_id FROM criteria WHERE id = 1').version_id, ver.id);
   assert.equal(db.get('SELECT criterion_version_id FROM results WHERE id = 1').criterion_version_id, ver.id, 'old executions are linked to the version they verified');
@@ -149,7 +149,8 @@ test('adapter: malformed NDJSON is preserved as raw events and never invents a v
 test('adapter: a process killed mid-run has no run_end and is an execution error', async () => {
   setState({ mode: 'crash' });
   const o = await runKane({ objective: 'x', url: 'http://127.0.0.1:9/', workDir: path.join(tmp, 'w2'), config: baseConfig });
-  assert.equal(o.runEnd, null); assert.equal(o.signal, 'SIGKILL');
+  assert.equal(o.runEnd, null);
+  if (process.platform !== 'win32') assert.equal(o.signal, 'SIGKILL');
   assert.deepEqual([classify(o).status, classify(o).errorKind], ['error', 'did_not_start']);
 });
 test('adapter: shell metacharacters in criteria are passed as one argument, never interpreted', async () => {

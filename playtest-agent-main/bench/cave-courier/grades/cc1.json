@@ -1,0 +1,47 @@
+{
+ "note": "Hand grades of the Cave Courier bench run (cc1, cc1-clean), by the lead build session on 29 Oct 2026, about 00:05 Halifax, reading each report's title, actual and evidence against the bug lines of game/index.html. The scorer's flag-only count said 5 of 5; that count used the bug flags that fired, not the reports. One report per bug, strict reading.",
+ "run": "data/runs/cc1",
+ "clean_run": "data/runs/cc1-clean",
+ "reports": [
+  {
+   "index": 0,
+   "title": "Shed door says it opens but remains blocking",
+   "confirmed": true,
+   "bug_id": "1"
+  },
+  {
+   "index": 1,
+   "title": "Falling into pit makes player disappear and R restart does not recover",
+   "confirmed": true,
+   "bug_id": "4",
+   "why": "R does nothing after the fall: bug 4 (no restart from the deep pit). The fall itself (x 116 to 352, y 226 to 2000) is also what bug 2 (no ground under x 300 to 330) does, but the report calls it a pit and does not say ground is missing, so bug 2 is not counted as found."
+  },
+  {
+   "index": 2,
+   "title": "Second platform coin gives only 1 score instead of 10",
+   "confirmed": true,
+   "bug_id": "5"
+  },
+  {
+   "index": 3,
+   "title": "Buying boots deducts coins but Boots status stays 'no'",
+   "confirmed": true,
+   "bug_id": "3"
+  }
+ ],
+ "clean_reports": [],
+ "planted": 5,
+ "found_confirmed": 4,
+ "found_ids": [
+  "1",
+  "3",
+  "4",
+  "5"
+ ],
+ "reported_not_confirmed_ids": [],
+ "missed_ids": [
+  "2"
+ ],
+ "false_reports": 0,
+ "clean_false_reports": 0
+}
