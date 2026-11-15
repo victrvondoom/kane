@@ -13,6 +13,13 @@ services:
       REQUIRE_EVIDENCE: "1"
       LT_USERNAME: ${LT_USERNAME:?set LT_USERNAME in your shell or .env}
       LT_ACCESS_KEY: ${LT_ACCESS_KEY:?set LT_ACCESS_KEY in your shell or .env}
+      # On-call engineer (optional; see docs/ONCALL.md). Unset = the feature is off for everyone.
+      ONCALL_ENGINEERS: ${ONCALL_ENGINEERS:-}
+      ONCALL_APPROVERS: ${ONCALL_APPROVERS:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ONCALL_GITHUB_TOKEN: ${ONCALL_GITHUB_TOKEN:-}
+      ONCALL_REPO_DIR: ${ONCALL_REPO_DIR:-}   # mount a clone of the repository the agent should work on
     volumes: ["shipproof-data:/data"]
     stop_grace_period: 20s        # lets the server stop the browser and record interrupted checks
     healthcheck:

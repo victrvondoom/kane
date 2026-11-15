@@ -58,7 +58,7 @@ export function createOncall({ db, dataDir, workspaceDir, kaneCfg, runner, orche
   const status = async (user) => {
     const role = roleFor(user), r = await repo();
     return { enabled: cfg.enabled && !!role, role, levels: role ? ['read_only', ...(role !== 'read_only' ? ['engineering'] : [])] : [], canApprove: role === 'production',
-      voice: { provider: voice.id, label: voice.label, configured: voice.configured(), transport: voice.transport, providerStorageAllowed: cfg.voice.allowProviderStore },
+      voice: { provider: voice.id, label: voice.label, configured: voice.configured(), transport: voice.transport, dataChannelLabel: voice.dataChannelLabel || null, providerStorageAllowed: cfg.voice.allowProviderStore },
       reasoning: { provider: reasoning.id, model: reasoning.model, configured: reasoning.configured() },
       repository: r?.error ? { available: false, reason: r.error } : { available: true, remote: r.remote, defaultBranch: r.defaultBranch, github: r.github },
       github: { configured: github.configured, pushAuth: cfg.github.token ? 'token' : 'ambient git credentials' },

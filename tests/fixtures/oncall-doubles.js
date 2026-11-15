@@ -75,14 +75,15 @@ function wsAccept(req, socket) {
   socket.on('error', () => {});
   return { send, onMessage: (h) => handlers.push(h), drop: () => socket.destroy() };
 }
-export async function fakeLiveProvider({ apiKey = 'sk-test-live-key-000000000000' } = {}) {
+/** `answer(offerSdp)` may supply a real SDP answer (the browser e2e test answers with a second real WebRTC peer). */
+export async function fakeLiveProvider({ apiKey = 'sk-test-live-key-000000000000', answer = null } = {}) {
   const created = [], received = [], attaches = []; let seq = 0, conn = null;
   const server = http.createServer(async (req, res) => {
     const raw = await body(req); const send = (c, o) => { res.writeHead(c, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(o)); };
     if (req.method === 'POST' && req.url === '/v1/live/sessions') {
       if (req.headers.authorization !== `Bearer ${apiKey}`) return send(401, { error: { code: 'invalid_api_key', message: 'bad key' } });
       const json = JSON.parse(raw); const id = `live_test_${++seq}`; created.push({ id, ...json, safetyId: req.headers['openai-safety-identifier'] });
-      return send(201, { session: { id }, transport: { type: 'webrtc', sdp: 'v=0\r\no=- 0 0 IN IP4 127.0.0.1\r\ns=answer\r\n' } });
+      return send(201, { session: { id }, transport: { type: 'webrtc', sdp: answer ? await answer(json.transport.sdp) : 'v=0\r\no=- 0 0 IN IP4 127.0.0.1\r\ns=answer\r\n' } });
     }
     send(404, { error: { message: 'not found' } });
   });
