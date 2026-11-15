@@ -12,6 +12,14 @@ Built for the Kane CLI hackathon. Kane CLI is the verification engine — nothin
 product can mark a criterion as verified except a `kane-cli run` that exits `0` with a passing
 `run_end` event.
 
+
+## On-call engineer (voice)
+
+Call an engineering agent from the browser, describe an incident, and it investigates real systems, fixes the defect
+on an isolated branch, proves the fix with a red/green regression test, pushes the branch and opens a pull request —
+with every step recorded as evidence and production actions gated on an on-screen approval.
+Setup, safety model and limits: [docs/ONCALL.md](docs/ONCALL.md).
+
 ## What it does
 
 | Module | What you get |

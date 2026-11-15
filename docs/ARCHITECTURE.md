@@ -112,3 +112,7 @@ as no evidence.
 - New tables (migration 003, additive): `criterion_versions`, `builds`, `policy_versions`, `webhook_deliveries`, `release_decisions`, `dossiers`; new columns pin each execution to criterion version, build, environment and policy version.
 
 Limits: change impact is only as good as the declared path mappings; the webhook trusts GitHub's file lists for non-forced pushes; the dossier key is a single server key without rotation tooling.
+
+## On-call engineer
+
+`server/oncall/` adds a voice-driven engineering agent (voice provider adapter → session manager → engineer loop → permission-checked tool registry → git / checks / GitHub / SHIPPROOF data). It reads SHIPPROOF state through the same functions the API uses and writes no results, evidence or decisions. See [ONCALL.md](ONCALL.md).

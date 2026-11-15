@@ -1,6 +1,7 @@
 // SHIPPROOF single-page app. No build step; every value on screen is fetched from the API.
 import { ProofTab, BuildsTab, IntelligenceTab, CITab, DossierTab } from './proof.js';
 import { AutonomousLoopTab, StepsWriterTab, GatekeeperTab, OqedTab } from './autonomous.js';
+import { OnCallPage, OnCallIncidentPage } from './oncall.js';
 const $app = document.getElementById('app');
 let me = null, system = null, cleanup = [];
 
@@ -86,7 +87,7 @@ function shell(...content) {
     h('header', { class: 'top' }, h('div', { class: 'wrap' },
       h('a', { class: 'brand', href: me ? '#/app' : '#/' }, h('i'), 'SHIPPROOF'),
       h('nav', {}, engine,
-        me ? [h('a', { href: '#/app' }, 'Projects'),
+        me ? [h('a', { href: '#/app' }, 'Projects'), h('a', { href: '#/oncall' }, 'On-call'),
           h('button', { class: 'linkbtn opt', style: { color: 'var(--info)', 'font-weight': '600' }, onclick: act(async () => {
             const demo = await api('POST', '/demo/judge-scenario');
             toast('Judge demo loaded! Opening autonomous loop...');
@@ -672,6 +673,7 @@ async function render() {
     else if (parts[0] === 'new') view = await NewProject();
     else if (parts[0] === 'p' && parts[1]) view = await Project(Number(parts[1]), parts[2], parts[3]);
     else if (parts[0] === 'run' && parts[1]) view = await RunPage(Number(parts[1]), parts[2]);
+    else if (parts[0] === 'oncall') view = shell(parts[1] === 'i' && parts[2] ? await OnCallIncidentPage(parts[2]) : await OnCallPage());
     else view = shell(h('div', { class: 'page' }, h('div', { class: 'panel empty stack' }, h('h2', {}, 'Page not found'), h('div', {}, h('a', { class: 'btn', href: '#/app' }, 'Back to projects')))));
   } catch (e) {
     view = shell(h('div', { class: 'page' }, h('div', { class: 'panel empty stack' }, h('h2', {}, 'Something went wrong'), h('p', {}, e.message), h('div', { class: 'row', style: { 'justify-content': 'center' } }, h('button', { class: 'btn primary', onclick: render }, 'Retry'), h('a', { class: 'btn', href: '#/app' }, 'Back to projects')))));
@@ -679,7 +681,7 @@ async function render() {
   clearTimeout(slow);
   if (view) { const y = window.scrollY, same = $app.dataset.route === location.hash; $app.replaceChildren(view); $app.dataset.route = location.hash; window.scrollTo(0, same ? y : 0); }
 }
-window.SP = { h, api, act, toast, copy, dialog, tag, fmtTime, fmtDur, ago, KIND, LABEL, render: () => render() };
+window.SP = { h, api, act, toast, copy, dialog, tag, fmtTime, fmtDur, ago, KIND, LABEL, render: () => render(), onCleanup: (f) => cleanup.push(f) };
 window.addEventListener('hashchange', render);
 (async () => {
   try { me = (await api('GET', '/auth/me')).user; if (me) system = await api('GET', '/system'); } catch {}
