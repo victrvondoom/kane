@@ -681,7 +681,7 @@ async function render() {
   clearTimeout(slow);
   if (view) { const y = window.scrollY, same = $app.dataset.route === location.hash; $app.replaceChildren(view); $app.dataset.route = location.hash; window.scrollTo(0, same ? y : 0); }
 }
-window.SP = { h, api, act, toast, copy, dialog, tag, fmtTime, fmtDur, ago, KIND, LABEL, render: () => render(), onCleanup: (f) => cleanup.push(f) };
+window.SP = { h, api, act, toast, copy, dialog, tag, stamp, fmtTime, fmtDur, ago, KIND, LABEL, render: () => render(), onCleanup: (f) => cleanup.push(f) };
 window.addEventListener('hashchange', render);
 (async () => {
   try { me = (await api('GET', '/auth/me')).user; if (me) system = await api('GET', '/system'); } catch {}

@@ -5,7 +5,10 @@ import fs from 'node:fs';
 import { generateSpecifications, saveSpecification, listSpecifications, getSpecification } from './steps-writer.js';
 import { scanSecurity, recordSecurityScan, getLatestSecurityScan } from './gatekeeper.js';
 import { investigateFailure, recordInvestigation, listInvestigations, getInvestigation, queueReplay } from './playtest.js';
-import { setDefectState, DEFECTS } from './demo-defects.js';
+import { setDefectState, DEFECTS, demoCriterion } from './demo-defects.js';
+import { formatKey } from './requirements.js';
+import { kaneConfig } from './kane.js';
+import { writeVersion } from './proof.js';
 import { listTrials, getTrial } from './regression.js';
 import { checkOqedStatus, evaluateOqedEligibility } from './oqed.js';
 import { executeRepair } from './coding-agent.js';
@@ -235,19 +238,18 @@ export function registerAutonomousRoutes(api, { db, orchestrator, runner, ROOT, 
 
   api.post('/demo/judge-scenario', auth, h(async (req, res) => {
     // One-click comprehensive demo workflow for evaluators & judges
-    let demoProject = db.get(`SELECT * FROM projects WHERE name = 'Northwind Store (Judge Demo)' AND user_id = ?`, req.user.id);
+    const key = req.body?.defect === undefined ? Object.keys(DEFECTS)[0] : String(req.body.defect);
+    let task;
+    try { task = await demoCriterion(ROOT, key); } catch (e) { throw new HttpError(e.status || 500, e.message); }
+    const name = `Demo store — ${key}`;
+    let demoProject = db.get('SELECT * FROM projects WHERE name = ? AND user_id = ?', name, req.user.id);
     if (!demoProject) {
-      const pRes = db.run(
-        `INSERT INTO projects (user_id, name, app_url, created_at) VALUES (?, ?, ?, ?)`,
-        req.user.id, 'Northwind Store (Judge Demo)', config.demoAppUrl || 'http://127.0.0.1:4100/', new Date().toISOString()
-      );
+      const pRes = db.run('INSERT INTO projects (user_id, name, app_url, created_at) VALUES (?, ?, ?, ?)', req.user.id, name, config.demoAppUrl || kaneConfig().demoAppUrl, new Date().toISOString());
       demoProject = db.get('SELECT * FROM projects WHERE id = ?', Number(pRes.lastInsertRowid));
     }
 
     // 1. Steps Writer: generate specifications
-    const task = 'After applying coupon code SAVE10 to a cart containing one Trail Backpack ($80.00), the order total shows $72.00.';
-    const specs = generateSpecifications({ task, appUrl: demoProject.app_url });
-    const spec = specs[0];
+    const spec = generateSpecifications({ task, appUrl: demoProject.app_url })[0];
     const specRes = saveSpecification(db, demoProject.id, spec);
 
     // 2. Gatekeeper: preflight scan
@@ -257,13 +259,13 @@ export function registerAutonomousRoutes(api, { db, orchestrator, runner, ROOT, 
     // 3. OQED: toolchain diagnostics
     const oqedCheck = checkOqedStatus();
 
-    // 4. Ensure acceptance criterion
-    let criterion = db.get('SELECT * FROM criteria WHERE project_id = ? AND key = ?', demoProject.id, 'AC-002');
+    // 4. Ensure the acceptance criterion exists (keyed from the project's own sequence)
+    let criterion = db.get('SELECT * FROM criteria WHERE project_id = ? AND text = ? AND archived = 0', demoProject.id, spec.objective);
     if (!criterion) {
-      const cRes = db.run(
-        `INSERT INTO criteria (project_id, key, text, category, mandatory, created_at, updated_at) VALUES (?, ?, ?, ?, 1, ?, ?)`,
-        demoProject.id, 'AC-002', spec.objective, 'functional', new Date().toISOString(), new Date().toISOString()
-      );
+      const seq = db.get('UPDATE projects SET criteria_seq = criteria_seq + 1 WHERE id = ? RETURNING criteria_seq', demoProject.id).criteria_seq;
+      const cRes = db.run('INSERT INTO criteria (project_id, key, text, category, mandatory, created_at, updated_at) VALUES (?, ?, ?, ?, 1, ?, ?)',
+        demoProject.id, formatKey(seq), spec.objective, spec.category || 'functional', new Date().toISOString(), new Date().toISOString());
+      try { writeVersion(db, Number(cRes.lastInsertRowid)); } catch {}
       criterion = db.get('SELECT * FROM criteria WHERE id = ?', Number(cRes.lastInsertRowid));
     }
 
@@ -274,6 +276,8 @@ export function registerAutonomousRoutes(api, { db, orchestrator, runner, ROOT, 
       securityScan: { id: scanId, ...secScan },
       oqed: oqedCheck,
       criterion,
+      defect: key,
+      task,
       message: 'Judge Demo scenario prepared. Ready to execute autonomous verification loop.',
     });
   }));

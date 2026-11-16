@@ -11,6 +11,9 @@ const sha = (buf) => crypto.createHash('sha256').update(buf).digest('hex');
 export const DEFECTS = {
   coupon_ignored: {
     description: 'Coupon discount is calculated but not subtracted from the order total.',
+    // The acceptance criterion a user would write for the behaviour this defect breaks; built from the store's own catalogue.
+    criterion: ({ PRODUCTS, COUPONS, money }) => { const p = PRODUCTS[0], [code, c] = Object.entries(COUPONS)[0];
+      return `After applying coupon code ${code} to a cart containing one ${p.name} (${money(p.price)}), the order total shows ${money(p.price - Math.round((p.price * c.percent) / 100))}.`; },
     file: 'demo-app/pricing.js',
     healthy: 'const total = subtotal - discount;',
     defective: 'const total = subtotal;',
@@ -53,4 +56,16 @@ export function measureGroundTruth(workspaceDir, key) {
   const raw = execFileSync(process.execPath, ['--input-type=module', '-e', d.probe, pathToFileURL(file).href], { timeout: 15000, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   const measured = JSON.parse(raw);
   return { defectKey: key, defectPresent: d.defectPresent(measured), measured, file: d.file, fileSha256: sha(fs.readFileSync(file)), method: 'direct module execution (no verification engine involved)' };
+}
+
+/** The demo criterion for a defect, derived from the workspace's current catalogue and coupons (not a fixed string). */
+export async function demoCriterion(workspaceDir, key) {
+  const d = DEFECTS[key];
+  if (!d) throw Object.assign(new Error(`Unknown defect "${key}". Known: ${Object.keys(DEFECTS).join(', ')}`), { status: 400 });
+  const file = path.join(workspaceDir, d.file);
+  if (!fs.existsSync(file)) throw Object.assign(new Error(`${d.file} not found in the workspace`), { status: 400 });
+  const raw = execFileSync(process.execPath, ['--input-type=module', '-e',
+    `const m = await import(process.argv[1]); process.stdout.write(JSON.stringify({ PRODUCTS: m.PRODUCTS, COUPONS: m.COUPONS }));`, pathToFileURL(file).href], { timeout: 15000, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  const data = JSON.parse(raw);
+  return d.criterion({ ...data, money: (c) => '$' + (c / 100).toFixed(2) });
 }
