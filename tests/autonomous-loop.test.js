@@ -199,3 +199,28 @@ test('Autonomous Loop: Failure triggers Playtest investigation, Coding Agent rep
   assert.equal(ex.status, WORKFLOW_STATES.NOT_RELEASE_READY);
   assert.equal(ex.currentStage, 'REGRESSION_NOT_DETECTED');
 });
+
+test('Autonomous Loop: demo scenario and execution view are derived from live data, not fixed values', async () => {
+  const { PRODUCTS, COUPONS, money } = await import('../demo-app/pricing.js');
+  const [code, c] = Object.entries(COUPONS)[0];
+  const demo = (await S.api('POST', '/api/demo/judge-scenario', {})).body;
+  // the criterion is built from the store's own catalogue and coupon table
+  assert.ok(demo.task.includes(code) && demo.task.includes(PRODUCTS[0].name) && demo.task.includes(money(PRODUCTS[0].price - Math.round((PRODUCTS[0].price * c.percent) / 100))));
+  assert.equal(demo.criterion.text, demo.specification.objective);
+  assert.match(demo.criterion.key, /^AC-\d{3}$/);
+  assert.equal(S.db.get('SELECT criteria_seq s FROM projects WHERE id = ?', demo.project.id).s, Number(demo.criterion.key.slice(3)), 'key comes from the project sequence');
+  assert.equal((await S.api('POST', '/api/demo/judge-scenario', {})).body.criterion.id, demo.criterion.id, 'idempotent');
+  assert.equal((await S.api('POST', '/api/demo/judge-scenario', { defect: 'nope' })).status, 400);
+  // a loop on a project with no criteria allocates its key from the sequence too
+  const pid = (await S.api('POST', '/api/projects', { name: 'Seq', appUrl: 'http://127.0.0.1:4100/' })).body.project.id;
+  await S.api('POST', `/api/projects/${pid}/requirements`, { text: 'The catalogue lists the Trail Backpack.\nA visitor can register an account.' });
+  S.db.run('UPDATE criteria SET archived = 1 WHERE project_id = ?', pid);
+  setState({ mode: 'ok', failWhen: [] });
+  const r = await S.api('POST', `/api/projects/${pid}/loop/start`, { taskDescription: 'Catalogue page loads.' });
+  await S.orchestrator.waitFor(r.body.executionId);
+  const ex = (await S.api('GET', `/api/projects/${pid}/loop/${r.body.executionId}`)).body.execution;
+  assert.equal(S.db.get('SELECT key FROM criteria WHERE id = ?', ex.criterionId).key, 'AC-003');
+  // the view carries the records the screen renders
+  assert.equal(ex.specification.id, ex.specId); assert.equal(ex.securityScan.id, ex.scanId); assert.equal(ex.decision.id, ex.decisionId);
+  assert.equal(ex.investigation, null); assert.equal(ex.decision.verdict, 'verified');
+});

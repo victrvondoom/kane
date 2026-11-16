@@ -2,53 +2,34 @@
 // Steps Writer, Gatekeeper, Playtest Agent, OQED, and Central Orchestration.
 const S = () => window.SP;
 
-const STAGE_LABELS = {
-  SPECIFYING: '1. Specify (Steps Writer)',
-  SECURITY_CHECK: '2. Security Gate (Gatekeeper)',
-  BUILDING: '3. Build Target',
-  VERIFYING: '4. Kane CLI Acceptance',
-  ANALYSING_FAILURE: '5. Failure Analysis (Playtest)',
-  REPAIRING: '6. Agent Repair',
-  REVERIFYING: '7. Kane Reverification',
-  OPTIMISING: '8. Native Proof (OQED)',
-  VERIFIED: '9. Verified',
-  RELEASE_READY: '10. Release Ready',
-  BLOCKED: 'Blocked',
-  FAILED: 'Failed',
-  NEEDS_HUMAN_APPROVAL: 'Human Approval Required',
-};
-
-const STAGE_ORDER = [
-  'SPECIFYING',
-  'SECURITY_CHECK',
-  'BUILDING',
-  'VERIFYING',
-  'ANALYSING_FAILURE',
-  'REPAIRING',
-  'REVERIFYING',
-  'OPTIMISING',
-  'VERIFIED',
-  'RELEASE_READY',
-];
+// Statuses are rendered from whatever the server reports; nothing here enumerates a fixed pipeline.
+const TERMINAL = new Set(['RELEASE_READY', 'NOT_RELEASE_READY', 'BLOCKED', 'FAILED', 'ERROR', 'INCONCLUSIVE', 'CANCELLED', 'NEEDS_HUMAN_APPROVAL', 'INTERRUPTED']);
+const label = (status) => String(status || '').replace(/_/g, ' ');
+// Maps a status onto the existing colour classes.
+const tone = (status) => (/^(RELEASE_READY|VERIFIED|passed)$/.test(status) ? 's-verified' : /^(FAILED|BLOCKED|failed)$/.test(status) ? 's-failed'
+  : /^(NOT_RELEASE_READY|INCONCLUSIVE|INTERRUPTED|ERROR|NEEDS_HUMAN_APPROVAL|error|timeout)$/.test(status) ? 's-blocked' : /^(CANCELLED|not_executed)$/.test(status) ? 's-untested' : 's-running');
 
 export function AutonomousLoopTab({ project: p }) {
   const { h, api, toast } = S();
   const root = h('div', { class: 'stack-l' });
 
-  let activeExecution = null;
+  let activeId = null;       // execution being shown
+  let detail = null;         // its full record, fetched from the API
+  let oqed = null;           // workspace eligibility, fetched from the API
   let eventSource = null;
+  let poll = null;           // fallback while an execution is live: the stream has no replay, so a fast run could finish unseen
 
   const refresh = async () => {
+    clearTimeout(poll);
+    if (!root.isConnected && detail) return; // the tab was left
     try {
-      const execList = await api('GET', `/projects/${p.id}/loop/executions`);
-      const executions = execList.executions || [];
-      if (executions.length && !activeExecution) {
-        activeExecution = executions[0];
-      } else if (activeExecution) {
-        const latest = executions.find((e) => e.id === activeExecution.id);
-        if (latest) activeExecution = latest;
-      }
-      renderView(executions);
+      const executions = (await api('GET', `/projects/${p.id}/loop/executions`)).executions || [];
+      if (!activeId && executions.length) activeId = executions[0].id;
+      detail = activeId ? (await api('GET', `/projects/${p.id}/loop/${activeId}`)).execution : null;
+      if (!oqed) { try { oqed = (await api('GET', `/projects/${p.id}/oqed/eligibility`)).eligibility; } catch { oqed = null; } }
+      if (detail && !TERMINAL.has(detail.status)) { if (!eventSource) listenStream(detail.id); poll = setTimeout(refresh, 1500); }
+      else if (eventSource) { eventSource.close(); eventSource = null; }
+      root.replaceChildren(renderControls(), renderTimeline(detail), renderStageCards(detail), renderExecutionsHistory(executions));
     } catch (err) {
       toast(err.message, true);
     }
@@ -57,46 +38,41 @@ export function AutonomousLoopTab({ project: p }) {
   const listenStream = (execId) => {
     if (eventSource) eventSource.close();
     eventSource = new EventSource(`/api/projects/${p.id}/loop/${execId}/stream`);
-    eventSource.addEventListener('state_change', (ev) => {
-      const data = JSON.parse(ev.data);
-      if (activeExecution && activeExecution.id === data.executionId) {
-        activeExecution.status = data.state;
-        activeExecution.stage = data.stage;
-        activeExecution.details = data.details || {};
-        refresh();
-      }
-    });
-    eventSource.addEventListener('progress', () => {
+    const onEvent = (ev) => {
+      let data = {}; try { data = JSON.parse(ev.data); } catch {}
+      if (data.status && TERMINAL.has(data.status)) { eventSource.close(); eventSource = null; }
       refresh();
-    });
+    };
+    eventSource.addEventListener('state_change', onEvent);
+    eventSource.addEventListener('progress', onEvent);
   };
 
-  const renderView = (executions) => {
-    root.replaceChildren(
-      renderJudgeControlHeader(),
-      renderExecutionVisualizer(activeExecution),
-      renderStageCards(activeExecution),
-      renderExecutionsHistory(executions)
-    );
+  const start = async (projectId, taskDescription, autoRepair) => {
+    const res = await api('POST', `/projects/${projectId}/loop/start`, { taskDescription, autoRepair });
+    if (projectId !== p.id) { location.hash = `#/p/${projectId}/loop`; return; }
+    activeId = res.executionId;
+    listenStream(res.executionId);
+    await refresh();
   };
 
-  // 1. JUDGE CONTROLS & DEMO BUTTONS
-  const renderJudgeControlHeader = () => {
+  // 1. CONTROLS
+  const renderControls = () => {
     const taskInput = h('input', {
       type: 'text',
-      value: 'Applying coupon SAVE10 to cart ($80.00) reduces total to $72.00.',
+      value: detail?.taskDescription || '',
       placeholder: 'Enter natural language specification or acceptance goal...',
       style: { flex: '1', 'min-width': '280px' },
     });
     const autoRepairCheck = h('input', { type: 'checkbox', checked: true });
+    const demoAction = (path, body) => async () => {
+      try { toast((await api('POST', path, body)).message, false); } catch (e) { toast(e.message, true); }
+    };
 
     return h('div', { class: 'panel stack' },
       h('div', { class: 'row spread' },
         h('div', { class: 'stack-s' },
           h('h2', {}, '⚡ Autonomous Development Loop'),
-          h('p', { class: 'small mute' },
-            'Coding Agent → Steps Writer → Gatekeeper → Kane CLI → Playtest Agent → Agent Repair → Reverification → Verified Release'
-          )
+          h('p', { class: 'small mute' }, 'Specify → security gate → verify → replay → repair → re-verify → release decision → regression trial')
         ),
         h('div', { class: 'row' },
           h('button', {
@@ -104,46 +80,16 @@ export function AutonomousLoopTab({ project: p }) {
             style: { 'font-weight': '600' },
             onclick: async () => {
               try {
-                toast('Initializing Judge Demo scenario with real Northwind store...', false);
                 const demo = await api('POST', '/demo/judge-scenario', {});
-                toast('Demo prepared! Starting autonomous verification loop...', false);
-                const startRes = await api('POST', `/projects/${p.id}/loop/start`, {
-                  taskDescription: demo.specification.objective,
-                  autoRepair: true,
-                });
-                activeExecution = { id: startRes.executionId, status: 'SPECIFYING' };
-                listenStream(startRes.executionId);
-                await refresh();
-                toast('Autonomous loop started!', false);
+                toast(`Demo prepared for "${demo.defect}". Starting the loop...`, false);
+                await start(demo.project.id, demo.task, true);
               } catch (e) {
                 toast(e.message, true);
               }
             },
           }, '⚡ Run Judge Demo (1-Click)'),
-          h('button', {
-            class: 'btn danger sm',
-            title: 'Seeds bug in demo-app/pricing.js (coupon discount ignored)',
-            onclick: async () => {
-              try {
-                const res = await api('POST', '/demo/break-app', {});
-                toast(res.message, false);
-              } catch (e) {
-                toast(e.message, true);
-              }
-            },
-          }, '🐛 Seed Store Bug'),
-          h('button', {
-            class: 'btn sm',
-            title: 'Restores working discount logic in demo-app/pricing.js',
-            onclick: async () => {
-              try {
-                const res = await api('POST', '/demo/fix-app', {});
-                toast(res.message, false);
-              } catch (e) {
-                toast(e.message, true);
-              }
-            },
-          }, '🩹 Restore Clean Code')
+          h('button', { class: 'btn danger sm', title: 'Introduces the demo defect into the demo store source', onclick: demoAction('/demo/break-app', {}) }, '🐛 Seed Store Bug'),
+          h('button', { class: 'btn sm', title: 'Removes the demo defect from the demo store source', onclick: demoAction('/demo/fix-app', {}) }, '🩹 Restore Clean Code')
         )
       ),
       h('div', { class: 'row', style: { 'margin-top': '8px' } },
@@ -157,209 +103,117 @@ export function AutonomousLoopTab({ project: p }) {
           onclick: async () => {
             const task = taskInput.value.trim();
             if (!task) return toast('Please enter a task description', true);
-            try {
-              const res = await api('POST', `/projects/${p.id}/loop/start`, {
-                taskDescription: task,
-                autoRepair: autoRepairCheck.checked,
-              });
-              activeExecution = { id: res.executionId, status: 'SPECIFYING' };
-              listenStream(res.executionId);
-              await refresh();
-              toast('Workflow launched!', false);
-            } catch (e) {
-              toast(e.message, true);
-            }
+            try { await start(p.id, task, autoRepairCheck.checked); toast('Workflow launched!', false); } catch (e) { toast(e.message, true); }
           },
         }, 'Start Autonomous Loop')
       )
     );
   };
 
-  // 2. STAGE PROGRESSION PIPELINE
-  const renderExecutionVisualizer = (exec) => {
-    if (!exec) {
-      return h('div', { class: 'panel empty' },
-        'No autonomous execution active. Click "Run Judge Demo (1-Click)" or start a loop above.'
-      );
-    }
-
-    const currentStage = exec.status;
-    const isTerminal = ['VERIFIED', 'RELEASE_READY', 'BLOCKED', 'FAILED', 'NEEDS_HUMAN_APPROVAL'].includes(currentStage);
-
-    const stageItems = STAGE_ORDER.map((stageKey) => {
-      const idx = STAGE_ORDER.indexOf(stageKey);
-      const currIdx = STAGE_ORDER.indexOf(currentStage);
-
-      let stateClass = 'stage-pending';
-      let icon = '○';
-
-      if (currentStage === stageKey) {
-        stateClass = 'stage-current';
-        icon = '●';
-      } else if (currIdx > idx || currentStage === 'RELEASE_READY' || currentStage === 'VERIFIED') {
-        stateClass = 'stage-done';
-        icon = '✓';
-      }
-
-      return h('div', { class: `stage-item ${stateClass}`, style: { padding: '8px 12px', border: '1px solid var(--line2)', 'border-radius': '6px', background: currentStage === stageKey ? 'var(--panel2)' : 'transparent' } },
-        h('span', { style: { 'margin-right': '6px', color: currentStage === stageKey ? 'var(--info)' : (stateClass === 'stage-done' ? 'var(--ok)' : 'var(--mute)') } }, icon),
-        h('span', { class: 'small mono' }, STAGE_LABELS[stageKey] || stageKey)
+  // 2. TIMELINE — the transitions this execution actually recorded, in order
+  const renderTimeline = (exec) => {
+    if (!exec) return h('div', { class: 'panel empty' }, 'No autonomous execution yet. Start a loop above.');
+    const live = !TERMINAL.has(exec.status);
+    const items = exec.events.map((e, i) => {
+      const current = i === exec.events.length - 1;
+      return h('div', { class: 'stage-item', title: `${e.stage} · ${e.ts}${e.data?.reason ? ' · ' + e.data.reason : ''}`,
+        style: { padding: '8px 12px', border: '1px solid var(--line2)', 'border-radius': '6px', background: current ? 'var(--panel2)' : 'transparent' } },
+        h('span', { class: current ? tone(e.status) : 's-verified', style: { 'margin-right': '6px' } }, current && live ? '●' : current ? '■' : '✓'),
+        h('span', { class: 'small mono' }, label(e.status))
       );
     });
-
     return h('div', { class: 'panel stack' },
       h('div', { class: 'row spread' },
         h('div', { class: 'row' },
           h('h3', {}, `Execution #${exec.id}`),
-          h('span', { class: `tag s-${exec.status.toLowerCase().replace('_', '-')}` },
-            !isTerminal ? h('i', { class: 'dot live' }) : null,
-            exec.status
-          ),
-          exec.retryCount > 0 ? h('span', { class: 'cat' }, `Repair attempt ${exec.retryCount}`) : null
+          h('span', { class: `tag ${tone(exec.status)}` }, live ? h('i', { class: 'dot live' }) : null, label(exec.status)),
+          exec.retryCount > 0 ? h('span', { class: 'cat' }, `Repair attempts: ${exec.retryCount}`) : null,
+          exec.failureClass ? h('span', { class: 'cat' }, `Failure class: ${exec.failureClass}`) : null
         ),
         h('span', { class: 'small mute mono' }, exec.taskDescription || '')
       ),
-      h('div', { class: 'row', style: { gap: '8px', 'flex-wrap': 'wrap' } }, stageItems)
+      h('div', { class: 'row', style: { gap: '8px', 'flex-wrap': 'wrap' } }, items),
+      exec.reason ? h('p', { class: 'small' }, h('b', {}, `${exec.currentStage}: `), exec.reason) : null
     );
   };
 
-  // 3. CAPABILITY SECTION CARDS
+  // 3. STAGE CARDS — every value below comes from the execution's persisted records
+  const card = (title, tagText, tagTone, body) => h('div', { class: 'panel stack' },
+    h('div', { class: 'row spread' }, h('h3', {}, title), h('span', { class: `tag ${tagTone}` }, tagText)), body);
+  const none = (text) => h('p', { class: 'small mute' }, text);
+  const kv = (pairs) => h('div', { class: 'kv small' }, pairs.filter(Boolean).flatMap(([k, v, cls]) => [h('dt', {}, k), h('dd', { class: `mono ${cls || ''}` }, v == null || v === '' ? '—' : String(v))]));
+
   const renderStageCards = (exec) => {
     if (!exec) return h('div');
+    const spec = exec.specification, scan = exec.securityScan, inv = exec.investigation, dec = exec.decision, reg = exec.regression;
 
-    const d = exec.details || {};
+    const specCard = card('Steps Writer — Test Specification', spec ? `${spec.specKey} v${spec.version}` : 'NOT GENERATED', spec ? 's-verified' : 's-untested',
+      spec ? h('div', { class: 'stack-s' },
+        h('div', { class: 'small' }, h('b', {}, 'Objective: '), spec.objective),
+        h('div', { class: 'small' }, h('b', {}, 'Expected: '), spec.expected || '—'),
+        spec.preconditions.length ? h('ul', { style: { margin: '0', 'padding-left': '20px', 'font-size': '12.5px', color: 'var(--mute)' } }, spec.preconditions.map((x) => h('li', {}, typeof x === 'string' ? x : JSON.stringify(x)))) : null,
+        spec.steps.length ? h('div', { class: 'scroll' }, h('table', { class: 'matrix small' },
+          h('thead', {}, h('tr', {}, h('th', {}, '#'), h('th', {}, 'Action'), h('th', {}, 'Target'), h('th', {}, 'Value'))),
+          h('tbody', {}, spec.steps.map((s, i) => h('tr', {}, h('td', {}, String(s.step ?? i + 1)), h('td', {}, s.action || '—'),
+            h('td', { class: 'mono' }, s.target || s.selector || s.description || '—'), h('td', { class: 'mono' }, s.value ?? s.expected ?? '—')))))) : null
+      ) : none('No specification was recorded for this execution.'));
 
-    return h('div', { class: 'grid2' },
-      // Steps Writer Card
-      h('div', { class: 'panel stack' },
-        h('div', { class: 'row spread' },
-          h('h3', {}, 'Steps Writer — Test Specification'),
-          h('span', { class: 'tag s-verified' }, 'SPECIFICATION ACTIVE')
-        ),
+    const scanCard = card('Gatekeeper — Preflight Security', scan ? scan.verdict : 'NOT SCANNED', scan ? (scan.verdict === 'ALLOWED' ? 's-verified' : scan.verdict === 'BLOCKED' ? 's-failed' : 's-blocked') : 's-untested',
+      scan ? h('div', { class: 'stack-s' },
+        h('p', { class: 'small' }, scan.summary),
+        kv([['Packages:', scan.packageCount], ['Findings:', scan.findings.length], ['Scanned:', S().ago(scan.createdAt)]]),
+        scan.findings.length ? h('ul', { style: { margin: '0', 'padding-left': '20px', 'font-size': '12.5px' } }, scan.findings.slice(0, 8).map((f) => h('li', {}, `${f.severity || ''} ${f.package || f.rule || ''}: ${f.message || f.title || JSON.stringify(f)}`))) : null
+      ) : none('The security scan has not run for this execution.'));
+
+    const invTone = !inv ? 's-untested' : inv.defectStatus === 'CONFIRMED_DEFECT' ? 's-failed' : inv.defectStatus === 'UNCONFIRMED_TRANSIENT' ? 's-verified' : 's-blocked';
+    const invCard = card('Playtest Agent — Failure Reproduction', inv ? inv.defectStatus.replace(/_/g, ' ') : 'NOT ENGAGED', invTone,
+      inv ? h('div', { class: 'stack-s' },
+        h('pre', { style: { 'font-size': '11.5px', 'max-height': '160px', 'white-space': 'pre-wrap' } }, inv.diagnosis),
+        kv([['Original result:', `#${inv.resultId} (run #${inv.runId})`], ['Failure class:', inv.classification],
+          ['Replay:', inv.replay ? `run #${inv.replay.runId}, result #${inv.replay.resultId} → ${inv.replay.status}` : 'not executed', inv.replay ? '' : 's-blocked'],
+          ['Replay evidence:', inv.replay ? `${inv.replay.evidence.length} file(s)` : '—'], ['Reproduced:', inv.reproduced ? 'yes' : 'no', inv.reproduced ? 's-failed' : '']])
+      ) : none(exec.failureClass && exec.failureClass !== 'application_defect' ? `Not engaged: the execution ended without a verdict (${exec.failureClass}), which is not an application failure.` : 'Not engaged: no failed verification in this execution.'));
+
+    const repairCard = card('Coding Agent — Repair', exec.repairs.length ? `${exec.repairs.length} ATTEMPT(S)` : 'NO REPAIR', !exec.repairs.length ? 's-untested' : exec.repairs.some((r) => r.outcome === 'verified') ? 's-verified' : 's-blocked',
+      exec.repairs.length ? h('div', { class: 'stack-s' }, exec.repairs.map((r) => h('div', { class: 'stack-s' },
+        h('div', { class: 'small' }, h('b', {}, `Attempt ${r.attemptNumber}: `), `${r.status}${r.outcome ? ' → ' + r.outcome.replace(/_/g, ' ') : ''}`),
+        h('p', { class: 'small mute' }, r.patchSummary),
+        kv([['Changed files:', r.changedFiles.length ? r.changedFiles.join(', ') : 'none'],
+          ...r.fileHashes.map((f) => [`${f.file}:`, `${f.beforeSha256 ? f.beforeSha256.slice(0, 12) + ' → ' : ''}${(f.afterSha256 || '').slice(0, 12)}`]),
+          ['Source result:', r.sourceResultId ? `#${r.sourceResultId}` : null], ['Verification run:', r.verifyRunId ? `#${r.verifyRunId}` : null]])
+      ))) : none('No repair was attempted in this execution.'));
+
+    const regRuns = reg?.runs || [];
+    const regTone = !reg ? 's-untested' : reg.outcome === 'detected' ? 's-verified' : reg.outcome === 'missed' ? 's-failed' : reg.outcome === 'not_run' ? 's-untested' : 's-blocked';
+    const regCard = card('Regression Trial', reg ? reg.outcome.replace(/_/g, ' ').toUpperCase() : 'NOT RUN', regTone,
+      reg && (reg.reason || regRuns.length) ? h('div', { class: 'stack-s' },
+        reg.reason ? h('p', { class: 'small' }, reg.reason) : null,
+        kv([['Defect:', reg.defectKey], ['Engine:', reg.engine ? `${reg.engine} (${reg.engineKind})` : null]]),
+        regRuns.length ? h('div', { class: 'scroll' }, h('table', { class: 'matrix small' },
+          h('thead', {}, h('tr', {}, h('th', {}, 'Copy'), h('th', {}, 'Defect present'), h('th', {}, 'Result'), h('th', {}, 'Evidence'))),
+          h('tbody', {}, regRuns.map((r) => h('tr', {}, h('td', {}, r.variant), h('td', {}, r.defectPresent ? 'yes' : 'no'),
+            h('td', { class: `mono ${tone(r.status)}` }, `${r.status}${r.errorKind ? ' / ' + r.errorKind : ''}`), h('td', {}, `${r.evidence.length} file(s)`)))))) : null
+      ) : none('No regression trial was executed (it runs only after a repair has been verified).'));
+
+    const oqedCard = card('OQED — Native Optimization', oqed ? oqed.code : 'UNKNOWN', oqed?.eligible ? 's-verified' : 's-untested',
+      oqed ? h('div', { class: 'stack-s' },
+        h('p', { class: 'small mute' }, oqed.summary),
+        kv([['Engine:', oqed.status?.engine], ['Toolchain ready:', oqed.status?.toolchainReady ? 'yes' : 'no'], ['Native source files:', (oqed.targetScan?.files || []).length]])
+      ) : none('Eligibility could not be read.'));
+
+    const allowed = exec.status === 'RELEASE_READY' && exec.release?.allowed;
+    const blocking = exec.release ? exec.release.blocking : (dec?.blocking || []).map((b) => b.code);
+    const gateCard = card('Release Gate Decision', dec ? `DECISION #${dec.id}: ${dec.verdict.toUpperCase()}` : 'NO DECISION', !dec ? 's-untested' : allowed ? 's-verified' : 's-blocked',
+      h('div', { class: 'row spread', style: { 'align-items': 'center' } },
         h('div', { class: 'stack-s' },
-          h('div', { class: 'small' }, h('b', {}, 'Objective: '), exec.taskDescription || '—'),
-          h('div', { class: 'small' }, h('b', {}, 'Preconditions:')),
-          h('ul', { style: { 'margin': '0', 'padding-left': '20px', 'font-size': '12.5px', color: 'var(--mute)' } },
-            h('li', {}, 'Application server reachable at target URL'),
-            h('li', {}, 'Product catalogue populated with Trail Backpack ($80.00)'),
-            h('li', {}, 'Coupon engine supports discount codes')
-          ),
-          h('div', { class: 'small' }, h('b', {}, 'Browser Verification Steps:')),
-          h('div', { class: 'scroll' },
-            h('table', { class: 'matrix small' },
-              h('thead', {}, h('tr', {}, h('th', {}, '#'), h('th', {}, 'Action'), h('th', {}, 'Target / Selector'), h('th', {}, 'Value'))),
-              h('tbody', {},
-                h('tr', {}, h('td', {}, '1'), h('td', {}, 'navigate'), h('td', { class: 'mono' }, p.appUrl), h('td', {}, '—')),
-                h('tr', {}, h('td', {}, '2'), h('td', {}, 'click'), h('td', { class: 'mono' }, 'button:add-to-cart'), h('td', {}, 'trail-backpack')),
-                h('tr', {}, h('td', {}, '3'), h('td', {}, 'fill'), h('td', { class: 'mono' }, 'input[name="code"]'), h('td', { class: 'mono' }, 'SAVE10')),
-                h('tr', {}, h('td', {}, '4'), h('td', {}, 'click'), h('td', { class: 'mono' }, 'button:Apply'), h('td', {}, '—')),
-                h('tr', {}, h('td', {}, '5'), h('td', {}, 'assert'), h('td', { class: 'mono' }, '[data-testid="order-total"]'), h('td', { class: 'mono' }, '$72.00'))
-              )
-            )
-          )
-        )
-      ),
-
-      // Gatekeeper Card
-      h('div', { class: 'panel stack' },
-        h('div', { class: 'row spread' },
-          h('h3', {}, 'Gatekeeper — Preflight Security'),
-          h('span', { class: 'tag s-verified' }, 'ALLOWED')
+          dec ? kv([['Decided:', S().ago(dec.decidedAt)], ['Build:', dec.build ? dec.build.shortSha : 'none registered'],
+            ['Current / stale / failed:', `${dec.freshness.CURRENT} / ${dec.freshness.STALE} / ${dec.freshness.FAILED}`], ['Blocking:', blocking.length ? blocking.join(', ') : 'none']]) : none('The release-decision engine was not reached in this execution.'),
+          (dec?.blocking || []).slice(0, 4).map((b) => h('div', { class: 'small mute' }, b.message))
         ),
-        h('div', { class: 'stack-s' },
-          h('div', { class: 'row small' },
-            h('span', { class: 'cat' }, 'Manifest Clean'),
-            h('span', { class: 'cat' }, 'Lockfile Verified'),
-            h('span', { class: 'cat' }, 'Safe Lifecycle Scripts'),
-            h('span', { class: 'cat' }, 'OSV Clean')
-          ),
-          h('p', { class: 'small mute' },
-            'Scanned project dependencies and package lockfiles. Zero malicious packages detected. No untrusted package registries or dangerous install hooks found.'
-          ),
-          h('div', { class: 'kv small', style: { 'margin-top': '4px' } },
-            h('dt', {}, 'Verdict:'), h('dd', { class: 'mono s-verified' }, 'ALLOWED (Preflight cleared)'),
-            h('dt', {}, 'Scanner:'), h('dd', { class: 'mono' }, 'Gatekeeper Supply Chain Guard v1.0'),
-            h('dt', {}, 'Tamper Proof:'), h('dd', { class: 'mono' }, 'Integrity SHA-256 Verified')
-          )
-        )
-      ),
+        S().stamp(allowed ? 'verified' : dec && dec.verdict === 'blocked' ? 'blocked' : 'unverified')
+      ));
 
-      // Playtest Agent Card
-      h('div', { class: 'panel stack' },
-        h('div', { class: 'row spread' },
-          h('h3', {}, 'Playtest Agent — Failure Reproduction'),
-          exec.investigationId ? h('span', { class: 'tag s-failed' }, 'DEFECT CONFIRMED') : h('span', { class: 'tag s-untested' }, 'STANDBY')
-        ),
-        exec.investigationId ? h('div', { class: 'stack-s' },
-          h('div', { class: 'small' }, h('b', {}, 'Defect Diagnosis:')),
-          h('p', { class: 'small' }, 'Reproduced genuine calculation mismatch: cart order total rendered as $80.00 instead of expected $72.00 after applying SAVE10 coupon.'),
-          h('div', { class: 'small' }, h('b', {}, 'Synthesized Replay Steps:')),
-          h('ol', { style: { 'margin': '0', 'padding-left': '20px', 'font-size': '12.5px', color: 'var(--mute)' } },
-            h('li', {}, 'Open cart view with item "trail-backpack" ($80.00)'),
-            h('li', {}, 'Enter coupon "SAVE10" into coupon field'),
-            h('li', {}, 'Observe summary total remains $80.00 (discount ignored)')
-          ),
-          h('div', { class: 'row small' },
-            h('span', { class: 'cat' }, 'Reproducible: Yes'),
-            h('span', { class: 'cat' }, 'Transient Network Noise: No')
-          )
-        ) : h('p', { class: 'small mute' }, 'Playtest Agent engages automatically if Kane acceptance verification fails to reproduce and isolate defects.')
-      ),
-
-      // Coding Agent Repair Card
-      h('div', { class: 'panel stack' },
-        h('div', { class: 'row spread' },
-          h('h3', {}, 'Coding Agent — Targeted Repair'),
-          exec.retryCount > 0 ? h('span', { class: 'tag s-verified' }, 'REPAIR APPLIED') : h('span', { class: 'tag s-untested' }, 'STANDBY')
-        ),
-        exec.retryCount > 0 ? h('div', { class: 'stack-s' },
-          h('div', { class: 'small' }, h('b', {}, 'Modified File: '), h('code', { class: 'mono' }, 'demo-app/pricing.js')),
-          h('pre', { style: { 'font-size': '11.5px', 'max-height': '140px' } },
-`--- demo-app/pricing.js
-+++ demo-app/pricing.js
-@@ -23,6 +23,6 @@
--  const total = subtotal;
-+  const total = subtotal - discount;`
-          ),
-          h('p', { class: 'small mute' }, 'Patch synthesized directly from Playtest failure dossier and applied to demo application.')
-        ) : h('p', { class: 'small mute' }, 'Coding Agent listens to Playtest failure reports to generate targeted patches and re-trigger Kane verification.')
-      ),
-
-      // OQED Native Optimizer Card
-      h('div', { class: 'panel stack' },
-        h('div', { class: 'row spread' },
-          h('h3', {}, 'OQED — Verified Native Optimization'),
-          h('span', { class: 'tag s-untested' }, 'HONEST EVALUATION')
-        ),
-        h('div', { class: 'stack-s' },
-          h('div', { class: 'kv small' },
-            h('dt', {}, 'Engine:'), h('dd', { class: 'mono' }, 'OQED x86-64 Equivalence Engine v0.1.0'),
-            h('dt', {}, 'Targets:'), h('dd', { class: 'mono' }, '0 C/C++ targets detected in project'),
-            h('dt', {}, 'Status:'), h('dd', { class: 'mono s-untested' }, 'UNAVAILABLE_NO_NATIVE_TARGETS'),
-            h('dt', {}, 'Rigor:'), h('dd', { class: 'mono s-verified' }, 'Zero False Optimization Guarantee')
-          ),
-          h('p', { class: 'small mute' },
-            'OQED specializes in native C/C++ loops with SMT-backed equivalence proofs (Z3/angr). It accurately reports web applications as ineligible rather than simulating unproven optimizations.'
-          )
-        )
-      ),
-
-      // Release Gate Stamp Card
-      h('div', { class: 'panel stack' },
-        h('div', { class: 'row spread' },
-          h('h3', {}, 'Release Gate Decision'),
-          h('span', { class: 'tag s-verified' }, 'CERTIFIED VERIFICATION')
-        ),
-        h('div', { class: 'row spread', style: { 'align-items': 'center' } },
-          h('div', { class: 'stack-s' },
-            h('div', { class: 'small' }, h('b', {}, 'Gate Policy: '), 'Strict Evidence-Backed Clearance'),
-            h('div', { class: 'small mute' }, 'All acceptance criteria tested with Kane CLI evidence'),
-            h('div', { class: 'small mute' }, 'Security scan clean · Playtest confirmed · Verified patch')
-          ),
-          S().stamp(exec.status === 'RELEASE_READY' || exec.status === 'VERIFIED' ? 'verified' : 'blocked')
-        )
-      )
-    );
+    return h('div', { class: 'grid2' }, specCard, scanCard, invCard, repairCard, regCard, oqedCard, gateCard);
   };
 
   // 4. EXECUTIONS HISTORY TABLE
@@ -369,29 +223,18 @@ export function AutonomousLoopTab({ project: p }) {
         h('h3', {}, `Autonomous Executions History (${executions.length})`)
       ),
       executions.length ? h('table', {},
-        h('thead', {},
-          h('tr', {},
-            h('th', {}, 'ID'),
-            h('th', {}, 'Status'),
-            h('th', {}, 'Retries'),
-            h('th', {}, 'Task'),
-            h('th', {}, 'Spec ID'),
-            h('th', {}, 'Scan ID'),
-            h('th', {}, 'Started')
-          )
-        ),
+        h('thead', {}, h('tr', {}, h('th', {}, 'ID'), h('th', {}, 'Status'), h('th', {}, 'Stage'), h('th', {}, 'Retries'), h('th', {}, 'Task'), h('th', {}, 'Started'))),
         h('tbody', {},
           executions.map((e) => h('tr', {
             class: 'click',
             tabIndex: 0,
-            onclick: () => { activeExecution = e; refresh(); },
+            onclick: () => { activeId = e.id; if (eventSource) { eventSource.close(); eventSource = null; } refresh(); },
           },
             h('td', { class: 'mono key' }, `#${e.id}`),
-            h('td', {}, h('span', { class: `tag s-${e.status.toLowerCase().replace('_', '-')}` }, e.status)),
+            h('td', {}, h('span', { class: `tag ${tone(e.status)}` }, label(e.status))),
+            h('td', { class: 'mono small' }, e.currentStage || '—'),
             h('td', { class: 'num' }, e.retryCount || 0),
             h('td', { class: 'small' }, e.taskDescription || '—'),
-            h('td', { class: 'mono small' }, e.specId ? `SPEC-${e.specId}` : '—'),
-            h('td', { class: 'mono small' }, e.scanId ? `#${e.scanId}` : '—'),
             h('td', { class: 'small mute' }, S().ago(e.createdAt))
           ))
         )
@@ -399,6 +242,7 @@ export function AutonomousLoopTab({ project: p }) {
     );
   };
 
+  S().onCleanup(() => { clearTimeout(poll); if (eventSource) eventSource.close(); });
   refresh();
   return root;
 }

@@ -6,12 +6,13 @@
 //   - a regression result exists only if a regression trial was executed
 import EventEmitter from 'node:events';
 import { now, audit } from './db.js';
-import { generateSpecifications, saveSpecification } from './steps-writer.js';
+import { generateSpecifications, saveSpecification, getSpecification } from './steps-writer.js';
 import { scanSecurity, recordSecurityScan, VERDICTS as SEC_VERDICTS } from './gatekeeper.js';
-import { investigateFailure, recordInvestigation, queueReplay, DEFECT_STATUSES } from './playtest.js';
+import { investigateFailure, recordInvestigation, queueReplay, getInvestigation, DEFECT_STATUSES } from './playtest.js';
 import { buildFailureDossier, executeRepair, MAX_REPAIR_ATTEMPTS } from './coding-agent.js';
 import { computeDecision, persistDecision, writeVersion } from './proof.js';
 import { classifyFailure } from './gate.js';
+import { formatKey } from './requirements.js';
 import { runRegressionTrial, getTrial } from './regression.js';
 
 export const WORKFLOW_STATES = {
@@ -109,8 +110,9 @@ export class AutonomousOrchestrator extends EventEmitter {
     if (halted()) return;
     let criterion = this.db.get('SELECT * FROM criteria WHERE project_id = ? AND archived = 0 ORDER BY id DESC LIMIT 1', projectId);
     if (!criterion) {
+      const seq = this.db.get('UPDATE projects SET criteria_seq = criteria_seq + 1 WHERE id = ? RETURNING criteria_seq', projectId).criteria_seq;
       const cid = Number(this.db.run('INSERT INTO criteria (project_id, key, text, category, mandatory, created_at, updated_at) VALUES (?, ?, ?, ?, 1, ?, ?)',
-        projectId, 'AC-001', primarySpec.objective, primarySpec.category || 'functional', now(), now()).lastInsertRowid);
+        projectId, formatKey(seq), primarySpec.objective, primarySpec.category || 'functional', now(), now()).lastInsertRowid);
       try { writeVersion(this.db, cid); } catch {}
       criterion = this.db.get('SELECT * FROM criteria WHERE id = ?', cid);
     }
@@ -265,6 +267,13 @@ export class AutonomousOrchestrator extends EventEmitter {
       repairs: this.db.all('SELECT * FROM agent_repair_attempts WHERE execution_id = ? ORDER BY attempt_number', executionId).map((r) => ({
         id: r.id, attemptNumber: r.attempt_number, patchSummary: r.patch_summary, changedFiles: JSON.parse(r.changed_files_json || '[]'), fileHashes: JSON.parse(r.file_hashes_json || '[]'),
         status: r.status, outcome: r.outcome, sourceResultId: r.source_result_id, verifyRunId: r.verify_run_id, createdAt: r.created_at })),
+      specification: row.spec_id ? getSpecification(this.db, row.spec_id) : null,
+      securityScan: (() => { const r = row.scan_id ? this.db.get('SELECT * FROM security_scans WHERE id = ?', row.scan_id) : null;
+        return r && { id: r.id, verdict: r.verdict, summary: r.summary, findings: JSON.parse(r.findings_json || '[]'), packageCount: r.package_count, commitSha: r.commit_sha, createdAt: r.created_at }; })(),
+      investigation: row.investigation_id ? getInvestigation(this.db, row.investigation_id) : null,
+      decision: (() => { const r = row.decision_id ? this.db.get('SELECT id, verdict, decision, created_at FROM release_decisions WHERE id = ?', row.decision_id) : null;
+        if (!r) return null; const d = JSON.parse(r.decision);
+        return { id: r.id, verdict: r.verdict, decidedAt: r.created_at, blocking: d.blocking.map((b) => ({ code: b.code, criterionKey: b.criterionKey, message: b.message })), freshness: d.freshness, build: d.build }; })(),
       events: this.db.all('SELECT ts, status, stage, data_json FROM agent_execution_events WHERE execution_id = ? ORDER BY id', executionId).map((e) => ({ ts: e.ts, status: e.status, stage: e.stage, data: JSON.parse(e.data_json) })),
       createdAt: row.created_at, updatedAt: row.updated_at,
     };
