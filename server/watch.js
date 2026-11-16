@@ -35,10 +35,13 @@ export function cleanThresholds(input = {}) {
   return out;
 }
 
+/** Scheduled monitoring (`enabled`, `intervalMinutes`, `nextDueAt`) and event-triggered monitoring (`events`) are
+ *  configured independently. Automatic verification (`autoRun`) is shared by both and is off by default. */
 export function getConfig(db, projectId) {
   const r = db.get('SELECT * FROM watch_config WHERE project_id = ?', projectId);
   const custom = r ? JSON.parse(r.thresholds_json || '{}') : {};
   return { enabled: !!r?.enabled, intervalMinutes: r?.interval_minutes ?? 60, autoRun: !!r?.auto_run, nextDueAt: r?.next_due_at ?? null,
+    events: { enabled: !!r?.events_enabled, workflowRun: !!r?.events_workflow_run, deployment: !!r?.events_deployment },
     thresholds: { ...DEFAULT_THRESHOLDS, ...custom }, customThresholds: custom };
 }
 export function setConfig(db, projectId, body = {}) {
@@ -48,12 +51,24 @@ export function setConfig(db, projectId, body = {}) {
   if (!Number.isInteger(interval) || interval < 1 || interval > 10080) throw Object.assign(new Error('intervalMinutes must be an integer between 1 and 10080'), { status: 400 });
   const autoRun = body.autoRun === undefined ? cur.autoRun : !!body.autoRun;
   const thresholds = body.thresholds === undefined ? cur.customThresholds : cleanThresholds(body.thresholds);
+  const events = cleanEvents(body.events, cur.events);
   const due = enabled ? new Date(Date.now() + interval * 60000).toISOString() : null;
-  db.run(`INSERT INTO watch_config (project_id, enabled, interval_minutes, auto_run, thresholds_json, next_due_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)
+  db.run(`INSERT INTO watch_config (project_id, enabled, interval_minutes, auto_run, thresholds_json, next_due_at, updated_at, events_enabled, events_workflow_run, events_deployment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(project_id) DO UPDATE SET enabled = excluded.enabled, interval_minutes = excluded.interval_minutes, auto_run = excluded.auto_run,
-            thresholds_json = excluded.thresholds_json, next_due_at = excluded.next_due_at, updated_at = excluded.updated_at`,
-    projectId, enabled ? 1 : 0, interval, autoRun ? 1 : 0, JSON.stringify(thresholds), due, now());
+            thresholds_json = excluded.thresholds_json, next_due_at = excluded.next_due_at, updated_at = excluded.updated_at,
+            events_enabled = excluded.events_enabled, events_workflow_run = excluded.events_workflow_run, events_deployment = excluded.events_deployment`,
+    projectId, enabled ? 1 : 0, interval, autoRun ? 1 : 0, JSON.stringify(thresholds), due, now(),
+    events.enabled ? 1 : 0, events.workflowRun ? 1 : 0, events.deployment ? 1 : 0);
   return getConfig(db, projectId);
+}
+const EVENT_KEYS = ['enabled', 'workflowRun', 'deployment'];
+export function cleanEvents(input, current) {
+  if (input === undefined) return current;
+  if (!input || typeof input !== 'object' || Array.isArray(input)) throw Object.assign(new Error('events must be an object'), { status: 400 });
+  const unknown = Object.keys(input).filter((k) => !EVENT_KEYS.includes(k));
+  if (unknown.length) throw Object.assign(new Error(`Unknown event setting "${unknown[0]}". Known: ${EVENT_KEYS.join(', ')}`), { status: 400 });
+  for (const [k, v] of Object.entries(input)) if (typeof v !== 'boolean') throw Object.assign(new Error(`events.${k} must be true or false`), { status: 400 });
+  return { ...current, ...input };
 }
 
 const median = (a) => { const s = [...a].sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : null; };
@@ -164,7 +179,8 @@ export function createWatch({ db, runner, config, decide, evidenceRoot, engineSt
   const busy = new Set();
   let timer = null, stopped = false;
 
-  async function runCheck(projectId, trigger = 'manual') {
+  /** `trigger`: schedule | manual | event. For `event`, opts.eventId names the watch_events row this check serves. */
+  async function runCheck(projectId, trigger = 'manual', opts = {}) {
     if (busy.has(projectId)) throw Object.assign(new Error('A watch check is already running for this project'), { status: 409 });
     busy.add(projectId);
     try {
@@ -186,8 +202,12 @@ export function createWatch({ db, runner, config, decide, evidenceRoot, engineSt
       const out = db.tx(() => {
         const prev = new Map(db.all(`SELECT * FROM watch_findings WHERE project_id = ?`, projectId).map((r) => [r.fingerprint, r]));
         const counts = { new: 0, persisting: 0, resolved: 0, reopened: 0, open: findings.length, bySeverity: {}, byOrigin: {} };
-        const checkId = Number(db.run(`INSERT INTO watch_checks (project_id, trigger, health, variables_json, plan_json, counts_json, started_at, finished_at) VALUES (?, ?, ?, ?, ?, '{}', ?, ?)`,
-          projectId, trigger, health, JSON.stringify({ ...variables, probeErrors }), JSON.stringify(plan), startedAt, now()).lastInsertRowid);
+        const checkId = Number(db.run(`INSERT INTO watch_checks (project_id, trigger, health, variables_json, plan_json, counts_json, started_at, finished_at, event_id) VALUES (?, ?, ?, ?, ?, '{}', ?, ?, ?)`,
+          projectId, trigger, health, JSON.stringify({ ...variables, probeErrors }), JSON.stringify(plan), startedAt, now(), opts.eventId ?? null).lastInsertRowid);
+        if (opts.eventId) { // exactly-once: the event completes in the same transaction that persists its check
+          if (!db.run(`UPDATE watch_events SET state = 'COMPLETED', check_id = ?, processed_at = ?, error = NULL WHERE id = ? AND state = 'PROCESSING'`, checkId, now(), opts.eventId).changes)
+            throw new Error(`watch event ${opts.eventId} is not being processed`);
+        }
         for (const f of findings) {
           counts.bySeverity[f.severity] = (counts.bySeverity[f.severity] || 0) + 1; counts.byOrigin[f.origin] = (counts.byOrigin[f.origin] || 0) + 1;
           const p = prev.get(f.fingerprint), detail = JSON.stringify({ value: f.value, threshold: f.threshold, action: f.action, criterionId: f.criterionId, resultId: f.resultId, files: f.files, probe: f.probe });
@@ -195,8 +215,8 @@ export function createWatch({ db, runner, config, decide, evidenceRoot, engineSt
             db.run(`INSERT INTO watch_findings (project_id, fingerprint, variable, scenario, cause, origin, severity, detail_json, first_check_id, last_check_id, first_seen, last_seen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               projectId, f.fingerprint, f.variable, f.scenario, f.cause, f.origin, f.severity, detail, checkId, checkId, startedAt, startedAt); }
           else { const re = p.status === 'resolved'; re ? counts.reopened++ : counts.persisting++; f.trend = re ? 'reopened' : 'persisting'; f.occurrences = p.occurrences + 1; f.firstSeen = p.first_seen;
-            db.run(`UPDATE watch_findings SET scenario = ?, cause = ?, severity = ?, detail_json = ?, status = 'open', occurrences = occurrences + 1, last_check_id = ?, last_seen = ?, resolved_at = NULL WHERE id = ?`,
-              f.scenario, f.cause, f.severity, detail, checkId, startedAt, p.id); }
+            db.run(`UPDATE watch_findings SET scenario = ?, cause = ?, severity = ?, detail_json = ?, status = 'open', occurrences = occurrences + 1, reopens = reopens + ?, last_check_id = ?, last_seen = ?, resolved_at = NULL WHERE id = ?`,
+              f.scenario, f.cause, f.severity, detail, re ? 1 : 0, checkId, startedAt, p.id); }
         }
         const seen = new Set(findings.map((f) => f.fingerprint)), resolved = [];
         for (const p of prev.values()) if (p.status === 'open' && !seen.has(p.fingerprint)) {
@@ -208,7 +228,7 @@ export function createWatch({ db, runner, config, decide, evidenceRoot, engineSt
       });
       audit(db, { projectId, actor: 'watch', action: 'watch.checked', entity: 'watch_check', entityId: out.checkId, detail: { trigger, health, counts: out.counts } });
       let started = null;
-      if (trigger === 'schedule' && cfg.autoRun) { try { started = executePlan(projectId, out.checkId, 'watch_auto'); } catch (e) { started = { started: false, reason: e.message }; } }
+      if ((trigger === 'schedule' || trigger === 'event') && cfg.autoRun) { try { started = executePlan(projectId, out.checkId, 'watch_auto'); } catch (e) { started = { started: false, reason: e.message }; } }
       return { id: out.checkId, projectId, trigger, health, startedAt, variables, findings, resolved: out.resolved, counts: out.counts, plan, execution: started };
     } finally { busy.delete(projectId); }
   }
@@ -249,11 +269,17 @@ export function createWatch({ db, runner, config, decide, evidenceRoot, engineSt
   function start() { if (!timer && tickMs > 0) { timer = setInterval(() => { tick().catch(() => {}); }, tickMs); timer.unref?.(); } }
   function stop() { stopped = true; clearInterval(timer); timer = null; }
 
-  const checkView = (r) => ({ id: r.id, trigger: r.trigger, health: r.health, counts: JSON.parse(r.counts_json), plan: JSON.parse(r.plan_json), variables: JSON.parse(r.variables_json), startedRunId: r.started_run_id, startedAt: r.started_at, finishedAt: r.finished_at });
-  const listChecks = (projectId, limit = 30) => db.all('SELECT * FROM watch_checks WHERE project_id = ? ORDER BY id DESC LIMIT ?', projectId, Math.min(Math.max(Number(limit) || 30, 1), 200)).map(checkView);
+  const checkView = (r) => ({ id: r.id, trigger: r.trigger, health: r.health, counts: JSON.parse(r.counts_json), plan: JSON.parse(r.plan_json), variables: JSON.parse(r.variables_json),
+    startedRunId: r.started_run_id, startedAt: r.started_at, finishedAt: r.finished_at,
+    event: r.event_id ? { id: r.event_id, source: r.ev_source, externalId: r.ev_external_id, externalState: r.ev_external_state, commitSha: r.ev_commit_sha,
+      environment: r.ev_environment, repository: r.ev_repository, workflowName: r.ev_workflow_name, state: r.ev_state } : null });
+  const listChecks = (projectId, limit = 30) => db.all(`SELECT c.*, e.source ev_source, e.external_id ev_external_id, e.external_state ev_external_state, e.commit_sha ev_commit_sha,
+      e.environment ev_environment, e.repository ev_repository, e.workflow_name ev_workflow_name, e.state ev_state
+    FROM watch_checks c LEFT JOIN watch_events e ON e.id = c.event_id WHERE c.project_id = ? ORDER BY c.id DESC LIMIT ?`,
+    projectId, Math.min(Math.max(Number(limit) || 30, 1), 200)).map(checkView);
   const listFindings = (projectId, status) => db.all(`SELECT * FROM watch_findings WHERE project_id = ? ${status ? 'AND status = ?' : ''} ORDER BY status, last_seen DESC`, ...(status ? [projectId, status] : [projectId]))
     .map((f) => ({ fingerprint: f.fingerprint, variable: f.variable, scenario: f.scenario, cause: f.cause, origin: f.origin, severity: f.severity, status: f.status, occurrences: f.occurrences,
-      firstSeen: f.first_seen, lastSeen: f.last_seen, resolvedAt: f.resolved_at, ...JSON.parse(f.detail_json) }));
+      firstSeen: f.first_seen, lastSeen: f.last_seen, resolvedAt: f.resolved_at, reopens: f.reopens, ...JSON.parse(f.detail_json) }));
   /** How each numeric variable moved across recent checks. */
   function trend(projectId, limit = 30) {
     const checks = listChecks(projectId, limit).reverse(), series = {};

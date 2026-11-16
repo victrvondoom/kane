@@ -16,6 +16,10 @@ import { loadKeys } from './keys.js';
 import { registerProofRoutes } from './routes-proof.js';
 import { AutonomousOrchestrator } from './orchestrator.js';
 import { createWatch, getConfig as watchConfig, setConfig as setWatchConfig, DEFAULT_THRESHOLDS } from './watch.js';
+import { createEvents } from './events.js';
+import { summarizeEvidence } from './telemetry.js';
+import { createInvestigations } from './investigations.js';
+import { registerInvestigationRoutes } from './routes-investigations.js';
 import { registerAutonomousRoutes } from './routes-autonomous.js';
 import { createLogBuffer } from './oncall/logbuffer.js';
 import { createOncall } from './oncall/index.js';
@@ -33,7 +37,7 @@ const str = (v, max, name) => {
 const ACTIVE = `('queued','starting','running')`;
 const print = (level, msg, fields = {}) => { if (process.env.LOG_LEVEL !== 'silent') console.log(JSON.stringify({ ts: now(), level, msg, ...fields })); };
 
-export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './data'), config = kaneConfig(), workspaceDir = ROOT, repairFn = null, watchOptions = {}, oncallOptions = {} } = {}) {
+export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './data'), config = kaneConfig(), workspaceDir = ROOT, repairFn = null, watchOptions = {}, eventOptions = {}, oncallOptions = {} } = {}) {
   const db = openDb(dataDir);
   // Structured log lines are printed and also kept in a bounded in-memory buffer the on-call agent can inspect.
   const logBuffer = createLogBuffer();
@@ -395,6 +399,17 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
     if (!x) throw new HttpError(404, 'Result not found');
     res.json({ result: resultView(x, true) });
   }));
+  // Failure investigations and fix verification (see investigations.js). Built on the same runner and evidence store.
+  const inv = createInvestigations({ db, runner, evidenceRoot });
+  registerInvestigationRoutes(api, { inv, db, h, auth, project, ownedRun, HttpError });
+  // Diagnostics from Kane's network (HAR) and console evidence. Read-only; it never changes the verdict.
+  api.get('/runs/:rid/results/:resid/telemetry', auth, h((req, res) => {
+    const r = ownedRun(req);
+    const x = db.get('SELECT id, status FROM results WHERE id = ? AND run_id = ?', Number(req.params.resid), r.id);
+    if (!x) throw new HttpError(404, 'Result not found');
+    const rows = db.all('SELECT uid, name, kind, rel_path, mime FROM evidence WHERE result_id = ? ORDER BY id', x.id);
+    res.json({ result: { id: x.id, status: x.status }, telemetry: summarizeEvidence(rows, evidenceRoot), note: 'Diagnostics only. The result status and the release gate are unchanged.' });
+  }));
   api.post('/runs/:rid/cancel', auth, h((req, res) => {
     const r = ownedRun(req);
     if (!runner.cancel(r.id)) throw new HttpError(409, 'Run is not active');
@@ -580,18 +595,25 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
     res.status(202).json({ run: runView(db.get('SELECT * FROM runs WHERE id = ?', id)) });
   }));
 
-  registerProofRoutes(api, { db, runner, config, keys, evidenceRoot, h, auth, agent, project, bad, HttpError, record, decide, startRun, runView, baseUrl, validUrl, getEngineVersion: () => engineVersion });
-  // ---------- continuous watch ----------
   const watch = createWatch({ db, runner, config, decide: (p) => decide(p), evidenceRoot, ...watchOptions });
+  const events = createEvents({ db, watch, log, tickMs: watchOptions.tickMs ?? 5000, ...eventOptions });
+  registerProofRoutes(api, { db, runner, config, keys, evidenceRoot, h, auth, agent, project, bad, HttpError, record, decide, startRun, runView, baseUrl, validUrl, events, getEngineVersion: () => engineVersion });
+  // ---------- continuous watch ----------
   const wrap = (fn) => { try { return fn(); } catch (e) { if (e.status) throw new HttpError(e.status, e.message); throw e; } };
   api.get('/projects/:pid/watch', auth, h((req, res) => { const p = project(req); res.json({ config: watchConfig(db, p.id), defaults: DEFAULT_THRESHOLDS, latest: watch.listChecks(p.id, 1)[0] || null }); }));
-  api.put('/projects/:pid/watch', auth, h((req, res) => { const p = project(req); const c = wrap(() => setWatchConfig(db, p.id, req.body || {})); record(req, 'watch.configured', { projectId: p.id, entity: 'project', entityId: p.id, detail: { enabled: c.enabled, intervalMinutes: c.intervalMinutes, autoRun: c.autoRun } }); res.json({ config: c }); }));
+  api.put('/projects/:pid/watch', auth, h((req, res) => { const p = project(req); const c = wrap(() => setWatchConfig(db, p.id, req.body || {})); record(req, 'watch.configured', { projectId: p.id, entity: 'project', entityId: p.id, detail: { enabled: c.enabled, intervalMinutes: c.intervalMinutes, autoRun: c.autoRun, events: c.events } }); res.json({ config: c }); }));
   api.post('/projects/:pid/watch/check', auth, h(async (req, res) => { const p = project(req); try { res.status(201).json({ check: await watch.runCheck(p.id, 'manual') }); } catch (e) { if (e.status) throw new HttpError(e.status, e.message); throw e; } }));
   api.get('/projects/:pid/watch/checks', auth, h((req, res) => res.json({ checks: watch.listChecks(project(req).id, req.query.limit) })));
   api.get('/projects/:pid/watch/findings', auth, h((req, res) => { const st = req.query.status; if (st && !['open', 'resolved'].includes(st)) throw bad('status must be open or resolved'); res.json({ findings: watch.listFindings(project(req).id, st) }); }));
   api.get('/projects/:pid/watch/trend', auth, h((req, res) => res.json(watch.trend(project(req).id, req.query.limit))));
+  api.get('/projects/:pid/watch/events', auth, h((req, res) => {
+    const st = req.query.state;
+    if (st && !['QUEUED', 'PROCESSING', 'COMPLETED', 'IGNORED', 'FAILED'].includes(st)) throw bad('state must be QUEUED, PROCESSING, COMPLETED, IGNORED or FAILED');
+    res.json({ events: events.history(project(req).id, { state: st, limit: req.query.limit }), pending: events.pending(project(req).id) });
+  }));
   api.post('/projects/:pid/watch/checks/:cid/execute', auth, h((req, res) => { const p = project(req); res.json(wrap(() => watch.executePlan(p.id, Number(req.params.cid)))); }));
   watch.start();
+  events.start();
 
   registerAutonomousRoutes(api, { db, orchestrator, runner, ROOT: workspaceDir, config, auth, project, h, HttpError, bad, baseUrl });
   const oncall = createOncall({ db, dataDir, workspaceDir, kaneCfg: config, runner, orchestrator, decide: (p) => decide(p), startRun, keys, logBuffer, log, ...oncallOptions });
@@ -607,6 +629,6 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
   app.use(express.static(path.join(ROOT, 'public'), { index: false, maxAge: 0 }));
   app.get('*', (req, res) => res.sendFile(path.join(ROOT, 'public', 'index.html')));
   /** Graceful shutdown: stop taking work, stop the browser, flush state, close the DB. */
-  const shutdown = async () => { draining = true; try { await oncall.shutdown(); } catch {} try { watch.stop(); } catch {} try { orchestrator.stop(); } catch {} await runner.shutdown(); try { db.close(); } catch {} };
-  return { app, db, runner, orchestrator, watch, oncall, shutdown };
+  const shutdown = async () => { draining = true; try { await oncall.shutdown(); } catch {} try { await events.stop(); } catch {} try { watch.stop(); } catch {} try { orchestrator.stop(); } catch {} await runner.shutdown(); try { db.close(); } catch {} };
+  return { app, db, runner, orchestrator, watch, events, oncall, shutdown };
 }

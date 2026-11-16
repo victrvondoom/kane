@@ -7,7 +7,7 @@ import { registerBuild, buildView, impactPlan, traceCriterion, getPolicy, setPol
 import { verifyDossier } from './keys.js';
 
 export function registerProofRoutes(api, x) {
-  const { db, runner, keys, evidenceRoot, h, auth, agent, project, bad, HttpError, record, decide, startRun, runView, baseUrl, validUrl } = x;
+  const { db, runner, keys, evidenceRoot, h, auth, agent, project, bad, HttpError, record, decide, startRun, runView, baseUrl, validUrl, events } = x;
   const wrap = (fn) => { try { return fn(); } catch (e) { throw e.status ? e : bad(e.message); } };
   const ownedBuild = (p, id) => {
     const b = db.get('SELECT * FROM builds WHERE id = ? AND project_id = ?', Number(id), p.id);
@@ -95,7 +95,8 @@ export function registerProofRoutes(api, x) {
   // ---------- GitHub webhook ----------
   api.get('/projects/:pid/integration', auth, h((req, res) => {
     const p = project(req);
-    res.json({ webhook: { configured: !!p.webhook_secret_enc, url: `${baseUrl(req)}/api/webhooks/github/${p.id}`, environment: p.webhook_environment, contentType: 'application/json', events: ['push'] },
+    res.json({ webhook: { configured: !!p.webhook_secret_enc, url: `${baseUrl(req)}/api/webhooks/github/${p.id}`, environment: p.webhook_environment, contentType: 'application/json', events: ['push', 'workflow_run', 'deployment_status'],
+        eventSubscriptions: { workflow_run: 'Completed GitHub Actions runs trigger an assessment when subscribed in Watch', deployment_status: 'Successful or failed deployments trigger an assessment when subscribed in Watch' } },
       ci: { hasApiKey: !!p.api_key_hash, baseUrl: baseUrl(req), clientUrl: `${baseUrl(req)}/ci/shipproof-ci.mjs`, workflowUrl: `${baseUrl(req)}/ci/shipproof-verify.yml` },
       deliveries: db.all('SELECT d.delivery_id, d.event, d.outcome, d.detail, d.received_at, b.commit_sha FROM webhook_deliveries d LEFT JOIN builds b ON b.id = d.build_id WHERE d.project_id = ? ORDER BY d.id DESC LIMIT 25', p.id) });
   }));
@@ -130,10 +131,19 @@ export function registerProofRoutes(api, x) {
     if (!/^[\w]{1,40}$/.test(event)) throw bad('Missing or malformed X-GitHub-Event');
     // Replay protection: a delivery id is processed once per project, atomically with its effects.
     const out = db.tx(() => {
-      if (db.get('SELECT 1 FROM webhook_deliveries WHERE project_id = ? AND delivery_id = ?', p.id, delivery)) return { duplicate: true };
+      if (db.get('SELECT 1 FROM webhook_deliveries WHERE project_id = ? AND delivery_id = ?', p.id, delivery)) {
+        db.run('UPDATE watch_events SET duplicates = duplicates + 1, last_duplicate_at = ? WHERE project_id = ? AND delivery_id = ?', now(), p.id, delivery);
+        return { duplicate: true };
+      }
       const log = (outcome, detail, buildId = null) => db.run('INSERT INTO webhook_deliveries (project_id, delivery_id, event, outcome, build_id, detail, received_at) VALUES (?, ?, ?, ?, ?, ?, ?)', p.id, delivery, event, outcome, buildId, detail, now());
       const b = req.body || {};
       if (event === 'ping') { log('ok', 'ping'); return { ok: true, event }; }
+      // Lifecycle events: validated and persisted here; the assessment runs later on the event worker (see events.js).
+      if (event === 'workflow_run' || event === 'deployment_status') {
+        const r = events.ingest(p.id, delivery, event, b);
+        if (r.status === 'rejected') { log('rejected', r.error); return { error: r.error }; }
+        return { ok: true, event, eventStatus: r.status, eventId: r.eventId, reason: r.reason, buildId: r.buildId };
+      }
       if (event !== 'push') { log('ignored', `event "${event}" is not handled`); return { ignored: true, reason: 'only push events are processed' }; }
       if (b.deleted || /^0+$/.test(String(b.after || ''))) { log('ignored', 'branch deletion'); return { ignored: true, reason: 'branch deletion' }; }
       const commits = Array.isArray(b.commits) ? b.commits : [];
@@ -150,6 +160,8 @@ export function registerProofRoutes(api, x) {
     });
     if (out.error) throw bad(out.error);
     res.status(out.duplicate ? 200 : 202).json(out);
+    // Acknowledged only after the commit above: the event is durable before the worker is woken.
+    if (out.eventStatus === 'queued') events.kick();
   }));
 
   // ---------- CI API (project API key) ----------
