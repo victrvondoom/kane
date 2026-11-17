@@ -447,6 +447,3 @@ More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 | Document | Covers |
 |---|---|
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Components, data model, outcome classification, streaming, restart safety |
-| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Production checklist, backup and restore, rollback |
-| [docs/ONCALL.md](docs/ONCALL.md) | Voice on-call engineer: setup, safety model, limits |
