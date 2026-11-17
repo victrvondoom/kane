@@ -9,7 +9,6 @@ Evidence-backed release verification for AI-generated software, powered by [Kane
 [Quick start](#quick-start) · [How it works](#how-it-works) · [Gate rules](#gate-rules) · [Demo](#demo-walkthrough) · [API](#apis) · [Docs](#documentation)
 
 </div>
-
 ---
 
 SHIPPROOF takes a live application URL and requirements written in plain language. It splits the requirements
