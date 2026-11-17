@@ -1,0 +1,5034 @@
+{
+ "schema": "shipproof.bench.impact/v1",
+ "generatedAt": "2026-11-17T20:35:34.516Z",
+ "node": "v22.23.5",
+ "dataset": "repository-derived: this repository's server/ modules and tests/ suite, execution truth from V8 coverage",
+ "criteria": 25,
+ "changesMeasured": 51,
+ "changesSkipped": 2,
+ "graph": {
+  "files": 83,
+  "unresolvedFiles": [
+   "tests/agent-workspace.test.js",
+   "tests/autonomous-loop.test.js",
+   "tests/fault-localization.test.js",
+   "tests/unit.test.js"
+  ],
+  "externalSpecifiers": 257,
+  "buildMs": 43.28
+ },
+ "notMeasured": [
+  "historical failure ranking (no trustworthy outcome history exists in the repository)",
+  "learned ranking (no training data)",
+  "missed-regression severity (no severity labels for tests)"
+ ],
+ "summary": {
+  "full": {
+   "microRecall": 1,
+   "macroRecall": 1,
+   "changesWithFullRecall": 51,
+   "meanExecutedFraction": 1,
+   "meanCostFraction": 1,
+   "missedPairs": 0,
+   "selectionMsTotal": 0.142
+  },
+  "direct": {
+   "microRecall": 0.06636155606407322,
+   "macroRecall": 0.08306041184446951,
+   "changesWithFullRecall": 2,
+   "meanExecutedFraction": 0.35764705882352954,
+   "meanCostFraction": 0.06212313852685845,
+   "missedPairs": 816,
+   "selectionMsTotal": 42.847
+  },
+  "hybrid": {
+   "microRecall": 1,
+   "macroRecall": 1,
+   "changesWithFullRecall": 51,
+   "meanExecutedFraction": 1,
+   "meanCostFraction": 1,
+   "missedPairs": 0,
+   "selectionMsTotal": 35.429
+  },
+  "hybrid_50": {
+   "microRecall": 0.3295194508009153,
+   "macroRecall": 0.33953641397739664,
+   "changesWithFullRecall": 2,
+   "meanExecutedFraction": 0.5388235294117644,
+   "meanCostFraction": 0.08895756748752424,
+   "missedPairs": 586,
+   "selectionMsTotal": 33.227
+  },
+  "hybrid_25": {
+   "microRecall": 0.07322654462242563,
+   "macroRecall": 0.0883341946118584,
+   "changesWithFullRecall": 2,
+   "meanExecutedFraction": 0.3623529411764707,
+   "meanCostFraction": 0.06221355015809953,
+   "missedPairs": 810,
+   "selectionMsTotal": 33.031
+  }
+ },
+ "rows": [
+  {
+   "changed": "server/app.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_25": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    }
+   }
+  },
+  {
+   "changed": "server/auth.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.0731749596489944,
+     "costMs": 18996
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.0731749596489944,
+     "costMs": 18996
+    },
+    "hybrid_25": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.0731749596489944,
+     "costMs": 18996
+    }
+   }
+  },
+  {
+   "changed": "server/coding-agent.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.045790205587892,
+     "costMs": 11887
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.06599459932125563,
+     "costMs": 17132
+    },
+    "hybrid_25": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.045790205587892,
+     "costMs": 11887
+    }
+   }
+  },
+  {
+   "changed": "server/db.js",
+   "truthCount": 23,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 23,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 4,
+     "recallHit": 2,
+     "recall": 0.08695652173913043,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/fault-localization.test.js",
+      "tests/gatekeeper.test.js",
+      "tests/impact-graph.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/steps-writer.test.js",
+      "tests/telemetry.test.js",
+      "tests/unit.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.16,
+     "costFraction": 0.03617145036344796,
+     "costMs": 9390
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 23,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 11,
+     "recall": 0.4782608695652174,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/fault-localization.test.js",
+      "tests/impact-graph.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.07623739873727355,
+     "costMs": 19791
+    },
+    "hybrid_25": {
+     "selected": 7,
+     "recallHit": 5,
+     "recall": 0.21739130434782608,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/fault-localization.test.js",
+      "tests/impact-graph.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.28,
+     "costFraction": 0.037577475856808824,
+     "costMs": 9755
+    }
+   }
+  },
+  {
+   "changed": "server/demo-defects.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.045790205587892,
+     "costMs": 11887
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.06599459932125563,
+     "costMs": 17132
+    },
+    "hybrid_25": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.045790205587892,
+     "costMs": 11887
+    }
+   }
+  },
+  {
+   "changed": "server/demo-template.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/events.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.012203530857444423,
+     "costMs": 3168
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.012203530857444423,
+     "costMs": 3168
+    }
+   }
+  },
+  {
+   "changed": "server/fault-localization.js",
+   "truthCount": 1,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 1,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 25,
+     "recallHit": 1,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 1,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 25,
+     "recallHit": 1,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_25": {
+     "selected": 25,
+     "recallHit": 1,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    }
+   }
+  },
+  {
+   "changed": "server/gate.js",
+   "truthCount": 21,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 21,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 6,
+     "recallHit": 2,
+     "recall": 0.09523809523809523,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/fault-localization.test.js",
+      "tests/hardening.test.js",
+      "tests/impact-graph.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/oncall.test.js",
+      "tests/playtest.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.24,
+     "costFraction": 0.044337954598859,
+     "costMs": 11510
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 21,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 9,
+     "recall": 0.42857142857142855,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/fault-localization.test.js",
+      "tests/hardening.test.js",
+      "tests/impact-graph.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.08356028767666807,
+     "costMs": 21692
+    },
+    "hybrid_25": {
+     "selected": 7,
+     "recallHit": 3,
+     "recall": 0.14285714285714285,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/fault-localization.test.js",
+      "tests/hardening.test.js",
+      "tests/impact-graph.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.28,
+     "costFraction": 0.044900364796203344,
+     "costMs": 11656
+    }
+   }
+  },
+  {
+   "changed": "server/gatekeeper.js",
+   "truthCount": 18,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 18,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 1,
+     "recall": 0.05555555555555555,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 18,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 6,
+     "recall": 0.3333333333333333,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.06599459932125563,
+     "costMs": 17132
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 1,
+     "recall": 0.05555555555555555,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/impact-graph.js",
+   "truthCount": 16,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 16,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 2,
+     "recall": 0.125,
+     "missed": [
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 16,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 6,
+     "recall": 0.375,
+     "missed": [
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 2,
+     "recall": 0.125,
+     "missed": [
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/investigations.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.013809866832051218,
+     "costMs": 3585
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03401426056541485,
+     "costMs": 8830
+    },
+    "hybrid_25": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.013809866832051218,
+     "costMs": 3585
+    }
+   }
+  },
+  {
+   "changed": "server/kane.js",
+   "truthCount": 18,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 18,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 9,
+     "recallHit": 2,
+     "recall": 0.1111111111111111,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.03846731664849748,
+     "costMs": 9986
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 18,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 6,
+     "recall": 0.3333333333333333,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.058671710381861114,
+     "costMs": 15231
+    },
+    "hybrid_25": {
+     "selected": 9,
+     "recallHit": 2,
+     "recall": 0.1111111111111111,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.03846731664849748,
+     "costMs": 9986
+    }
+   }
+  },
+  {
+   "changed": "server/keys.js",
+   "truthCount": 19,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 19,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 9,
+     "recallHit": 3,
+     "recall": 0.15789473684210525,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/fault-localization.test.js",
+      "tests/hardening.test.js",
+      "tests/impact-graph.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.16080694306944995,
+     "costMs": 41745
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 19,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 7,
+     "recall": 0.3684210526315789,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/fault-localization.test.js",
+      "tests/hardening.test.js",
+      "tests/impact-graph.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.1810113368028136,
+     "costMs": 46990
+    },
+    "hybrid_25": {
+     "selected": 9,
+     "recallHit": 3,
+     "recall": 0.15789473684210525,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/fault-localization.test.js",
+      "tests/hardening.test.js",
+      "tests/impact-graph.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.16080694306944995,
+     "costMs": 41745
+    }
+   }
+  },
+  {
+   "changed": "server/netpolicy.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.03846731664849748,
+     "costMs": 9986
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.058671710381861114,
+     "costMs": 15231
+    },
+    "hybrid_25": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.03846731664849748,
+     "costMs": 9986
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/checks.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.028856265673332125,
+     "costMs": 7491
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.04906065940669576,
+     "costMs": 12736
+    },
+    "hybrid_25": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.028856265673332125,
+     "costMs": 7491
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/config.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 11,
+     "recallHit": 3,
+     "recall": 0.17647058823529413,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.44,
+     "costFraction": 0.27201007715805653,
+     "costMs": 70613
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/proof.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.2791827332365166,
+     "costMs": 72475
+    },
+    "hybrid_25": {
+     "selected": 11,
+     "recallHit": 3,
+     "recall": 0.17647058823529413,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.44,
+     "costFraction": 0.27201007715805653,
+     "costMs": 70613
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/engineer.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/git.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.028856265673332125,
+     "costMs": 7491
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.04906065940669576,
+     "costMs": 12736
+    },
+    "hybrid_25": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.028856265673332125,
+     "costMs": 7491
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/github.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/index.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/logbuffer.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/prompts.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/reasoning/anthropic.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/reasoning/index.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/redact.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.028856265673332125,
+     "costMs": 7491
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.04906065940669576,
+     "costMs": 12736
+    },
+    "hybrid_25": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.028856265673332125,
+     "costMs": 7491
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/report.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/routes.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/sessions.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/store.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/telephony/index.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/tools/engineering.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/tools/incident.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/tools/registry.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.028856265673332125,
+     "costMs": 7491
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.04906065940669576,
+     "costMs": 12736
+    },
+    "hybrid_25": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.028856265673332125,
+     "costMs": 7491
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/tools/repo.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/tools/runtime.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/voice/index.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/oncall/voice/openai-live.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/oqed.js",
+   "truthCount": 18,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 18,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 1,
+     "recall": 0.05555555555555555,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 18,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 6,
+     "recall": 0.3333333333333333,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 1,
+     "recall": 0.05555555555555555,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/orchestrator.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 10,
+     "recallHit": 2,
+     "recall": 0.11764705882352941,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.4,
+     "costFraction": 0.05075559424800749,
+     "costMs": 13176
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.06599459932125563,
+     "costMs": 17132
+    },
+    "hybrid_25": {
+     "selected": 10,
+     "recallHit": 2,
+     "recall": 0.11764705882352941,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.4,
+     "costFraction": 0.05075559424800749,
+     "costMs": 13176
+    }
+   }
+  },
+  {
+   "changed": "server/playtest.js",
+   "truthCount": 18,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 18,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 1,
+     "recall": 0.05555555555555555,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 18,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 6,
+     "recall": 0.3333333333333333,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.06599459932125563,
+     "costMs": 17132
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 1,
+     "recall": 0.05555555555555555,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/proof.js",
+   "truthCount": 19,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 19,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 7,
+     "recallHit": 1,
+     "recall": 0.05263157894736842,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/fault-localization.test.js",
+      "tests/hardening.test.js",
+      "tests/impact-graph.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.28,
+     "costFraction": 0.016402346714330288,
+     "costMs": 4258
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 19,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 7,
+     "recall": 0.3684210526315789,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.037496581239382584,
+     "costMs": 9734
+    },
+    "hybrid_25": {
+     "selected": 7,
+     "recallHit": 1,
+     "recall": 0.05263157894736842,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/fault-localization.test.js",
+      "tests/hardening.test.js",
+      "tests/impact-graph.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.28,
+     "costFraction": 0.016402346714330288,
+     "costMs": 4258
+    }
+   }
+  },
+  {
+   "changed": "server/regression.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.045790205587892,
+     "costMs": 11887
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.06599459932125563,
+     "costMs": 17132
+    },
+    "hybrid_25": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.045790205587892,
+     "costMs": 11887
+    }
+   }
+  },
+  {
+   "changed": "server/requirements.js",
+   "truthCount": 22,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 22,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 5,
+     "recallHit": 2,
+     "recall": 0.09090909090909091,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/fault-localization.test.js",
+      "tests/impact-graph.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/playtest.test.js",
+      "tests/proof.test.js",
+      "tests/steps-writer.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.2,
+     "costFraction": 0.036579775575218514,
+     "costMs": 9496
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 22,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 10,
+     "recall": 0.45454545454545453,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/fault-localization.test.js",
+      "tests/impact-graph.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/playtest.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.08918824177475086,
+     "costMs": 23153
+    },
+    "hybrid_25": {
+     "selected": 7,
+     "recallHit": 4,
+     "recall": 0.18181818181818182,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/fault-localization.test.js",
+      "tests/impact-graph.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/playtest.test.js",
+      "tests/proof.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.28,
+     "costFraction": 0.03922233307780906,
+     "costMs": 10182
+    }
+   }
+  },
+  {
+   "changed": "server/routes-autonomous.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/routes-investigations.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/routes-proof.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/runner.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 0,
+     "recall": 0,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/steps-writer.js",
+   "truthCount": 18,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 18,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 8,
+     "recallHit": 1,
+     "recall": 0.05555555555555555,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 18,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 6,
+     "recall": 0.3333333333333333,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.06599459932125563,
+     "costMs": 17132
+    },
+    "hybrid_25": {
+     "selected": 8,
+     "recallHit": 1,
+     "recall": 0.05555555555555555,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.32,
+     "costFraction": 0.003778934271197279,
+     "costMs": 981
+    }
+   }
+  },
+  {
+   "changed": "server/telemetry.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.005986201689541867,
+     "costMs": 1554
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/watch.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.005986201689541867,
+     "costMs": 1554
+    }
+   }
+  },
+  {
+   "changed": "server/watch.js",
+   "truthCount": 17,
+   "strategies": {
+    "full": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "direct": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.01050089176685401,
+     "costMs": 2726
+    },
+    "hybrid": {
+     "selected": 25,
+     "recallHit": 17,
+     "recall": 1,
+     "missed": [],
+     "executedFraction": 1,
+     "costFraction": 1,
+     "costMs": 259597
+    },
+    "hybrid_50": {
+     "selected": 13,
+     "recallHit": 5,
+     "recall": 0.29411764705882354,
+     "missed": [
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/hardening.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js"
+     ],
+     "executedFraction": 0.52,
+     "costFraction": 0.03240792459080806,
+     "costMs": 8413
+    },
+    "hybrid_25": {
+     "selected": 9,
+     "recallHit": 1,
+     "recall": 0.058823529411764705,
+     "missed": [
+      "tests/autonomous-loop.test.js",
+      "tests/e2e-investigation.test.js",
+      "tests/e2e-loop.test.js",
+      "tests/e2e-oncall.test.js",
+      "tests/e2e-proof.test.js",
+      "tests/e2e-watch.test.js",
+      "tests/e2e-workspace.test.js",
+      "tests/e2e.test.js",
+      "tests/events.test.js",
+      "tests/hardening.test.js",
+      "tests/integration.test.js",
+      "tests/investigations.test.js",
+      "tests/loop-truth.test.js",
+      "tests/oncall.test.js",
+      "tests/proof.test.js",
+      "tests/telemetry.test.js"
+     ],
+     "executedFraction": 0.36,
+     "costFraction": 0.01050089176685401,
+     "costMs": 2726
+    }
+   }
+  }
+ ]
+}

@@ -180,3 +180,20 @@ It is served by `GET /api/runs/:rid/results/:resid/telemetry` and shown in the r
 - Formats: HAR 1.2 is parsed as specified. Console output is read as NDJSON (`level`/`type` and `text`/`message`)
   or as plain text lines. The exact files Kane CLI 0.10.x writes for network and console output are not documented
   in this repository and have not been verified against a real run.
+
+## Algorithm intelligence (see ALGORITHM_IMPLEMENTATION_REPORT.md)
+
+- **Hybrid test impact** (`server/impact-graph.js`): a static import graph plus reverse closure selects which criteria
+  a change can affect. Mandatory, critical and unknown-impact criteria always run; transitive criteria are admitted
+  within an optional budget. Exposed at `POST /projects/:pid/builds/:bid/selection`, which takes the commit's sources
+  and never executes anything.
+- **Ochiai fault localization** (`server/fault-localization.js`): ranks components from a genuine execution spectrum.
+  Infrastructure failures and flaky tests are excluded. Library only; benchmark results show it does not localize on
+  file-level spectra.
+- **Merkle transparency log** (`server/transparency.js`): RFC 9162 inclusion and consistency proofs with checkpoints
+  signed by the existing Ed25519 key. Library only; not persisted.
+- **Explorer and reducer** (`playtest-agent-main/pt/search_nsga2.py`, `search_model.py`, `probdd.py`): NSGA-II
+  exploration with Pareto objectives, and a ProbDD-style reducer compared against `pt/reduce.py`. Evaluated on synthetic models.
+- **Near-duplicate fingerprints** (`gatekeeper-main/src/gatekeeper/fingerprint/minhash.py`): normalised tokens,
+  MinHash and LSH. A similarity relationship is never a maliciousness verdict.
+- Not implemented: interprocedural taint analysis (designed only).

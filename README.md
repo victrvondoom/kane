@@ -447,3 +447,13 @@ More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 | Document | Covers |
 |---|---|
+
+## Algorithm intelligence
+
+SHIPPROOF now includes impact-based test selection (`POST /projects/:pid/builds/:bid/selection`), plus library
+implementations, with tests and benchmarks, of Ochiai fault localization, an NSGA-II explorer, a ProbDD-style reducer,
+MinHash/LSH package fingerprints and a Merkle transparency log. Benchmarks are reproducible via `npm run bench:truth`,
+`npm run bench:impact` and `npm run bench:sbfl`. Results are mixed and documented honestly: selection without a budget
+runs every test in this repository, Ochiai did not localize seeded defects on file-level spectra, and NSGA-II did not beat
+random sampling on its synthetic model. Details: [ALGORITHM_IMPLEMENTATION_REPORT.md](ALGORITHM_IMPLEMENTATION_REPORT.md),
+[ALGORITHM_BENCHMARK_REPORT.md](ALGORITHM_BENCHMARK_REPORT.md), [ALGORITHM_VALIDATION.md](ALGORITHM_VALIDATION.md).

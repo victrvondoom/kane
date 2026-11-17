@@ -16,7 +16,10 @@
     "migrate": "node server/db.js",
     "backup": "node server/db.js backup",
     "kane:smoke": "node scripts/kane-smoke.js",
-    "test": "node --test --test-concurrency=1 tests/*.test.js"
+    "bench:truth": "node scripts/bench-collect-truth.mjs",
+    "bench:impact": "node scripts/bench-impact.mjs",
+    "bench:sbfl": "node scripts/bench-sbfl.mjs",
+    "test":"node --test --test-concurrency=1 tests/*.test.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
