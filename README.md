@@ -256,3 +256,15 @@ gate the workflow: no verification is started while they are open.
 ## Command center (agent workspace)
 
 Every signed-in page has **SHIPPROOF ENGINEER**, a persistent conversation with the On-call engineer (Engineer button, Ctrl/⌘K, or "Ask the engineer" on repair tasks and incidents). Phones get a bottom bar. Tests: `npm test`; the workspace browser test saves screenshots with `WORKSPACE_SHOTS=docs/screenshots`. See `AGENT_WORKSPACE_GUIDE.md`, `COMMAND_CENTER_ARCHITECTURE.md` and `MOBILE_RESPONSIVE_REPORT.md`.
+
+### Screenshots
+
+Engineer drawer on a project (desktop):
+
+![SHIPPROOF ENGINEER drawer on a project](docs/screenshots/desktop-drawer-conversation.png)
+
+Phone (390 px): projects with bottom navigation, and the full-screen engineer drawer:
+
+| Projects | Engineer drawer |
+|---|---|
+| ![Projects on a phone](docs/screenshots/phone-projects.png) | ![Engineer drawer on a phone](docs/screenshots/phone-drawer.png) |
