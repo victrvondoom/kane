@@ -1,0 +1,83 @@
+/* Command-center shell: SHIPPROOF ENGINEER drawer, bottom navigation for phones, breadcrumbs, command palette.
+   Loaded after styles.css. Breakpoint: 760px (phones and small tablets get the bottom bar and full-height drawer). */
+
+/* ---- header on narrow screens: primary destinations move to the bottom bar; Search and Engineer stay in reach */
+.agent-entry{color:var(--ok)!important}
+.engine{font-variant-numeric:tabular-nums}
+@media (max-width:760px){
+  .top .wrap{gap:8px;padding:0 14px}
+  .top nav{gap:2px}
+  .top nav > :not(.mob-keep):not(.engine):not(.agent-entry){display:none}
+  .top nav .engine{font-size:0;gap:0;padding:8px}
+  .top nav .engine .dot{width:10px;height:10px}
+  .linkbtn.mob-keep,.linkbtn.agent-entry{padding:8px 8px;min-height:40px}
+}
+
+/* ---- bottom navigation (phones only) */
+.bottomnav{display:none}
+@media (max-width:760px){
+  body.has-bottomnav .bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(4,1fr);
+    background:rgba(12,13,11,.97);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+  body.has-bottomnav main{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+}
+.bottomnav a,.bottomnav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:56px;padding:6px 4px;
+  font:600 11px var(--sans);letter-spacing:.02em;color:var(--mute);background:none;border:0;text-decoration:none;cursor:pointer}
+.bottomnav a[aria-current=page],.bottomnav button[aria-expanded=true]{color:var(--ok)}
+.bottomnav i{font-style:normal;font-size:17px;line-height:1}
+
+/* ---- breadcrumbs */
+.crumbs{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;font:500 12px var(--mono);color:var(--mute);padding-top:20px;min-width:0}
+.crumbs a{color:var(--mute);text-decoration:none;overflow-wrap:anywhere}
+.crumbs a:hover{color:var(--ink)}
+.crumbs [aria-current=page]{color:var(--ink)}
+
+/* ---- SHIPPROOF ENGINEER drawer */
+.ag-drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100vw);z-index:60;display:flex;flex-direction:column;min-height:0;
+  background:var(--panel);border-left:1px solid var(--line);box-shadow:-18px 0 40px rgba(0,0,0,.35)}
+.ag-drawer[hidden]{display:none}
+.ag-drawer.expanded{width:min(860px,100vw)}
+.agent-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);min-width:0}
+.agent-head h3{font-size:11px}
+.agent-status{display:flex;align-items:center;gap:8px;color:var(--mute);min-width:0}
+.agent-project{padding:8px 16px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.agent-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:14px 16px;display:grid;gap:14px;align-content:start}
+.agent-scroll .tscript{max-height:none}
+.agent-scroll .empty{padding:12px 0}
+.agent-tscript li p{overflow-wrap:anywhere}
+.agent-composer{border-top:1px solid var(--line);padding:10px 16px calc(12px + env(safe-area-inset-bottom) + var(--kb,0px));background:var(--panel);display:grid;gap:8px;flex:none}
+.agent-input-row{display:flex;gap:8px;align-items:flex-end}
+.agent-input-row textarea{flex:1;min-height:44px;max-height:160px;resize:none;font-size:15px}
+.agent-input-row .btn{min-height:44px}
+.agent-hint{font-size:12px}
+.agent-activity summary{cursor:pointer;color:var(--mute);padding:2px 0}
+.agent-activity .feed{margin-top:8px}
+.ctx-chip{display:flex;align-items:center;gap:8px;padding:6px 8px 6px 12px;border:1px dashed var(--info);border-radius:8px;color:var(--info);min-width:0}
+.ctx-msg summary{cursor:pointer;color:var(--info)}
+.ag-drawer .ref{min-height:28px;min-width:28px}
+.ag-drawer button:disabled,.ag-drawer select:disabled,.ag-drawer textarea:disabled{opacity:.5;cursor:not-allowed}
+
+/* ---- command palette */
+.palette{width:min(640px,calc(100vw - 24px));margin-top:12vh;padding:16px;border:1px solid var(--line2);border-radius:12px;background:var(--panel);color:var(--ink)}
+.palette::backdrop{background:rgba(0,0,0,.55)}
+.palette input{font-size:16px}
+.palette-list{list-style:none;margin:0;padding:0;display:grid;gap:2px;max-height:52vh;overflow:auto;overscroll-behavior:contain}
+.palette-list li{display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:7px;cursor:pointer;min-height:44px}
+.palette-list li.on{background:var(--panel2);box-shadow:inset 3px 0 0 var(--ok)}
+.palette-foot{margin-top:2px}
+
+/* ---- touch and motion */
+@media (pointer:coarse){
+  .btn,.linkbtn,.bottomnav a,.bottomnav button{min-height:44px}
+  .ag-drawer .ref{min-width:44px;min-height:44px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+@media (max-width:760px){
+  .ag-drawer{inset:0;width:100%;height:100dvh;border-left:0;box-shadow:none}
+  .ag-drawer.expanded{width:100%}
+  .agent-desk{display:none}
+  .agent-input-row textarea{font-size:16px}
+  body.agent-open{overflow:hidden}
+  .palette{margin-top:6vh}
+}

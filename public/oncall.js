@@ -1,6 +1,7 @@
 // On-call engineer: call console, live transcript, incident workspace and incident history.
 // The browser carries audio only (WebRTC). Transcripts, tool activity and incident state come from the server's
 // activity stream; no provider credential, tool call or engineering decision ever passes through this file.
+import { openAgent } from './agent-workspace.js';
 const S = () => window.SP;
 const STAGES = [['understand', 'Understand'], ['investigate', 'Investigate'], ['diagnose', 'Diagnose'], ['repair', 'Repair'], ['verify', 'Verify'], ['deliver', 'Deliver']];
 const LEVEL_CLASS = { verified: 's-verified', tests_passed: 's-verified', failed: 's-failed', unverified: 's-blocked', no_code_change: 's-untested', interrupted: 's-blocked' };
@@ -299,7 +300,9 @@ export async function OnCallIncidentPage(id) {
   const openEvidence = (ref) => evidenceDialog(`/oncall/incidents/${inc.id}/evidence/${ref}`);
   return h('div', { class: 'page stack-l' },
     h('div', { class: 'row spread' }, h('a', { class: 'small mute', href: '#/oncall' }, '← On-call'), h('span', { class: 'small mute' }, `Opened ${fmtTime(inc.createdAt)}${inc.closedAt ? ` · closed ${fmtTime(inc.closedAt)}` : ''}`)),
-    h('div', { class: 'panel' }, incidentBody(inc, { openEvidence })),
+    h('div', { class: 'panel stack-s' }, h('div', { class: 'row spread' }, h('span', { class: 'small mute' }, 'Ask about this incident, its evidence or its fix.'),
+      h('button', { class: 'btn', onclick: () => openAgent({ context: { kind: 'incident', title: `#${inc.id} ${inc.title}`, fields: { status: inc.status, stage: inc.stage, description: inc.description, verification: inc.verification?.statement, branch: inc.branch, 'pull request': inc.prNumber ? `#${inc.prNumber}` : null, environment: inc.environment } } }) }, 'Ask the engineer about this')),
+      incidentBody(inc, { openEvidence })),
     inc.summary ? h('div', { class: 'panel stack-s' }, h('h3', {}, 'Summary'), h('p', { style: { 'white-space': 'pre-wrap' } }, inc.summary)) : null,
     h('div', { class: 'panel flush' }, h('div', { class: 'panel-h' }, h('h3', {}, `Evidence ledger · ${inc.evidence.length}`), h('span', { class: 'small mute' }, 'Every tool execution, hashed')),
       h('ol', { class: 'feed tall' }, inc.evidence.map((e) => h('li', { class: e.ok ? '' : 'err' }, h('time', {}, new Date(e.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })), h('span', { class: `tier t-${TIER[e.tier]}` }, TIER[e.tier]),
