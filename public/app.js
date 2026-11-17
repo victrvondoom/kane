@@ -1,8 +1,11 @@
 // SHIPPROOF single-page app. No build step; every value on screen is fetched from the API.
 import { ProofTab, BuildsTab, IntelligenceTab, CITab, DossierTab } from './proof.js';
 import { AutonomousLoopTab, StepsWriterTab, GatekeeperTab, OqedTab } from './autonomous.js';
+import { OnCallPage, OnCallIncidentPage } from './oncall.js';
+import { ensureAgent, resetAgent, openAgent, toggleAgent, setAgentProject } from './agent-workspace.js';
+import { openPalette, installPaletteShortcut } from './command-palette.js';
 const $app = document.getElementById('app');
-let me = null, system = null, cleanup = [];
+let me = null, system = null, cleanup = [], crumb = null; // crumb: the project (and tab) the current page belongs to
 
 // ---------- tiny DOM + API helpers ----------
 function h(tag, attrs, ...kids) {
@@ -77,6 +80,27 @@ const segBar = (counts, order) => {
 const copy = async (text, what) => { await navigator.clipboard.writeText(text); toast(`${what} copied`); };
 
 // ---------- chrome ----------
+async function judgeDemo() {
+  const demo = await api('POST', '/demo/judge-scenario');
+  toast('Judge demo loaded! Opening autonomous loop...');
+  location.hash = `#/p/${demo.project.id}/loop`;
+}
+async function signOut() { await api('POST', '/auth/logout'); resetAgent(); me = null; location.hash = '#/'; render(); }
+const openPaletteUI = () => openPalette({ openAgent: () => openAgent(), onSignOut: act(signOut), onDemo: act(judgeDemo) });
+// Primary destinations on phones: the bottom bar is the first thing a thumb reaches; secondary ones live in Search.
+function bottomNav() {
+  const seg = (location.hash.replace(/^#\/?/, '').split('/')[0]) || 'app', current = (ids) => (ids.includes(seg) ? { 'aria-current': 'page' } : {});
+  return h('nav', { class: 'bottomnav', 'aria-label': 'Primary' },
+    h('a', { href: '#/app', ...current(['app', 'p', 'run', 'new']) }, h('i', { 'aria-hidden': 'true' }, '▤'), 'Projects'),
+    h('button', { type: 'button', 'aria-controls': 'agent', onclick: () => toggleAgent() }, h('i', { 'aria-hidden': 'true' }, '✦'), 'Engineer'),
+    h('a', { href: '#/oncall', ...current(['oncall']) }, h('i', { 'aria-hidden': 'true' }, '◉'), 'On-call'),
+    h('button', { type: 'button', onclick: openPaletteUI }, h('i', { 'aria-hidden': 'true' }, '⋯'), 'More'));
+}
+function crumbs() {
+  if (!crumb) return null;
+  return h('nav', { class: 'crumbs', 'aria-label': 'Breadcrumb' }, h('a', { href: '#/app' }, 'Projects'), h('span', { 'aria-hidden': 'true' }, '/'),
+    h('a', { href: `#/p/${crumb.id}`, 'aria-current': crumb.tab ? null : 'page' }, crumb.name), crumb.tab ? [h('span', { 'aria-hidden': 'true' }, '/'), h('span', { 'aria-current': 'page' }, crumb.tab)] : null);
+}
 function shell(...content) {
   const k = system?.kane;
   const engine = me && k ? h('button', { class: 'engine', title: k.detail, onclick: act(async () => { system = await api('GET', '/system?fresh=1'); toast(`Kane CLI ${system.kane.version || 'not installed'} — ${system.kane.detail}`, !system.kane.ready); render(); }) },
@@ -86,16 +110,15 @@ function shell(...content) {
     h('header', { class: 'top' }, h('div', { class: 'wrap' },
       h('a', { class: 'brand', href: me ? '#/app' : '#/' }, h('i'), 'SHIPPROOF'),
       h('nav', {}, engine,
-        me ? [h('a', { href: '#/app' }, 'Projects'),
-          h('button', { class: 'linkbtn', style: { color: 'var(--info)', 'font-weight': '600' }, onclick: act(async () => {
-            const demo = await api('POST', '/demo/judge-scenario');
-            toast('Judge demo loaded! Opening autonomous loop...');
-            location.hash = `#/p/${demo.project.id}/loop`;
-          }) }, '⚡ Judge Demo (1-Click)'),
+        me ? [h('button', { class: 'linkbtn agent-entry', 'aria-controls': 'agent', onclick: () => toggleAgent() }, '✦ Engineer'),
+          h('button', { class: 'linkbtn mob-keep', 'aria-keyshortcuts': 'Control+K', title: 'Search and commands (Ctrl+K)', onclick: openPaletteUI }, 'Search'),
+          h('a', { href: '#/app' }, 'Projects'), h('a', { href: '#/oncall' }, 'On-call'),
+          h('button', { class: 'linkbtn opt', style: { color: 'var(--info)', 'font-weight': '600' }, onclick: act(judgeDemo) }, '⚡ Judge Demo (1-Click)'),
           h('a', { href: '#/new', class: 'opt' }, 'New project'),
-          h('button', { class: 'linkbtn', onclick: act(async () => { await api('POST', '/auth/logout'); me = null; location.hash = '#/'; render(); }) }, 'Sign out')]
+          h('button', { class: 'linkbtn', onclick: act(signOut) }, 'Sign out')]
           : [h('a', { href: '#/login' }, 'Sign in'), h('a', { class: 'btn primary sm', href: '#/signup' }, 'Get started')]))),
-    h('main', { class: 'wrap' }, content));
+    h('main', { class: 'wrap' }, crumbs(), content),
+    me ? bottomNav() : null);
 }
 const engineCallout = () => {
   const k = system?.kane;
@@ -295,6 +318,8 @@ async function Project(id, tab = 'requirements', sub) {
     ci: () => CITab(d),
     dossier: () => DossierTab(d, sub)
   }[tab] || (() => AutonomousLoopTab(d, sub));
+  crumb = { id: p.id, name: p.name, tab: (tabs.find((t) => t[0] === tab) || [])[1] || '' };
+  setAgentProject({ id: p.id, name: p.name });
   return shell(h('div', { class: 'page stack-l' },
     h('div', { class: 'row spread', style: { 'align-items': 'flex-start' } },
       h('div', { class: 'stack-s grow' }, h('h3', {}, h('a', { href: '#/app', style: { 'text-decoration': 'none' } }, '← Projects')), h('h1', {}, p.name),
@@ -406,6 +431,8 @@ function FailuresTab({ project: p, criteria, repairTasks }, start) {
         : h('div', { class: 'stack' },
           h('details', {}, h('summary', { class: 'small' }, 'Repair task for your coding agent'), h('pre', { style: { 'margin-top': '10px' } }, t.prompt)),
           h('div', { class: 'row' }, h('button', { class: 'btn', onclick: act(() => copy(t.prompt, 'Repair task')) }, 'Copy repair task'),
+            h('button', { class: 'btn', 'aria-label': `Ask the engineer about ${t.criterionKey}`, onclick: () => openAgent({ context: { kind: 'repair task', title: `RT-${t.id} · ${t.criterionKey}`, fields: {
+              project: p.name, criterion: t.criterionText, expected: t.expected, observed: t.observed, diagnosis: t.diagnosis, 'source run': t.sourceResult?.run_id, status: t.status } } }) }, 'Ask the engineer'),
             h('div', { class: 'grow', style: { 'min-width': '200px' } }, note),
             h('button', { class: 'btn primary', onclick: act(async () => { const { run } = await api('POST', `/repair-tasks/${t.id}/fix-applied`, { note: note.value }); toast('Fix recorded — Kane CLI is re-verifying'); location.hash = `#/run/${run.id}`; }) }, 'Fix applied → re-verify')),
           h('p', { class: 'small mute' }, 'Marking a fix does not close this task. Only a passing Kane CLI re-run can.')));
@@ -658,6 +685,8 @@ async function PublicReport(token) {
 // ---------- router ----------
 async function render() {
   cleanup.forEach((f) => f()); cleanup = [];
+  crumb = null; setAgentProject(null); document.body.classList.toggle('has-bottomnav', !!me);
+  if (me) ensureAgent(me); // the engineer conversation outlives this render; ensureAgent is idempotent per user
   const share = /^\/r\/([\w-]+)$/.exec(location.pathname);
   const parts = (location.hash.replace(/^#\/?/, '') || '').split('/').filter(Boolean);
   let view;
@@ -672,6 +701,7 @@ async function render() {
     else if (parts[0] === 'new') view = await NewProject();
     else if (parts[0] === 'p' && parts[1]) view = await Project(Number(parts[1]), parts[2], parts[3]);
     else if (parts[0] === 'run' && parts[1]) view = await RunPage(Number(parts[1]), parts[2]);
+    else if (parts[0] === 'oncall') view = shell(parts[1] === 'i' && parts[2] ? await OnCallIncidentPage(parts[2]) : await OnCallPage());
     else view = shell(h('div', { class: 'page' }, h('div', { class: 'panel empty stack' }, h('h2', {}, 'Page not found'), h('div', {}, h('a', { class: 'btn', href: '#/app' }, 'Back to projects')))));
   } catch (e) {
     view = shell(h('div', { class: 'page' }, h('div', { class: 'panel empty stack' }, h('h2', {}, 'Something went wrong'), h('p', {}, e.message), h('div', { class: 'row', style: { 'justify-content': 'center' } }, h('button', { class: 'btn primary', onclick: render }, 'Retry'), h('a', { class: 'btn', href: '#/app' }, 'Back to projects')))));
@@ -679,8 +709,9 @@ async function render() {
   clearTimeout(slow);
   if (view) { const y = window.scrollY, same = $app.dataset.route === location.hash; $app.replaceChildren(view); $app.dataset.route = location.hash; window.scrollTo(0, same ? y : 0); }
 }
-window.SP = { h, api, act, toast, copy, dialog, tag, fmtTime, fmtDur, ago, KIND, LABEL, render: () => render() };
+window.SP = { h, api, act, toast, copy, dialog, tag, stamp, fmtTime, fmtDur, ago, KIND, LABEL, render: () => render(), onCleanup: (f) => cleanup.push(f) };
 window.addEventListener('hashchange', render);
+installPaletteShortcut(openPaletteUI);
 (async () => {
   try { me = (await api('GET', '/auth/me')).user; if (me) system = await api('GET', '/system'); } catch {}
   render();

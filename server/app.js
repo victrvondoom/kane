@@ -15,7 +15,10 @@ import { writeVersion, computeDecision, cleanList, CRITICALITY, backfillEvidence
 import { loadKeys } from './keys.js';
 import { registerProofRoutes } from './routes-proof.js';
 import { AutonomousOrchestrator } from './orchestrator.js';
+import { createWatch, getConfig as watchConfig, setConfig as setWatchConfig, DEFAULT_THRESHOLDS } from './watch.js';
 import { registerAutonomousRoutes } from './routes-autonomous.js';
+import { createLogBuffer } from './oncall/logbuffer.js';
+import { createOncall } from './oncall/index.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CATEGORIES = ['functional', 'visual', 'persistence'];
@@ -28,12 +31,15 @@ const str = (v, max, name) => {
   return v.trim();
 };
 const ACTIVE = `('queued','starting','running')`;
-const log = (level, msg, fields = {}) => { if (process.env.LOG_LEVEL !== 'silent') console.log(JSON.stringify({ ts: now(), level, msg, ...fields })); };
+const print = (level, msg, fields = {}) => { if (process.env.LOG_LEVEL !== 'silent') console.log(JSON.stringify({ ts: now(), level, msg, ...fields })); };
 
-export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './data'), config = kaneConfig() } = {}) {
+export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './data'), config = kaneConfig(), workspaceDir = ROOT, repairFn = null, watchOptions = {}, oncallOptions = {} } = {}) {
   const db = openDb(dataDir);
+  // Structured log lines are printed and also kept in a bounded in-memory buffer the on-call agent can inspect.
+  const logBuffer = createLogBuffer();
+  const log = (level, msg, fields = {}) => { logBuffer.push({ ts: now(), level, msg, ...fields }); print(level, msg, fields); };
   const runner = createRunner({ db, dataDir, config });
-  const orchestrator = new AutonomousOrchestrator({ db, runner, workspaceDir: ROOT });
+  const orchestrator = new AutonomousOrchestrator({ db, runner, workspaceDir, dataDir, config, repairFn, decide: (p) => decide(p) });
   const evidenceRoot = path.join(dataDir, 'evidence');
   const validUrl = async (v) => {
     const r = await checkTarget(str(v, 500, 'Application URL'), { allowPrivate: config.allowPrivateTargets });
@@ -55,7 +61,9 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
     req.id = crypto.randomUUID();
     res.setHeader('X-Request-Id', req.id);
     const t0 = Date.now();
-    res.on('finish', () => { if (req.path.startsWith('/api') && !req.path.endsWith('/stream')) log(res.statusCode >= 500 ? 'error' : 'info', 'request', { requestId: req.id, method: req.method, path: req.path, status: res.statusCode, ms: Date.now() - t0, userId: req.user?.id }); });
+    // originalUrl, not req.path: inside a mounted router the mount prefix is stripped by the time the response finishes.
+    const urlPath = req.originalUrl.split('?')[0];
+    res.on('finish', () => { if (urlPath.startsWith('/api') && !urlPath.endsWith('/stream')) log(res.statusCode >= 500 ? 'error' : 'info', 'request', { requestId: req.id, method: req.method, path: urlPath, status: res.statusCode, ms: Date.now() - t0, userId: req.user?.id }); });
     next();
   });
   // Liveness: the process is up. Readiness: it can actually serve (DB answers, data dir writable, not draining).
@@ -573,18 +581,32 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
   }));
 
   registerProofRoutes(api, { db, runner, config, keys, evidenceRoot, h, auth, agent, project, bad, HttpError, record, decide, startRun, runView, baseUrl, validUrl, getEngineVersion: () => engineVersion });
-  registerAutonomousRoutes(api, { db, orchestrator, runner, ROOT, auth, project, h, HttpError, bad, baseUrl });
+  // ---------- continuous watch ----------
+  const watch = createWatch({ db, runner, config, decide: (p) => decide(p), evidenceRoot, ...watchOptions });
+  const wrap = (fn) => { try { return fn(); } catch (e) { if (e.status) throw new HttpError(e.status, e.message); throw e; } };
+  api.get('/projects/:pid/watch', auth, h((req, res) => { const p = project(req); res.json({ config: watchConfig(db, p.id), defaults: DEFAULT_THRESHOLDS, latest: watch.listChecks(p.id, 1)[0] || null }); }));
+  api.put('/projects/:pid/watch', auth, h((req, res) => { const p = project(req); const c = wrap(() => setWatchConfig(db, p.id, req.body || {})); record(req, 'watch.configured', { projectId: p.id, entity: 'project', entityId: p.id, detail: { enabled: c.enabled, intervalMinutes: c.intervalMinutes, autoRun: c.autoRun } }); res.json({ config: c }); }));
+  api.post('/projects/:pid/watch/check', auth, h(async (req, res) => { const p = project(req); try { res.status(201).json({ check: await watch.runCheck(p.id, 'manual') }); } catch (e) { if (e.status) throw new HttpError(e.status, e.message); throw e; } }));
+  api.get('/projects/:pid/watch/checks', auth, h((req, res) => res.json({ checks: watch.listChecks(project(req).id, req.query.limit) })));
+  api.get('/projects/:pid/watch/findings', auth, h((req, res) => { const st = req.query.status; if (st && !['open', 'resolved'].includes(st)) throw bad('status must be open or resolved'); res.json({ findings: watch.listFindings(project(req).id, st) }); }));
+  api.get('/projects/:pid/watch/trend', auth, h((req, res) => res.json(watch.trend(project(req).id, req.query.limit))));
+  api.post('/projects/:pid/watch/checks/:cid/execute', auth, h((req, res) => { const p = project(req); res.json(wrap(() => watch.executePlan(p.id, Number(req.params.cid)))); }));
+  watch.start();
+
+  registerAutonomousRoutes(api, { db, orchestrator, runner, ROOT: workspaceDir, config, auth, project, h, HttpError, bad, baseUrl });
+  const oncall = createOncall({ db, dataDir, workspaceDir, kaneCfg: config, runner, orchestrator, decide: (p) => decide(p), startRun, keys, logBuffer, log, ...oncallOptions });
+  oncall.routes(api, { auth, h, HttpError, db });
   api.use((req, res) => res.status(404).json({ error: 'Not found' }));
   app.use('/api', api);
   app.use('/api', (err, req, res, _next) => {
     const status = err.status || (err.type === 'entity.parse.failed' ? 400 : 500);
     if (status === 500) log('error', 'unhandled', { requestId: req.id, path: req.path, error: err.message, stack: err.stack?.split('\n').slice(0, 4).join(' | ') });
-    res.status(status).json({ error: status === 500 ? 'Internal server error' : err.message, requestId: req.id, ...(err.activeRunId ? { activeRunId: err.activeRunId } : {}), ...(err.nothingToVerify ? { nothingToVerify: true } : {}) });
+    res.status(status).json({ error: status === 500 ? 'Internal server error' : err.message, requestId: req.id, ...(typeof err.code === 'string' && status !== 500 ? { code: err.code } : {}), ...(err.activeRunId ? { activeRunId: err.activeRunId } : {}), ...(err.nothingToVerify ? { nothingToVerify: true } : {}) });
   });
 
   app.use(express.static(path.join(ROOT, 'public'), { index: false, maxAge: 0 }));
   app.get('*', (req, res) => res.sendFile(path.join(ROOT, 'public', 'index.html')));
   /** Graceful shutdown: stop taking work, stop the browser, flush state, close the DB. */
-  const shutdown = async () => { draining = true; await runner.shutdown(); try { db.close(); } catch {} };
-  return { app, db, runner, orchestrator, shutdown };
+  const shutdown = async () => { draining = true; try { await oncall.shutdown(); } catch {} try { watch.stop(); } catch {} try { orchestrator.stop(); } catch {} await runner.shutdown(); try { db.close(); } catch {} };
+  return { app, db, runner, orchestrator, watch, oncall, shutdown };
 }

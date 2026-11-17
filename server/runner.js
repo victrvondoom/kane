@@ -57,7 +57,15 @@ export function createRunner({ db, dataDir, config = kaneConfig() }) {
       if (!active && !queue.length) { idleResolvers.forEach((r) => r()); idleResolvers = []; }
       return;
     }
-    const runId = queue.shift();
+    const item = queue.shift();
+    if (typeof item === 'object') { // isolated job (regression trial): same single-flight queue, no `results` rows
+      active = { runId: null, handle: null, cancelled: false, isolated: true };
+      try { item.resolve(await item.fn()); } catch (e) { item.resolve({ status: 'error', errorKind: 'runner', reason: e.message, files: [] }); }
+      active = null;
+      setImmediate(pump);
+      return;
+    }
+    const runId = item;
     active = { runId, handle: null, cancelled: false };
     try { await execute(runId); } catch (e) {
       emit(runId, null, 'system', { level: 'error', message: `Runner error: ${e.message}` });
@@ -67,6 +75,64 @@ export function createRunner({ db, dataDir, config = kaneConfig() }) {
     bus.emit(`run:${runId}`, { kind: 'end' });
     active = null;
     setImmediate(pump);
+  }
+
+  /** One engine execution + conservative classification + evidence collection. Shared by runs and isolated trials. */
+  async function runObjective({ objective, url, variables = [], workDir, destDir, onEvent = () => {}, onWarn = () => {} }) {
+    const outcome = await runKane({ objective, url, workDir, variables, config, onEvent, onSpawn: (h) => { if (active) active.handle = h; } });
+    if (active) active.handle = null;
+    let verdict = classify(outcome);
+    const end = outcome.runEnd || {};
+    const step = verdict.status === 'passed' ? null : failingStep(outcome.events);
+    let files = [];
+    try { files = collectEvidence({ outcome, workDir, destDir }); }
+    catch (e) { onWarn(`Evidence collection failed: ${e.message}`); }
+    const hasLink = typeof end.test_url === 'string' && /^https?:\/\//.test(end.test_url);
+    if (verdict.status === 'passed' && config.requireEvidence && !files.length && !hasLink) {
+      verdict = { status: 'error', errorKind: 'no_evidence',
+        reason: 'Kane CLI reported a pass but no evidence artifact (screenshot, log, evidence pack or Test Manager link) could be collected. A pass without evidence is treated as unverified.' };
+    }
+    fs.rm(workDir, { recursive: true, force: true }, () => {});
+    return { outcome, verdict, end, step, files, hasLink };
+  }
+
+  /**
+   * Execute an objective against an isolated target (e.g. a regression trial copy) through the same engine path
+   * and the same single-flight queue, WITHOUT creating `results` rows — so it can never count as release evidence.
+   */
+  function runIsolated({ objective, url, variables = [], label }) {
+    if (stopping) return Promise.resolve({ status: 'error', errorKind: 'interrupted', reason: 'Server is shutting down.', files: [] });
+    return new Promise((resolve) => {
+      queue.push({ resolve, fn: async () => {
+        const target = await checkTarget(url, { allowPrivate: config.allowPrivateTargets });
+        if (!target.ok) return { status: 'error', errorKind: 'target_blocked', reason: target.reason, files: [] };
+        const startedAt = now();
+        const rel = path.join('isolated', label);
+        const r = await runObjective({ objective, url, variables, workDir: path.join(dataDir, 'work', label), destDir: path.join(dataDir, 'evidence', rel) });
+        const end = r.end;
+        return { status: active?.cancelled ? 'error' : r.verdict.status, errorKind: active?.cancelled ? 'interrupted' : r.verdict.errorKind,
+          reason: r.verdict.reason ?? end.reason ?? null, exitCode: r.outcome.exitCode, command: r.outcome.command, summary: end.summary ?? null,
+          engine: r.outcome.engine, durationMs: r.outcome.durationMs, startedAt, finishedAt: now(),
+          credits: Number.isFinite(Number(end.credits_consumed)) ? Number(end.credits_consumed) : null,
+          files: r.files.map((f) => ({ ...f, relPath: path.join(rel, f.relPath) })), testUrl: r.hasLink ? end.test_url : null };
+      } });
+      setImmediate(pump);
+    });
+  }
+
+  const RUN_DONE = ['completed', 'cancelled', 'interrupted'];
+  /** Resolves when THIS run reaches a terminal state — never on unrelated queue activity. Returns the run row, or null on timeout. */
+  function waitForRun(runId, timeoutMs = 0) {
+    const get = () => db.get('SELECT * FROM runs WHERE id = ?', runId);
+    return new Promise((resolve) => {
+      const first = get();
+      if (!first || RUN_DONE.includes(first.status)) return resolve(first || null);
+      let timer = null;
+      const done = (v) => { bus.off(`run:${runId}`, on); clearTimeout(timer); resolve(v); };
+      const on = (ev) => { if (ev.kind !== 'end') return; setImmediate(() => { let r = null; try { r = get(); } catch {} done(r); }); };
+      bus.on(`run:${runId}`, on);
+      if (timeoutMs > 0) { timer = setTimeout(() => done(null), timeoutMs); timer.unref?.(); }
+    });
   }
 
   async function execute(runId) {
@@ -99,7 +165,9 @@ export function createRunner({ db, dataDir, config = kaneConfig() }) {
       db.run(`UPDATE results SET status = 'starting', started_at = ?, objective = ? WHERE id = ?`, now(), objective, res.id);
       emit(runId, res.id, 'system', { level: 'info', message: `${res.criterion_key}: launching Kane CLI`, phase: 'starting' });
       let live = false;
-      const outcome = await runKane({ objective, url: project.app_url, workDir, variables, config,
+      const { outcome, verdict, end, step, files, hasLink } = await runObjective({ objective, url: project.app_url, variables, workDir,
+        destDir: path.join(dataDir, 'evidence', `result-${res.id}`),
+        onWarn: (m) => emit(runId, res.id, 'system', { level: 'warn', message: m }),
         onEvent: (e) => {
           if (!live && e.kind === 'kane') {
             live = true;
@@ -107,20 +175,7 @@ export function createRunner({ db, dataDir, config = kaneConfig() }) {
             emit(runId, res.id, 'system', { level: 'info', message: `${res.criterion_key}: Kane CLI is running`, phase: 'running' });
           }
           emit(runId, res.id, e.kind, e.payload);
-        },
-        onSpawn: (h) => { active.handle = h; } });
-      active.handle = null;
-      let verdict = classify(outcome);
-      const end = outcome.runEnd || {};
-      const step = verdict.status === 'passed' ? null : failingStep(outcome.events);
-      let files = [];
-      try { files = collectEvidence({ outcome, workDir, destDir: path.join(dataDir, 'evidence', `result-${res.id}`) }); }
-      catch (e) { emit(runId, res.id, 'system', { level: 'warn', message: `Evidence collection failed: ${e.message}` }); }
-      const hasLink = typeof end.test_url === 'string' && /^https?:\/\//.test(end.test_url);
-      if (verdict.status === 'passed' && config.requireEvidence && !files.length && !hasLink) {
-        verdict = { status: 'error', errorKind: 'no_evidence',
-          reason: 'Kane CLI reported a pass but no evidence artifact (screenshot, log, evidence pack or Test Manager link) could be collected. A pass without evidence is treated as unverified.' };
-      }
+        } });
       db.tx(() => {
         db.run(`UPDATE results SET status = ?, error_kind = ?, exit_code = ?, signal = ?, command = ?, kane_status = ?, summary = ?, one_liner = ?,
                 reason = ?, final_state = ?, failing_step = ?, test_url = ?, session_dir = ?, credits = ?, stdout = ?, stderr = ?, finished_at = ?, duration_ms = ?, engine = ?
@@ -137,7 +192,6 @@ export function createRunner({ db, dataDir, config = kaneConfig() }) {
           db.run(`INSERT INTO evidence (uid, result_id, kind, name, url) VALUES (?, ?, 'test_manager', 'Kane Test Manager test case', ?)`, newUid(), res.id, end.test_url);
         syncRepairTask(db, db.get('SELECT * FROM results WHERE id = ?', res.id), project);
       });
-      fs.rm(workDir, { recursive: true, force: true }, () => {});
       emit(runId, res.id, 'system', { level: verdict.status === 'passed' ? 'ok' : 'error', phase: 'end', status: verdict.status,
         message: `${res.criterion_key}: ${verdict.status.toUpperCase()} (exit ${outcome.exitCode ?? 'n/a'}, ${Math.round(outcome.durationMs / 100) / 10}s, ${files.length} evidence file(s))${verdict.reason ? ' — ' + verdict.reason : ''}` });
     }
@@ -162,18 +216,21 @@ export function createRunner({ db, dataDir, config = kaneConfig() }) {
   async function shutdown() {
     stopping = true;
     for (const id of queue.splice(0)) {
+      if (typeof id === 'object') { id.resolve({ status: 'error', errorKind: 'interrupted', reason: 'Server stopped before this trial started.', files: [] }); continue; }
       db.run(`UPDATE results SET status = 'error', error_kind = 'interrupted', reason = 'Server stopped before this check started.', finished_at = ? WHERE run_id = ? AND status = 'queued'`, now(), id);
       db.run(`UPDATE runs SET status = 'interrupted', finished_at = ? WHERE id = ?`, now(), id);
+      bus.emit(`run:${id}`, { kind: 'end' });
     }
     if (active) {
       const id = active.runId;
       active.cancelled = true; active.handle?.cancel();
+      if (id == null) { await Promise.race([new Promise((r) => idleResolvers.push(r)), new Promise((r) => setTimeout(r, 6000))]); return; }
       await Promise.race([new Promise((r) => idleResolvers.push(r)), new Promise((r) => setTimeout(r, 6000))]);
       db.run(`UPDATE results SET error_kind = 'interrupted', status = 'error', reason = 'Server stopped before this check finished.' WHERE run_id = ? AND status = 'cancelled'`, id);
       db.run(`UPDATE runs SET status = 'interrupted' WHERE id = ? AND status = 'cancelled'`, id);
     }
   }
 
-  return { enqueue, cancel, shutdown, activeRunFor, bus, idle: () => (!active && !queue.length ? Promise.resolve() : new Promise((r) => idleResolvers.push(r))),
+  return { enqueue, cancel, shutdown, activeRunFor, waitForRun, runIsolated, bus, idle: () => (!active && !queue.length ? Promise.resolve() : new Promise((r) => idleResolvers.push(r))),
     state: () => ({ activeRunId: active?.runId ?? null, queued: queue.length }) };
 }

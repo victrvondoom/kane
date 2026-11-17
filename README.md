@@ -12,6 +12,14 @@ Built for the Kane CLI hackathon. Kane CLI is the verification engine — nothin
 product can mark a criterion as verified except a `kane-cli run` that exits `0` with a passing
 `run_end` event.
 
+
+## On-call engineer (voice)
+
+Call an engineering agent from the browser, describe an incident, and it investigates real systems, fixes the defect
+on an isolated branch, proves the fix with a red/green regression test, pushes the branch and opens a pull request —
+with every step recorded as evidence and production actions gated on an on-screen approval.
+Setup, safety model and limits: [docs/ONCALL.md](docs/ONCALL.md).
+
 ## What it does
 
 | Module | What you get |
@@ -227,3 +235,36 @@ classifies the run, and which evidence files were collected.
   open; rate limiting is in-memory per process. This has had no external security review.
 
 More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+## Continuous watch
+
+A per-project health check of the verification system itself, run on a schedule or on demand. Each check measures
+variables from live data, turns every abnormal one into a finding (`variable` → `scenario` → `cause`, with an
+`origin` of harness / environment / application / evidence / process), tracks findings across checks
+(new, persisting, reopened, resolved) and derives the next workflow from them. Harness and environment problems
+gate the workflow: no verification is started while they are open.
+
+| Endpoint | Purpose |
+|---|---|
+| `GET/PUT /api/projects/:pid/watch` | Schedule (`enabled`, `intervalMinutes`), `autoRun`, per-project `thresholds` |
+| `POST /api/projects/:pid/watch/check` | Run a check now |
+| `GET /api/projects/:pid/watch/checks`, `/findings?status=`, `/trend` | History, finding ledger, variable series |
+| `POST /api/projects/:pid/watch/checks/:cid/execute` | Start the automatic step of the latest check's plan |
+
+`autoRun` is off by default: a scheduled check only starts verification runs (which spend engine credits) when it is on.
+
+## Command center (agent workspace)
+
+Every signed-in page has **SHIPPROOF ENGINEER**, a persistent conversation with the On-call engineer (Engineer button, Ctrl/⌘K, or "Ask the engineer" on repair tasks and incidents). Phones get a bottom bar. Tests: `npm test`; the workspace browser test saves screenshots with `WORKSPACE_SHOTS=docs/screenshots`. See `AGENT_WORKSPACE_GUIDE.md`, `COMMAND_CENTER_ARCHITECTURE.md` and `MOBILE_RESPONSIVE_REPORT.md`.
+
+### Screenshots
+
+Engineer drawer on a project (desktop):
+
+![SHIPPROOF ENGINEER drawer on a project](docs/screenshots/desktop-drawer-conversation.png)
+
+Phone (390 px): projects with bottom navigation, and the full-screen engineer drawer:
+
+| Projects | Engineer drawer |
+|---|---|
+| ![Projects on a phone](docs/screenshots/phone-projects.png) | ![Engineer drawer on a phone](docs/screenshots/phone-drawer.png) |

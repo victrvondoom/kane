@@ -4,7 +4,9 @@
 // and enforces retry limits.
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { now } from './db.js';
+import { DEFECTS, defectFor, setDefectState } from './demo-defects.js';
 
 export const MAX_REPAIR_ATTEMPTS = 3;
 
@@ -42,75 +44,52 @@ export function buildFailureDossier({
   };
 }
 
+const fileSha = (workspaceDir, rel) => {
+  const f = path.resolve(workspaceDir, rel);
+  if (!f.startsWith(path.resolve(workspaceDir) + path.sep) || !fs.existsSync(f)) return null;
+  return crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
+};
+
 /**
- * Execute an automated repair attempt on the application under test.
- * Supports targeted fixes (such as coupon arithmetic correction) or custom repair runners.
+ * Execute one repair attempt. Records what actually changed (file hashes); an attempt that changed nothing is
+ * `proposed`, never `applied`. A repeated submission of the same attempt number returns the stored attempt and
+ * does not touch the workspace again. Source is only modified when `mutationAuthorized` is true.
  */
-export async function executeRepair({
-  db,
-  executionId,
-  attemptNumber,
-  workspaceDir,
-  dossier,
-  repairFn = null, // Optional custom repair function or patch generator
-}) {
-  if (attemptNumber > MAX_REPAIR_ATTEMPTS) {
-    return {
-      status: 'escalated',
-      patchSummary: `Maximum repair attempts (${MAX_REPAIR_ATTEMPTS}) exceeded. Escalated to human review.`,
-      changedFiles: [],
-      needsHumanApproval: true,
-    };
+export async function executeRepair({ db, executionId, attemptNumber, workspaceDir, dossier, repairFn = null, mutationAuthorized = false, sourceResultId = null }) {
+  if (db && executionId) {
+    const prior = db.get('SELECT * FROM agent_repair_attempts WHERE execution_id = ? AND attempt_number = ?', executionId, attemptNumber);
+    if (prior) return { status: prior.status, patchSummary: prior.patch_summary, changedFiles: JSON.parse(prior.changed_files_json || '[]'), attemptNumber, attemptId: prior.id, duplicate: true, needsHumanApproval: prior.status !== 'applied' };
   }
-
-  let patchSummary = '';
-  const changedFiles = [];
-
-  if (repairFn) {
+  if (attemptNumber > MAX_REPAIR_ATTEMPTS) {
+    return { status: 'escalated', patchSummary: `Maximum repair attempts (${MAX_REPAIR_ATTEMPTS}) exceeded. Escalated to human review.`, changedFiles: [], needsHumanApproval: true };
+  }
+  let patchSummary = '', changedFiles = [], hashes = [];
+  if (!mutationAuthorized) {
+    patchSummary = 'No source change was made: modifying the server workspace is not authorized for this user/environment.';
+  } else if (repairFn) {
     const res = await repairFn({ workspaceDir, dossier, attemptNumber });
     patchSummary = res.patchSummary || 'Custom repair applied';
-    changedFiles.push(...(res.changedFiles || []));
+    // Only files that exist inside the workspace count as changed.
+    changedFiles = (res.changedFiles || []).filter((f) => fileSha(workspaceDir, f));
+    hashes = changedFiles.map((f) => ({ file: f, afterSha256: fileSha(workspaceDir, f) }));
   } else {
-    // Default built-in autonomous repair logic for the demo-app (coupon pricing bug)
-    const pricingFile = path.join(workspaceDir, 'demo-app', 'pricing.js');
-    if (fs.existsSync(pricingFile)) {
-      let content = fs.readFileSync(pricingFile, 'utf8');
-      if (content.includes('const total = subtotal;')) {
-        content = content.replace('const total = subtotal;', 'const total = subtotal - discount;');
-        fs.writeFileSync(pricingFile, content, 'utf8');
-        patchSummary = 'Repaired pricing.js: Subtracted calculated discount from order total (total = subtotal - discount)';
-        changedFiles.push('demo-app/pricing.js');
-      } else {
-        patchSummary = 'Verified pricing.js already reflects corrected coupon deduction formula';
-      }
-    } else {
-      patchSummary = `Analyzed defect in ${dossier.criterionKey}; no unverified file mutations made outside authorized scope.`;
-    }
+    // Built-in deterministic repair for the bundled demo store only (not a general coding agent).
+    const key = defectFor(dossier.criterionText);
+    try {
+      const r = key ? setDefectState(workspaceDir, key, false) : null;
+      if (r?.changed) {
+        changedFiles = [r.file]; hashes = [{ file: r.file, beforeSha256: r.beforeSha256, afterSha256: r.afterSha256 }];
+        patchSummary = `Built-in demo repair for "${key}": ${DEFECTS[key].description} Replaced \`${DEFECTS[key].defective}\` with \`${DEFECTS[key].healthy}\` in ${r.file}.`;
+      } else patchSummary = r ? `No change made: ${r.file} already contains the corrected line.` : `No built-in repair exists for ${dossier.criterionKey}; no file was modified.`;
+    } catch (e) { patchSummary = `No change made: ${e.message}`; }
   }
-
-  const attemptStatus = changedFiles.length ? 'applied' : 'proposed';
-
-  // Persist attempt record
+  const status = changedFiles.length ? 'applied' : 'proposed';
+  let attemptId = null;
   if (db && executionId) {
-    db.run(
-      `INSERT INTO agent_repair_attempts (execution_id, attempt_number, patch_summary, changed_files_json, status, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      executionId,
-      attemptNumber,
-      patchSummary,
-      JSON.stringify(changedFiles),
-      attemptStatus,
-      now()
-    );
+    attemptId = Number(db.run(`INSERT INTO agent_repair_attempts (execution_id, attempt_number, patch_summary, changed_files_json, status, created_at, file_hashes_json, source_result_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, executionId, attemptNumber, patchSummary, JSON.stringify(changedFiles), status, now(), JSON.stringify(hashes), sourceResultId).lastInsertRowid);
   }
-
-  return {
-    status: attemptStatus,
-    patchSummary,
-    changedFiles,
-    attemptNumber,
-    needsHumanApproval: false,
-  };
+  return { status, patchSummary, changedFiles, fileHashes: hashes, attemptNumber, attemptId, duplicate: false, needsHumanApproval: status !== 'applied' };
 }
 
 export function listRepairAttempts(db, executionId) {

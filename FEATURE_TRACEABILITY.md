@@ -26,3 +26,13 @@
 | **Orchestrator** | 10-stage autonomous lifecycle state machine | `server/orchestrator.js` | Complete | `tests/autonomous-loop.test.js` |
 | **Orchestrator** | Process interruption recovery & history preservation | `server/orchestrator.js` | Complete | `tests/autonomous-loop.test.js` |
 | **Demo Experience** | Judge/Evaluator 1-click autonomous loop demo & controls | `public/app.js`, `public/autonomous.js` & `server/routes-autonomous.js` | Complete | `tests/autonomous-loop.test.js` |
+
+## Command center pass
+
+| Capability | Where | Verified by |
+|---|---|---|
+| Persistent SHIPPROOF ENGINEER drawer (text) | public/agent-workspace.js | tests/e2e-workspace.test.js |
+| Activity dedupe and replay | public/agent-state.js | tests/agent-workspace.test.js |
+| Command palette (Ctrl/⌘K) | public/command-palette.js | tests/e2e-workspace.test.js |
+| Ask the engineer (repair task, incident) | public/app.js, public/oncall.js | manual only (not automated) |
+| Phone bottom navigation | public/app.js, public/workspace.css | tests/e2e-workspace.test.js |

@@ -21,6 +21,12 @@ export function kaneConfig(env = process.env) {
     allowPrivateTargets: env.ALLOW_PRIVATE_TARGETS === '1',
     // Never set in production: lets a test stand-in engine's passes count toward release decisions.
     acceptFixtureEngine: env.ACCEPT_FIXTURE_ENGINE === '1',
+    // Demo/workspace source mutation (break/fix endpoints, built-in loop repair). Off by default, never in production,
+    // and only for the accounts listed in DEMO_MUTATION_USERS.
+    demoMutations: env.ALLOW_DEMO_MUTATIONS === '1' && env.NODE_ENV !== 'production',
+    // Where the bundled demo store is served (used by the one-click demo project).
+    demoAppUrl: env.DEMO_APP_URL || `http://127.0.0.1:${Number(env.DEMO_PORT) || 4100}/`,
+    demoMutationUsers: String(env.DEMO_MUTATION_USERS || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean),
   };
 }
 

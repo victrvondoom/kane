@@ -58,6 +58,24 @@ const DIAG = {
   interrupted: 'The server stopped while this check was in flight. Re-run it.',
   runner: 'An internal error stopped this check before a verdict.',
 };
+/**
+ * What kind of non-pass is this? Only an engine verdict of `failed` (a completed run whose expected outcome was
+ * not observed) is an application defect. Everything else is infrastructure: nothing was verified, so nothing
+ * about the application is known and application source must never be repaired on its account.
+ */
+const FAILURE_CLASS = { auth: 'authentication', network: 'network', timeout: 'timeout', interrupted: 'interrupted', cancelled: 'interrupted',
+  no_evidence: 'missing_evidence', target_blocked: 'environment', kane_not_installed: 'engine_error', did_not_start: 'engine_error',
+  inconsistent: 'engine_error', spawn_failed: 'engine_error', runner: 'engine_error' };
+export function classifyFailure(result) {
+  if (!result) return { failureClass: 'no_execution', applicationDefect: false, repairable: false, reason: 'No execution record exists.' };
+  if (result.status === 'passed') return { failureClass: 'none', applicationDefect: false, repairable: false, reason: null };
+  if (result.status === 'failed' && !result.error_kind)
+    return { failureClass: 'application_defect', applicationDefect: true, repairable: true, reason: result.reason || result.summary || 'Expected outcome was not observed.' };
+  if (['queued', 'starting', 'running'].includes(result.status))
+    return { failureClass: 'pending', applicationDefect: false, repairable: false, reason: 'Execution has not finished.' };
+  const failureClass = result.status === 'timeout' ? 'timeout' : result.status === 'cancelled' ? 'interrupted' : FAILURE_CLASS[result.error_kind] || 'engine_error';
+  return { failureClass, applicationDefect: false, repairable: false, reason: result.reason || explainError(result.error_kind) };
+}
 export const explainError = (kind) => DIAG[kind] || 'Execution ended without a verdict.';
 
 /** Called once per finished result. Opens/updates a repair task on genuine failure, verifies it on a later pass. */
