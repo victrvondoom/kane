@@ -92,6 +92,6 @@ implementations.
 
 ## Test baseline
 
-Pending: `npm test` on `1d1a70c` is running (log: `/home/user/scratch/main-baseline.log`). Numbers will be recorded in
-`VERIFICATION_MATRIX.md` once it finishes. Previously, the same suite on the pre-merge branch gave 182 pass, 7 fail
-(the seven Playwright browser tests) on 190 tests.
+`npm test` on `1d1a70c`: 210 tests, 201 pass, 8 fail, 1 skipped. Seven failures are the Playwright browser tests
+(`TimeoutError`). The eighth is the Gatekeeper integration test, which needs the Gatekeeper Python dependencies in the
+default `python3` (not installed here); it is a setup gap, not a code defect. Recorded in `VERIFICATION_MATRIX.md`, T1.

@@ -35,7 +35,7 @@ Each row says what claim is made, how it was checked, and the result. Result mea
 
 | # | Claim | Check | Result |
 |---|---|---|---|
-| T1 | Existing Node suite on `main` (`1d1a70c`) | `npm test`, log at `/home/user/scratch/main-baseline.log` | **Pending at time of writing.** Partial so far: three browser failures. Final numbers recorded below. |
+| T1 | Existing Node suite on `main` (`1d1a70c`) | `npm test`, log at `/home/user/scratch/main-baseline.log` | **210 tests: 201 pass, 8 fail, 1 skipped.** Seven failures are the known Playwright `TimeoutError` browser tests. The eighth, `Gatekeeper: package intelligence scan and multi-tool investigator tools` (`tests/integration-engines.test.js:60`), fails because the default `python3` lacks the Gatekeeper dependencies (`No module named 'httpx'`). This is a documented-setup gap, not a code defect. |
 | T2 | Previously merged algorithm tests pass | `node --test tests/impact-graph.test.js tests/fault-localization.test.js tests/transparency.test.js tests/algorithm-selection-api.test.js` | Ran on the pre-merge branch: 35 pass. Re-run on `main` is included in T1. |
 | T3 | Python algorithm suites pass | `playtest-agent-main/tests/test_search_nsga2.py`, `test_probdd.py`; `gatekeeper-main/tests/test_minhash.py` | Ran on the pre-merge branch: 18, 11 and 9 pass. Not re-run on `main`. |
 | T4 | Seven browser end-to-end tests fail for environment reasons | Log of T1 | Pre-existing on the baseline; `TimeoutError` from Playwright |
