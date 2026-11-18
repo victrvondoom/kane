@@ -235,7 +235,8 @@ async function withApp(source, fn) {
   }
 }
 
-const VULN = fs.readFileSync(path.join(demoDir, 'app.js'), 'utf8');
+// Normalised to LF: a Windows checkout with autocrlf may write CRLF, and the variants below match exact text.
+const VULN = fs.readFileSync(path.join(demoDir, 'app.js'), 'utf8').replace(/\r\n/g, '\n');
 const FIXED = (() => {
   const ws = tmp('ts-fixed-');
   fs.mkdirSync(path.join(ws, 'demo', 'tenant-boundary'), { recursive: true });

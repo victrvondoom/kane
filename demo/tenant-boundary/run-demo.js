@@ -43,7 +43,8 @@ async function main() {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'tenantseal-demo-'));
   const dir = path.join(workspace, 'demo', 'tenant-boundary');
   fs.mkdirSync(path.join(dir, '.tenantseal'), { recursive: true });
-  fs.copyFileSync(path.join(here, 'app.js'), path.join(dir, 'app.js'));
+  // LF copy: the repair patch is LF and must apply to the workspace copy exactly.
+  fs.writeFileSync(path.join(dir, 'app.js'), fs.readFileSync(path.join(here, 'app.js'), 'utf8').replace(/\r\n/g, '\n'));
   const port = await freePort();
   const cfg = JSON.parse(fs.readFileSync(path.join(here, 'tenantseal', 'config.json'), 'utf8'));
   cfg.target.url = `http://127.0.0.1:${port}/`;

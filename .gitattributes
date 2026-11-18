@@ -1,0 +1,5 @@
+# Line endings for files whose exact text is used by tests and by `git apply`.
+# Without these, a Windows checkout with core.autocrlf=true writes CRLF into the demo source and the
+# repair patch, so text-matching variants and patches stop applying.
+demo/tenant-boundary/** text eol=lf
+*.patch text eol=lf

@@ -15,7 +15,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
 const demoDir = path.join(root, 'demo', 'tenant-boundary');
 const FIXTURE = path.join(root, 'tests', 'fixtures', 'fake-kane.js');
-const VULN = fs.readFileSync(path.join(demoDir, 'app.js'), 'utf8');
+const VULN = fs.readFileSync(path.join(demoDir, 'app.js'), 'utf8').replace(/\r\n/g, '\n');
 const FIXED = (() => {
   const ws = fs.mkdtempSync(path.join(os.tmpdir(), 'ts-gate-fixed-'));
   fs.mkdirSync(path.join(ws, 'demo', 'tenant-boundary'), { recursive: true });
