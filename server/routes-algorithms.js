@@ -88,42 +88,17 @@ export function createAlgorithmsRouter(db, options = {}) {
   });
 
   // 2. NSGA-II Multi-Objective Automated Exploration
+  // Not connected. The previous handler ran runNSGA2Exploration, which generates random actions against hardcoded
+  // selectors and never opens a browser, then stored those sequences as exploration results. That is simulation,
+  // so the endpoint now refuses instead of reporting it. A live explorer must drive a real application through
+  // the Playtest adapter before this route returns results again.
   router.post('/nsga2/explore', (req, res) => {
-    try {
-      const { projectId, populationSize = 16, generations = 8, routes, seedSequences = [] } = req.body;
-      if (!projectId) return res.status(400).json({ error: 'projectId is required' });
-
-      const explorationResult = runNSGA2Exploration({
-        populationSize,
-        generations,
-        routes: routes || ['/', '/cart', '/checkout', '/login'],
-        seedSequences,
-      });
-
-      // Persist best frontier sequence
-      if (explorationResult.frontier.length > 0) {
-        const best = explorationResult.frontier[0];
-        const recordId = `nsga2_${crypto.randomBytes(8).toString('hex')}`;
-        db.run(
-          `INSERT INTO algorithm_sequence_records 
-           (id, project_id, record_type, original_step_count, reduced_step_count, reduction_ratio, signature, action_sequence, objectives, created_at)
-           VALUES (?, ?, 'nsga2_frontier', ?, ?, ?, ?, ?, ?, ?)`,
-          recordId,
-          projectId,
-          best.sequence.length,
-          best.sequence.length,
-          0.0,
-          `Coverage: ${best.objectives.stateCoverage}, Diversity: ${best.objectives.diversity}`,
-          JSON.stringify(best.sequence),
-          JSON.stringify(best.objectives),
-          new Date().toISOString()
-        );
-      }
-
-      res.json(explorationResult);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
+    const { projectId } = req.body || {};
+    if (!projectId) return res.status(400).json({ error: 'projectId is required' });
+    res.status(501).json({
+      status: 'not_connected',
+      error: 'NSGA-II exploration is not connected to a live application. No browser was run and no results were produced.',
+    });
   });
 
   // 3. Probabilistic Delta Debugging

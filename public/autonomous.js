@@ -631,9 +631,10 @@ export function PlaytestStudioTab({ project: p }) {
   };
 
   const render = () => {
-    const cKeyInput = h('input', { type: 'text', value: 'AC-002', placeholder: 'Criterion Key (e.g. AC-002)', style: { width: '130px' } });
-    const expInput = h('input', { type: 'text', value: 'Applying coupon code SAVE10 reduces order total by 10%', placeholder: 'Expected Visual State', style: { flex: '1' } });
-    const actInput = h('input', { type: 'text', value: 'Order total remained $80.00 after applying code SAVE10', placeholder: 'Observed Error State', style: { flex: '1' } });
+    // Empty by default: a defect report must describe the real observation, never a pre-filled example.
+    const cKeyInput = h('input', { type: 'text', placeholder: 'Criterion key, e.g. AC-002', style: { width: '130px' } });
+    const expInput = h('input', { type: 'text', placeholder: 'Expected behaviour, e.g. coupon SAVE10 reduces the total', style: { flex: '1' } });
+    const actInput = h('input', { type: 'text', placeholder: 'Observed behaviour, e.g. total unchanged after applying SAVE10', style: { flex: '1' } });
 
     root.replaceChildren(
       h('div', { class: 'panel stack' },
