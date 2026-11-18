@@ -1,8 +1,6 @@
-diff --git a/app.js b/C:/Users/ADMINI~1/AppData/Local/Temp/app.fixed.js
-index 01972b0..e8b6b68 100644
 --- a/demo/tenant-boundary/app.js
 +++ b/demo/tenant-boundary/app.js
-@@ -112,6 +112,7 @@ export function createApp({ docs = seedDocs() } = {}) {
+@@ -112,6 +112,7 @@
  
          // B. Edit page and save: no ownership check.
          if (root === 'docs' && sub === '/edit') {
@@ -10,7 +8,7 @@ index 01972b0..e8b6b68 100644
            if (req.method === 'GET') {
              return send(res, 200, 'text/html; charset=utf-8', page(`Edit ${doc.title}`, `<h1>Edit</h1><form method="post" action="/docs/${esc(id)}/edit">
  <textarea name="body">${esc(doc.body)}</textarea><button type="submit">Save</button></form>`));
-@@ -125,11 +126,13 @@ export function createApp({ docs = seedDocs() } = {}) {
+@@ -125,11 +126,13 @@
  
          // A. API read: no ownership check.
          if (root === 'api/docs' && !sub && req.method === 'GET') {
