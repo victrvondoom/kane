@@ -2,14 +2,41 @@
 // Spawns the real `kane-cli run ... --agent` process per acceptance criterion,
 // streams its NDJSON events, and classifies the outcome conservatively:
 // anything that is not an explicit, exit-code-0 pass with a run_end event is NOT a pass.
-import { spawn, execFile } from 'node:child_process';
+import { spawn, execFile, execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
+// On Windows, `npm install -g` creates kane-cli.cmd, which Node cannot spawn directly (ENOENT). For a bare
+// command name, run the package's own JavaScript entry point with Node instead. Resolved once per process.
+const engineEntryCache = new Map();
+export function resolveEngineBin(bin) {
+  if (process.platform !== 'win32' || path.isAbsolute(bin) || /[\\/]/.test(bin) || /\.(c|m)?js$|\.exe$/i.test(bin)) return bin;
+  if (engineEntryCache.has(bin)) return engineEntryCache.get(bin);
+  let resolved = bin;
+  const entryIn = (npmRoot) => {
+    const pkgDir = path.join(npmRoot, '@testmuai', bin);
+    const pkg = JSON.parse(fs.readFileSync(path.join(pkgDir, 'package.json'), 'utf8'));
+    const rel = typeof pkg.bin === 'string' ? pkg.bin : pkg.bin?.[bin];
+    return rel && fs.existsSync(path.join(pkgDir, rel)) ? path.join(pkgDir, rel) : null;
+  };
+  try {
+    // Default Windows global prefix first; `npm root -g` (fixed command, no user input) only as a fallback.
+    const candidates = [process.env.APPDATA && path.join(process.env.APPDATA, 'npm', 'node_modules')];
+    for (const dir of candidates.filter(Boolean)) { const e = entryIn(dir); if (e) { resolved = e; break; } }
+    if (resolved === bin) {
+      const npmRoot = execFileSync('npm', ['root', '-g'], { encoding: 'utf8', shell: true, timeout: 20000 }).trim();
+      const e = entryIn(npmRoot);
+      if (e) resolved = e;
+    }
+  } catch { /* keep the bare name: the caller reports kane_not_installed */ }
+  engineEntryCache.set(bin, resolved);
+  return resolved;
+}
+
 export function kaneConfig(env = process.env) {
   return {
-    bin: env.KANE_CLI_BIN || 'kane-cli',
+    bin: resolveEngineBin(env.KANE_CLI_BIN || 'kane-cli'),
     timeout: Math.max(30, Number(env.KANE_TIMEOUT_SECONDS) || 240),
     maxSteps: Math.max(5, Number(env.KANE_MAX_STEPS) || 40),
     headless: env.KANE_HEADLESS !== '0',
@@ -216,7 +243,7 @@ const ex = (bin, args) => new Promise((res) => {
   const execBin = isJs ? process.execPath : bin;
   const execArgs = isJs ? [bin, ...args] : args;
   execFile(execBin, execArgs, { timeout: 15000, env: { ...process.env, NO_COLOR: '1' } },
-    (err, stdout, stderr) => res({ code: err ? (typeof err.code === 'number' ? err.code : 1) : 0, out: String(stdout) + String(stderr) }));
+    (err, stdout, stderr) => res({ code: err ? (typeof err.code === 'number' ? err.code : 1) : 0, out: String(stdout) + String(stderr), missing: !!(err && err.code === 'ENOENT') }));
 });
 
 /** Real engine status for the UI: installed version and whether a login/credentials exist. No secrets returned. */
@@ -225,7 +252,11 @@ export async function kaneStatus(config = kaneConfig(), { fresh = false } = {}) 
   const v = await ex(config.bin, ['--version']);
   const installed = v.code === 0;
   let auth = 'unknown', detail = '';
-  if (!installed) { auth = 'unavailable'; detail = 'kane-cli not found on the server PATH.'; }
+  if (!installed) {
+    auth = 'unavailable';
+    detail = v.missing ? 'kane-cli not found on the server PATH.'
+      : `kane-cli is present but did not report its version: ${v.out.trim().split('\n')[0].slice(0, 200) || 'no output'}`;
+  }
   else if (config.username && config.accessKey) { auth = 'env_credentials'; detail = 'Using LT_USERNAME / LT_ACCESS_KEY from the server environment.'; }
   else {
     const w = await ex(config.bin, ['whoami']);

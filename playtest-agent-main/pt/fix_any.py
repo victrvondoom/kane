@@ -321,7 +321,8 @@ def fix_run(run_dir, client, *, report, fix_config, tries=3,
                             raise ValueError("the replay did not reach the report")
                         from PIL import Image
                         frame = Image.open(io.BytesIO(trace["frames"][-1])).convert("RGB")
-                        if len(set(frame.getdata())) <= 1:
+                        pixels = getattr(frame, "get_flattened_data", frame.getdata)()
+                        if len(set(pixels)) <= 1:
                             raise ValueError("the replay did not reach the report")
                         if health_seen:
                             health = health_seen[-1]
