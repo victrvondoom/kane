@@ -95,4 +95,8 @@ Together with the **Coding Agent Adapter** and **Central Orchestration State Mac
 - **Phase 3**: Central Orchestrator & state machine.
 - **Phase 4**: API routing & frontend UI integration.
 - **Phase 5**: Comprehensive test suite & automated verification.
+- **Phase 6**: Multi-Engine Isolated JSON Worker Protocol (`gatekeeper-worker.py`, `playtest-worker.py`, `oqed-worker.py`).
+- **Phase 7**: Nine-Layer Sparse Autoencoder Interpretability Lab (`server/sae/sae_engine.py`, `server/sae/sae-bridge.js`).
+- **Phase 8**: Project Tenant Workspace Isolation (`server/workspace.js`) & Database Migration `008_engine_integrations_and_sae.sql`.
+
 

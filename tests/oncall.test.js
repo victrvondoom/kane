@@ -357,7 +357,7 @@ test('SHIPPROOF and runtime tools report real state, scoped to the caller’s pr
 
   const health = await x('runtime_health', {});
   assert.match(health.summary, /application unreachable/); assert.match(health.content, /"reachable": false/); assert.match(health.content, /"database": true/);
-  assert.match((await x('runtime_database', {})).summary, /Database healthy \(7 migrations applied/);
+  assert.match((await x('runtime_database', {})).summary, /Database healthy \(\d+ migrations applied/);
   assert.match((await x('runtime_process', {})).content, /"eventLoopDelayMs"/);
   await api('GET', '/api/projects/424242');
   const fails = await x('runtime_api_failures', {});

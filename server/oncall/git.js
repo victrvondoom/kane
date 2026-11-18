@@ -24,9 +24,26 @@ export function safePath(root, rel) {
   if (typeof rel !== 'string' || !rel || rel.includes('\0')) throw new GitError('A relative file path is required');
   const abs = path.resolve(root, rel), base = path.resolve(root);
   if (abs !== base && !abs.startsWith(base + path.sep)) throw new GitError(`Path escapes the repository: ${rel}`);
-  let probe = abs; while (!fs.existsSync(probe)) probe = path.dirname(probe);
-  const real = fs.realpathSync(probe), realBase = fs.realpathSync(base);
-  if (real !== realBase && !real.startsWith(realBase + path.sep)) throw new GitError(`Path escapes the repository: ${rel}`);
+  // Walk every component from root downward to catch symlinks — including dangling ones whose
+  // target does not exist (existsSync returns false for a dangling symlink on Windows).
+  const realBase = fs.realpathSync(base);
+  const segments = path.relative(base, abs).split(path.sep);
+  let cur = base;
+  for (const seg of segments) {
+    cur = path.join(cur, seg);
+    try {
+      const st = fs.lstatSync(cur);
+      if (st.isSymbolicLink()) {
+        // Resolve the symlink's target and check it stays inside the base.
+        let target;
+        try { target = fs.realpathSync(cur); } catch { throw new GitError(`Path escapes the repository: ${rel}`); }
+        if (target !== realBase && !target.startsWith(realBase + path.sep)) throw new GitError(`Path escapes the repository: ${rel}`);
+      }
+    } catch (e) {
+      if (e instanceof GitError) throw e;
+      break; // component does not exist yet — the rest of the path is new
+    }
+  }
   return abs;
 }
 // Never readable or writable through the agent, whatever the permission level.

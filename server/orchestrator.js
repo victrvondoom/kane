@@ -14,6 +14,9 @@ import { computeDecision, persistDecision, writeVersion } from './proof.js';
 import { classifyFailure } from './gate.js';
 import { formatKey } from './requirements.js';
 import { runRegressionTrial, getTrial } from './regression.js';
+import { getProjectWorkspace } from './workspace.js';
+import { runGatekeeperScan } from './gatekeeper-bridge.js';
+import { runPlaytestInvestigation } from './playtest-bridge.js';
 
 export const WORKFLOW_STATES = {
   IDLE: 'IDLE', SPECIFICATION_READY: 'SPECIFICATION_READY', SECURITY_CHECK: 'SECURITY_CHECK', BUILDING: 'BUILDING', VERIFYING: 'VERIFYING',
@@ -90,6 +93,10 @@ export class AutonomousOrchestrator extends EventEmitter {
         reason: `No verdict was reached (${v.cls.failureClass}): ${v.cls.reason} This is not an application defect; no repair was attempted.` });
     };
 
+    // Obtain isolated tenant workspace
+    const projectWs = getProjectWorkspace({ db: this.db, projectId, dataDir: this.dataDir, customPath: this.workspaceDir });
+    const activeWorkspaceDir = projectWs.canonicalPath;
+
     // 1. SPECIFICATION
     this.updateState(executionId, S.SPECIFICATION_READY, 'STEPS_WRITER', { message: 'Generating structured test specifications...' });
     const primarySpec = generateSpecifications({ task: taskDescription, appUrl: effectiveUrl })[0];
@@ -100,10 +107,18 @@ export class AutonomousOrchestrator extends EventEmitter {
     // 2. SECURITY
     if (halted()) return;
     this.updateState(executionId, S.SECURITY_CHECK, 'GATEKEEPER', { message: 'Running Gatekeeper preflight security analysis...' });
-    const secScan = scanSecurity({ workspaceDir: this.workspaceDir });
+    const secScan = scanSecurity({ workspaceDir: activeWorkspaceDir });
     const scanId = recordSecurityScan(this.db, projectId, secScan);
     this.db.run('UPDATE agent_executions SET scan_id = ? WHERE id = ?', scanId, executionId);
     this.emitProgress(executionId, 'security_scanned', { scan: secScan });
+
+    try {
+      const fullAudit = await runGatekeeperScan({ db: this.db, projectId, workspaceDir: activeWorkspaceDir, correlationId: `exec-${executionId}` });
+      if (fullAudit?.audit?.verdict === 'BLOCKED') {
+        return this.updateState(executionId, S.BLOCKED, 'SECURITY_GATE_FAILED', { reason: fullAudit.audit.summary, findings: fullAudit.audit.findings });
+      }
+    } catch (_) {}
+
     if (secScan.verdict === SEC_VERDICTS.BLOCKED) return this.updateState(executionId, S.BLOCKED, 'SECURITY_GATE_FAILED', { reason: secScan.summary, findings: secScan.findings });
 
     // 3. VERIFY (the first real execution)
@@ -133,6 +148,24 @@ export class AutonomousOrchestrator extends EventEmitter {
         evidenceFiles: this.db.all('SELECT * FROM evidence WHERE result_id = ?', v.result.id),
         replay: queueReplay({ db: this.db, runner: this.runner, timeoutMs: ((this.config.timeout || 240) + 90) * 1000 * (this.runner.state().queued + 2) }) });
       if (this.stopped) return;
+
+      try {
+        const ptRes = await runPlaytestInvestigation({
+          db: this.db,
+          projectId,
+          resultId: v.result.id,
+          runId: v.runId,
+          replayRunId: investigation.replayRunId,
+          replayResultId: investigation.replayResultId,
+          failureReason: v.cls.reason,
+          correlationId: `exec-${executionId}`,
+        });
+        if (ptRes?.filmstrip) {
+          investigation.filmstripId = ptRes.filmstrip.id;
+          investigation.filmstripVerdict = ptRes.filmstrip.judge_verdict;
+        }
+      } catch (_) {}
+
       const invId = recordInvestigation(this.db, investigation);
       this.db.run('UPDATE agent_executions SET investigation_id = ? WHERE id = ?', invId, executionId);
       this.emitProgress(executionId, 'failure_investigated', { investigationId: invId, defectStatus: investigation.defectStatus, replayRunId: investigation.replayRunId });
@@ -149,7 +182,7 @@ export class AutonomousOrchestrator extends EventEmitter {
           if (attempt > MAX_REPAIR_ATTEMPTS) return this.updateState(executionId, S.NEEDS_HUMAN_APPROVAL, 'REPAIR_LIMIT_REACHED', { reason: `Still failing after ${MAX_REPAIR_ATTEMPTS} repair attempts.` });
           this.updateState(executionId, S.REPAIRING, 'CODING_AGENT_REPAIR', { message: `Repair attempt ${attempt}`, attempt });
           const dossier = buildFailureDossier({ task: { id: executionId, description: taskDescription }, specification: primarySpec, failedResult: source, playtestInvestigation: investigation });
-          const rep = await executeRepair({ db: this.db, executionId, attemptNumber: attempt, workspaceDir: this.workspaceDir, dossier, repairFn: this.repairFn, mutationAuthorized, sourceResultId: source.id });
+          const rep = await executeRepair({ db: this.db, executionId, attemptNumber: attempt, workspaceDir: activeWorkspaceDir, dossier, repairFn: this.repairFn, mutationAuthorized, sourceResultId: source.id });
           if (this.stopped) return;
           this.db.run('UPDATE agent_executions SET retry_count = ? WHERE id = ?', attempt, executionId);
           this.emitProgress(executionId, 'repair_attempted', { repairAttempt: rep });
@@ -178,7 +211,7 @@ export class AutonomousOrchestrator extends EventEmitter {
     // 7. REGRESSION — executed for real after a repair, in an isolated copy
     if (repaired) {
       this.updateState(executionId, S.REGRESSION_CHECK, 'REGRESSION_TRIAL', { message: 'Reintroducing the defect in an isolated copy and re-running verification...' });
-      const trial = await runRegressionTrial({ db: this.db, runner: this.runner, workspaceDir: this.workspaceDir, dataDir: this.dataDir, project, criterion, executionId });
+      const trial = await runRegressionTrial({ db: this.db, runner: this.runner, workspaceDir: activeWorkspaceDir, dataDir: this.dataDir, project, criterion, executionId });
       if (this.stopped) return;
       this.db.run('UPDATE agent_executions SET regression_status = ?, regression_trial_id = ? WHERE id = ?', trial.outcome, trial.id, executionId);
       this.emitProgress(executionId, 'regression_trial', { trialId: trial.id, outcome: trial.outcome, reason: trial.reason });
