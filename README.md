@@ -6,7 +6,7 @@
 
 Evidence-backed release verification for AI-generated software, powered by [Kane CLI](https://www.testmuai.com/docs/kane-cli-introduction).
 
-[Quick start](#quick-start) · [How it works](#how-it-works) · [Gate rules](#gate-rules) · [Demo](#demo-walkthrough) · [API](#apis) · [Docs](#documentation)
+[Quick start](#quick-start) · [How it works](#how-it-works) · [Gate rules](#gate-rules) · [Demo](#demo-walkthrough) · [Algorithm intelligence](#algorithm-intelligence) · [API](#apis) · [Docs](#documentation)
 
 </div>
 
@@ -28,6 +28,7 @@ exits `0` with a passing `run_end` event.** There is no manual override.
 - [Demo walkthrough](#demo-walkthrough)
 - [Proof intelligence](#proof-intelligence)
 - [On-call engineer (voice)](#on-call-engineer-voice)
+- [Algorithm intelligence](#algorithm-intelligence)
 - [APIs](#apis)
 - [Tests](#tests)
 - [Security](#security)
@@ -180,6 +181,7 @@ against a build whose changed files affect it, does not count.
 | Proof engine | Criterion versions, build impact, freshness, stability, policy, signed dossiers | `server/proof.js` |
 | Repair loop | Turns failures into prompts for a coding agent and re-runs only what was fixed | `server/app.js`, `server/coding-agent.js` |
 | Continuous watch | Scheduled health checks of the verification system itself | `server/watch.js` |
+| Algorithm intelligence | Test selection, fault localization, exploration, reduction, package fingerprints, transparency log | `server/impact-graph.js`, `server/fault-localization.js`, `server/transparency.js`, `playtest-agent-main/pt/`, `gatekeeper-main/src/gatekeeper/fingerprint/` |
 
 Nothing on screen is stored as a status flag. Totals, criterion status and the verdict are recomputed from
 the `results` table, so the UI cannot drift from the evidence.
@@ -318,7 +320,8 @@ SHIPPROOF tracks *which version* of the application each piece of evidence verif
 - **Builds and change impact.** A build is a commit plus an environment, registered by CI, a GitHub push
   webhook or the UI. Each criterion can declare criticality, functional areas and source-path patterns
   (`**`, `*`, `?`). For a build, every criterion is reported as *affected*, *unaffected* or *unknown*, with a
-  verification plan that gives a reason per criterion.
+  verification plan that gives a reason per criterion. The graph-based selection described in
+  [Algorithm intelligence](#algorithm-intelligence) extends this with indirect dependencies.
 - **Freshness.** Evidence is `CURRENT`, `STALE`, `UNVERIFIED`, `FAILED` or `BLOCKED`. A pass goes stale when a
   later build changes mapped files, when impact cannot be established, or when environment, engine-version or
   policy rules say so.
@@ -366,6 +369,351 @@ fixes the defect on an isolated branch, proves the fix with a red/green regressi
 opens a pull request. Every step is recorded as evidence, and production actions are gated on an on-screen
 approval. Setup, the safety model and limits are in [docs/ONCALL.md](docs/ONCALL.md).
 
+## Algorithm intelligence
+
+This section documents the algorithm layer added to SHIPPROOF: what each piece does, how to use it, what it was
+measured against, and what it does **not** do. Every number here comes from a file in
+[`benchmarks/algorithm-intelligence/`](benchmarks/algorithm-intelligence/), and the full write-up is in
+[ALGORITHM_BENCHMARK_REPORT.md](ALGORITHM_BENCHMARK_REPORT.md).
+
+**The rule that still holds.** None of these components can turn a non-passing criterion into a pass, change a
+criterion's verification state, or override the release gate. Selection decides *what to run*. Localization,
+exploration and reduction produce *leads to investigate*. Fingerprints and transparency produce *evidence about
+relationships and history*. A model's or an algorithm's opinion is never a verified result.
+
+### At a glance
+
+| Feature | Question it answers | Shipped in product | Measured result, in brief |
+|---|---|---|---|
+| Test impact selection | Which criteria must run for this commit, and why? | Yes: API endpoint | Full recall without a budget, but runs everything in this repo; budgets cut recall sharply |
+| Ochiai fault localization | Which components are statistically associated with failures? | Library only | Did not localize seeded defects on file-level spectra; worse than random |
+| NSGA-II exploration | Can a search over browser action sequences find more states and defects? | Library and synthetic model | Did not beat random sampling on the synthetic model |
+| ProbDD-style reduction | Can a failing interaction be shrunk with fewer replays? | Library | 21% fewer replays than the existing reducer, same final length |
+| MinHash / LSH fingerprints | Which package sources share code, even after renaming? | Library (Gatekeeper) | Recall 0.92 at threshold 0.5; no false pairs on boilerplate negatives |
+| Merkle transparency log | Can a verifier check the evidence history was not rewritten? | Library | Correct on every small tree tested; no scale benchmark |
+
+### 1. Test impact selection
+
+**What it does.** For one commit, it decides which acceptance criteria can be affected by the changed files, using
+an import graph built from the commit's JavaScript and TypeScript sources. It explains each decision with a path, for
+example `server/db.js → server/gate.js → server/app.js`.
+
+**How it decides.**
+
+1. The graph is built from the sources you send: every relative `import`, `export … from`, `require(...)` and literal
+   `import(...)` becomes an edge. Strings and comments are masked first, so a template that *contains* the text
+   `require(...)` is not treated as a dependency.
+2. The changed files are walked backwards through the graph (reverse breadth-first search), so every file that
+   depends on a change is found, with the chain that reaches it.
+3. Each criterion is classified:
+
+   | Tier | Meaning | Runs? |
+   |---|---|---|
+   | `direct` | A changed file matches the criterion's mapped paths | Yes |
+   | `transitive` | A file that depends on a change matches the mapped paths | Yes if required; otherwise admitted within the budget |
+   | `mandatory` | Mandatory, critical or security criterion with no matching change | Always |
+   | `unknown` | Unmapped criterion, or impact cannot be established | Always |
+   | `excluded` | No changed file and no dependent file matches | No, with the reason stated |
+
+4. Optional transitive criteria are admitted in a fixed order (shortest chain, then highest historical failure rate,
+   then lowest cost) until the budget is spent. Required criteria are never dropped; if they alone exceed the
+   budget, the plan says `overBudget: true`.
+
+**Full fallback to running everything** when: the change set of the build is unknown (no changed paths were
+registered), a build-level file changed (`package.json`, `package-lock.json`, `pyproject.toml`, `uv.lock`,
+`Dockerfile`, `docker-compose.yml`, `.github/**`, `migrations/**`), or the plan reports `fallback` with a reason.
+
+**Unknown is never unaffected.** A changed file with no dependency information (for example a stylesheet or an
+HTML template) cannot exclude a criterion whose mapping does not match it, so such criteria run. A file with a load the
+graph cannot resolve (a computed `require(name)`) marks the whole graph as incomplete, and unmatched criteria run.
+
+**Endpoint.** `POST /api/projects/:pid/builds/:bid/selection`, signed-in owner only. It executes nothing.
+
+```bash
+curl -s -X POST "$SHIPPROOF_URL/api/projects/$PID/builds/$BID/selection" \
+  -H "Cookie: $SESSION_COOKIE" -H "Content-Type: application/json" \
+  -d '{
+        "sources": {
+          "server/db.js": "export const now = () => new Date().toISOString();\n",
+          "server/gate.js": "import { now } from \"./db.js\";\nexport const gate = () => now();\n"
+        },
+        "budget": { "maxTests": 10 }
+      }'
+```
+
+Limits: at most 3,000 files and 5 MB of text in one request; `sources` must be an object of path → text; the budget is
+`{ "maxTests": n }` or `{ "maxMs": n }` with a whole number of zero or more. Anything else returns `400` before any graph is built.
+
+The response has the build and a `plan`. Trimmed example:
+
+```json
+{
+  "build": { "id": 12, "commitSha": "…", "changedPaths": ["server/db.js"] },
+  "plan": {
+    "mode": "hybrid",
+    "fallback": null,
+    "confidence": "medium",
+    "changed": ["server/db.js"],
+    "selected": [
+      { "key": "AC-001", "tier": "transitive", "required": true,
+        "chain": ["server/db.js", "server/gate.js", "server/app.js"],
+        "reason": "Depends on the change through server/db.js → server/gate.js → server/app.js; server/app.js is in its mapping." }
+    ],
+    "deferred": [],
+    "excluded": [
+      { "key": "AC-002", "tier": "excluded", "required": false,
+        "reason": "No changed file is in its mapping or in the dependents of the change." }
+    ],
+    "totals": { "total": 2, "selected": 1, "required": 1, "transitiveAdmitted": 0,
+                "deferred": 0, "excluded": 1, "estimatedMs": 0, "budget": { "maxTests": 10 }, "overBudget": false }
+  }
+}
+```
+
+`confidence` is `high` when no changed file is opaque and the graph is complete, `medium` when either is not, and
+`low` when the plan is a fallback.
+
+**Measured (repository-derived: this repo's 51 `server/` modules against 25 test files, ground truth from real test runs).**
+
+| Strategy | Recall of truly affected tests | Tests executed | Cost |
+|---|---|---|---|
+| Full suite | 1.00 | 100% | 100% |
+| Direct mapping only | 0.07 | 36% | 6% |
+| Hybrid graph, no budget | 1.00 | 100% | 100% |
+| Hybrid, budget 50% | 0.33 | 54% | 9% |
+| Hybrid, budget 25% | 0.07 | 36% | 6% |
+
+What this means in practice: the graph finds the dependencies a hand-written mapping misses (recall 0.07 → 1.00), but
+in *this* repository almost every test depends transitively on most of `server/` through `db.js` and `gate.js`, so
+an unbounded plan runs everything. The savings appear only when a budget is set, and then recall drops sharply. Use
+the graph where it can prune; do not expect it to shorten this repository's suite.
+
+**Limits.** Static only: a test that spawns a server process with a path string does not create an edge. Computed
+`require`/`import` targets are invisible and make the graph incomplete. No learned ranking exists; there is no trustworthy
+run-history data to train one. Historical failure rate is used only if the caller supplies it.
+
+### 2. Ochiai fault localization
+
+**What it does.** Given a record of which components each test execution touched and whether it passed, it ranks
+the components by how strongly they are associated with the failures. Components high in the ranking are where
+to start reading. This is a prioritisation, not a cause.
+
+**The formula.** For a component *c*, with `n_ef` failed executions that touched *c*, `n_ep` passed executions that
+touched *c*, and `n_f` failed executions in total:
+
+$$\operatorname{Ochiai}(c)=\frac{n_{ef}}{\sqrt{n_f\,(n_{ef}+n_{ep})}}$$
+
+It is zero when the denominator is zero.
+
+**Inputs and exclusions.** Each execution carries `testId`, `passed`, `components` and optionally `infra`. Infra
+executions (environment failures) are excluded and counted. A test id that both passed and failed in the input is
+flaky: all its executions are excluded and listed. Output includes, per component, the exact counts and the test
+ids that contributed.
+
+```js
+import { rankComponents } from './server/fault-localization.js';
+
+const { ranking } = rankComponents([
+  { testId: 'T1', passed: false, components: ['A', 'B'] },
+  { testId: 'T2', passed: false, components: ['A'] },
+  { testId: 'T3', passed: true,  components: ['B'] },
+]);
+// A: score 1.0 (nef 2, nep 0)   B: score 0.5 (nef 1, nep 1)
+```
+
+If no genuine spectrum exists, `dependencyFallback` orders components by import distance from the failing tests. It
+is labelled `dependency-distance-fallback` and carries no Ochiai score. The product does not generate spectra for
+application runs: Kane CLI records no code coverage. The only spectrum produced in this repository comes from the server's
+own test suite, via `NODE_V8_COVERAGE`.
+
+**Measured: it did not work here.** On seeded operator mutants in `server/` (12 detected of 29 attempted, 51
+components), Ochiai placed the mutated module first in 0 cases and had a mean rank of 39 of 51. A random ordering
+would average 26, and dependency distance averaged 9.4. The cause is the granularity: with one execution per test
+file, a mutant produces one or two failing executions, so every module loaded only by that test receives the same
+maximum score and the mutated module is buried in a tie. Finer spectra (per test case, per line) would be needed, and this repository cannot produce them
+for Kane runs. **Do not present this ranking as localization.**
+
+### 3. NSGA-II exploration (library, synthetic evaluation)
+
+**What it does.** NSGA-II (Deb et al., 2002) is a multi-objective evolutionary search. Here it searches over
+sequences of browser actions, looking for sequences that cover new pages and interactions, reach new defects, and
+get close to reproducing a defect, while using few actions. It keeps a *front* of candidates that trade these off,
+instead of collapsing them into one weighted score.
+
+**The actions** a candidate sequence is built from: `NAVIGATE`, `CLICK`, `TYPE`, `SUBMIT`, `SCROLL`, `WAIT`, `ASSERT`,
+`RECORD`.
+
+**The seven objectives**, all measured from the application's trace and combined only by Pareto dominance:
+
+| Objective | Direction | Meaning |
+|---|---|---|
+| `states` | maximise | Distinct pages visited |
+| `edges` | maximise | Distinct effective transitions (route and interaction coverage) |
+| `new_states` | maximise | Pages not seen earlier in this exploration |
+| `new_errors` | maximise | Defects not observed earlier in this exploration |
+| `progress` | maximise | Best matched step count toward a defect recipe |
+| `actions` | minimise | Effective actions (the action count needed) |
+| `cost` | minimise | Summed action cost |
+
+**The machinery.** Fast non-dominated sorting, crowding distance, binary tournaments on (rank, crowding), one-point
+crossover, typed mutation (replace, insert, delete), elimination of repeated sequences, elimination of behaviourally
+identical candidates during selection, a hard budget counted in application runs, and a seed for reproducibility.
+
+**Run it** (from `playtest-agent-main/`, with the Python environment described in [Tests](#tests)):
+
+```python
+from pt.search_model import SimApp
+from pt.search_nsga2 import Spec, nsga2, summarise
+
+session = nsga2(SimApp(), Spec(), budget=600, pop_size=40, seed=1)
+print(summarise(session))   # distinct pages, edges, defects found, first hit per defect, front size
+```
+
+**Important.** `SimApp` is a deterministic state machine with five seeded defects, **not a browser**. The
+explorer's contract is `app.run(actions) -> Trace`; the real Playtest driver would have to implement that
+contract, and that path has not been run.
+
+**Measured (synthetic model, 10 seeds, 600 runs each).**
+
+| Explorer | Distinct pages (of 10) | Distinct edges | Defects per seed |
+|---|---|---|---|
+| NSGA-II | 8.6 | 49.5 | 2.3 |
+| Random sampling | 8.8 | 50.5 | 2.6 |
+| Novelty hill-climb | 7.7 | 30.7 | 1.1 |
+
+NSGA-II did not beat random sampling on this model, and no strategy found the deepest defect within the budget. The
+model reaches about nine of its ten pages, so the coverage objectives have little room to discriminate. An ablation
+removing the action and cost objectives was inconclusive (2.3 → 2.2 on calibration seeds, 2.3 → 2.7 on held-out seeds).
+
+### 4. ProbDD-style reduction
+
+**What it does.** Given a failing sequence of interaction steps and an oracle that replays a candidate and reports
+whether the failure still reproduces, it removes steps while the failure persists, and ends at a **1-minimal**
+sequence: removing any single remaining step makes the failure disappear.
+
+**How it works.** Each step has a probability of being needed for the failure. Candidate removals are sampled with
+probability proportional to one minus that value, so steps that were repeatedly unnecessary are tried first.
+A successful removal decays the probability of the removed steps; a failed removal raises it. When sampling stops
+producing removals, a deterministic pass tests each remaining step alone. Pinned steps (setup and authentication) are never removed.
+Every oracle call is cached and counted against a replay budget.
+
+**What it does not do.** It is a ProbDD-style heuristic. Its update rules are not the ones in the published paper,
+and its convergence was not analysed. It claims one property only: 1-minimality of its result, if the budget allows.
+
+```python
+from pt.probdd import probdd
+
+result = probdd(len(steps), oracle, pinned=[0], max_replays=400, seed=1)
+# result: kept (indices), replays, one_minimal, budget_hit, reproduces, history
+```
+
+**Measured (synthetic oracles, 60 scenarios, 400-replay budget).** Both reducers reach the minimal witness length (4.5 on
+average). ProbDD-style used 33.7 replays on average; the repository's existing halving reducer
+(`playtest-agent-main/pt/reduce.py`, the same one the Playtest reports use) used 42.9. Both were 1-minimal in every scenario.
+This is an efficiency signal on small synthetic cases, not a general claim about real browser sessions.
+
+### 5. Package fingerprints: MinHash and LSH (Gatekeeper)
+
+**What it does.** Finds sources that share code shape even when identifiers were renamed, formatting changed, or a
+small section was edited, without comparing every pair. It is a candidate and evidence generator for the campaign
+analysis; **it never marks a package malicious**.
+
+**How it works.**
+
+1. **Normalise.** Comments and whitespace are dropped, optional semicolons are removed, string and number literals
+   become placeholders, and user identifiers become `I`. Words that carry capability meaning are kept (`require`,
+   `child_process`, `exec`, `fetch`, `http`, `net`, `fs` and similar). Renaming a variable therefore does not hide what
+   the code does, and renaming a helper still produces the same fingerprint.
+2. **Shingle and sketch.** Each token stream becomes a set of 5-token shingles, hashed with BLAKE2b (stable across
+   processes). A MinHash signature of 128 seeded universal-hash values is computed for each set.
+3. **Retrieve candidates.** Locality-sensitive hashing (32 bands of 4 rows) puts similar signatures in shared buckets. The
+   candidate threshold is about 0.42 Jaccard similarity.
+4. **Verify.** Each candidate pair is checked with exact shingle Jaccard similarity. A pair is reported at 0.5 or above.
+   Byte-identical sources and sources identical after normalisation are reported directly from their hashes.
+
+Each reported relationship carries `kind`, the estimated and exact similarity, and a reason. The reason states that the
+finding is shared code shape, not maliciousness.
+
+```python
+from gatekeeper.fingerprint.minhash import Hasher, fingerprint, find_relationships
+
+hasher = Hasher(num_perm=128, seed=7)
+fps = [fingerprint(name, source, hasher=hasher) for name, source in sources.items()]
+relationships, stats = find_relationships(fps, bands=32, verify_threshold=0.5)
+```
+
+**Measured (repository-derived base files with seeded synthetic variants; 145 entries, 290 positive pairs).**
+
+| Variant | Candidate recall (LSH) | Median exact similarity |
+|---|---|---|
+| Renamed and reformatted | 1.00 | 1.00 |
+| Small edit (3% of lines) | 1.00 | 0.96 |
+| Heavy edit (15% of lines) | 1.00 | 0.88 |
+| Partial reuse (half the file) | 0.90 | 0.58 |
+
+At the 0.5 threshold, LSH recalled 0.92 of positive pairs against 0.93 for an exhaustive comparison, with precision
+1.00 and no false pairs across the boilerplate negatives. Brute force over all 10,440 pairs took 1.2 s; the Python
+fingerprinting step took 5.3 s and is the main cost.
+
+**Limits.** The variants are synthetic, and the negatives are unrelated programs from one repository, not malicious
+packages. Real campaigns reuse code with different structure. Similarity needs publisher, dependency, endpoint and
+install-behaviour evidence before it means anything about a campaign. The fingerprint module is not yet part of
+Gatekeeper's campaign attribution.
+
+### 6. Merkle transparency log
+
+**What it does.** An append-only log of release events, built as an RFC 9162 Merkle tree with SHA-256, domain-separated
+leaf and node hashing, inclusion proofs and consistency proofs. It lets a verifier who holds only a small checkpoint
+check three things independently:
+
+- **Inclusion.** A given release event is in the log at a given position, under a given root.
+- **Consistency.** A later checkpoint extends an earlier one: the earlier history was not altered or dropped.
+- **Checkpoint authenticity.** The root and size were signed by the server's existing Ed25519 key.
+
+```js
+import { MerkleLog, checkpoint, verifyCheckpoint, verifyInclusion, verifyConsistency, leafHash } from './server/transparency.js';
+
+const log = new MerkleLog();
+const index = log.append(JSON.stringify({ kind: 'release', dossier: dossierId, payloadSha256 }));
+
+const cp = checkpoint(log, keys);                      // keys = loadKeys(DATA_DIR)
+verifyCheckpoint(cp);                                   // { valid: true, problems: [] }
+
+const proof = log.inclusionProof(index);
+verifyInclusion({ leafHash: leafHash(eventText), index, size: cp.size, proof, root: cp.root }); // true
+```
+
+**Not claimed.** There is no third-party timestamping and no external anchor: the signature proves the server's key
+signed the root, nothing more. The log is in memory in this version. Persisting it and linking each signed dossier to a
+leaf are not implemented.
+
+**Verified.** Every inclusion proof for every index up to 40 leaves and every consistency proof for every size pair up
+to 40 leaves, plus tamper cases (altered leaf, altered proof, rewritten history, reversed sizes, altered signature). No
+scale or timing benchmark has been run.
+
+### Not built yet
+
+- **Interprocedural taint analysis** for install-time package code (sources such as environment variables and
+  credentials, sinks such as network and child processes). It is designed in
+  [ALGORITHM_INTELLIGENCE_PLAN.md](ALGORITHM_INTELLIGENCE_PLAN.md) and needs a real JavaScript parser before any
+  measured claim is possible.
+- **A UI section** for these results. The only surface today is the selection endpoint.
+- **Linking the Ochiai ranking** to the repair dossier, **wiring fingerprints** into Gatekeeper's campaign view, and
+  **persisting the transparency log**.
+
+### Reproducing the benchmarks
+
+| Command | What it does | Time |
+|---|---|---|
+| `npm run bench:truth` | Runs each `tests/*.test.js` file twice (instrumented and plain) and records loaded modules, durations and infra classification into `benchmarks/algorithm-intelligence/truth.json` | Long: runs the whole test suite twice, including browser tests |
+| `npm run bench:impact` | Compares full, direct, and hybrid selection against `truth.json`, writes `impact.json` | Seconds |
+| `npm run bench:sbfl` | Seeds operator mutants in `server/`, re-runs the affected fast tests on a copy of the repository, writes `sbfl.json` | Minutes |
+| `cd gatekeeper-main && PYTHONPATH=src python scripts/bench_minhash.py --source-dir ../server --out ../benchmarks/algorithm-intelligence/minhash.json` | MinHash/LSH quality and cost | Seconds |
+| `cd playtest-agent-main && PYTHONPATH=. python bench/algorithm_intelligence_bench.py --out ../benchmarks/algorithm-intelligence/explore-and-reduce.json` | NSGA-II, random and hill-climb comparison, ablation, ProbDD versus `reduce.py` | Seconds |
+
+Every benchmark writes its settings and dataset description into its output file. `truth.json` depends on the machine:
+durations will differ, and the impact and SBFL results depend on it.
+
 ## APIs
 
 Generate a project API key under **Settings → Coding-agent access**.
@@ -387,6 +735,12 @@ Proof and CI endpoints (Bearer project key):
 | `GET /api/agent/runs/:id` | Run status and per-criterion results |
 | `GET /api/agent/decision?commitSha=` | Recorded release decision with blocking conditions |
 | `POST /api/webhooks/github/:projectId` | GitHub push webhook (HMAC-SHA256, one-time delivery ids) |
+
+Selection (signed-in project owner, session cookie):
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /api/projects/:pid/builds/:bid/selection` | Hybrid graph impact plan from the sources you send; executes nothing. See [Algorithm intelligence](#1-test-impact-selection) |
 
 Continuous watch (a scheduled health check of the verification system itself):
 
@@ -414,6 +768,22 @@ detection, and browser end-to-end journeys (skipped when Playwright is absent).
 then labels the engine as *test stand-in*, tags those results "Test fixture", and warns on any report that
 contains one. The product has no simulated mode and never falls back to a stand-in.
 
+**Known failing tests.** On a host without a working browser setup, seven browser end-to-end tests fail with
+Playwright `TimeoutError`. They fail the same way on the code before the algorithm work, and they are environment
+failures, not application defects. The algorithm tests themselves all pass.
+
+**Algorithm tests.** The Node tests for the algorithm layer are `tests/impact-graph.test.js`,
+`tests/fault-localization.test.js`, `tests/transparency.test.js` and `tests/algorithm-selection-api.test.js`. The Python
+suites for the new explorer, reducer and fingerprints are not part of `npm test`:
+
+```bash
+cd playtest-agent-main && python3 -m pytest tests/test_search_nsga2.py tests/test_probdd.py
+```
+
+```bash
+pip install -e ./gatekeeper-main pytest && cd gatekeeper-main && PYTHONPATH=src python -m pytest tests/test_minhash.py
+```
+
 ### Real Kane CLI smoke test
 
 On a machine that is signed in to Kane CLI and can reach TestMu AI:
@@ -433,10 +803,13 @@ the run, and which evidence files were collected.
   revocable. Links can expire. Passwords use scrypt. Sessions use a random 256-bit token stored hashed, in an
   `HttpOnly`, `SameSite=Lax` cookie.
 - **Isolation.** Every project, run, evidence and repair-task route checks ownership. Cross-tenant access returns
-  404. Evidence files are addressed by random ids and served only to their owning account.
+  404. Evidence files are addressed by random ids and served only to their owning account. The selection endpoint
+  follows the same ownership rule.
 - **Audit.** Keys, links, runs, criterion edits and repair declarations are written to an append-only audit log.
 - **Browser.** CSP without inline script. All user content is rendered as text nodes.
 - **Kane credentials** come from the server environment only. Secret variables are write-only and redacted.
+- **Uploaded source.** The selection endpoint reads the text you send. It never writes it to disk, never runs it, and
+  checks the file count, size and shape before it builds the graph.
 - **Residual risks.** The target policy checks the registered URL, not redirects or links the browser follows
   later, so run the container on a network segment without access to internal services. Sign-up is open, and
   rate limiting is in-memory per process. This project has had no external security review.
@@ -447,13 +820,10 @@ More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 | Document | Covers |
 |---|---|
-
-## Algorithm intelligence
-
-SHIPPROOF now includes impact-based test selection (`POST /projects/:pid/builds/:bid/selection`), plus library
-implementations, with tests and benchmarks, of Ochiai fault localization, an NSGA-II explorer, a ProbDD-style reducer,
-MinHash/LSH package fingerprints and a Merkle transparency log. Benchmarks are reproducible via `npm run bench:truth`,
-`npm run bench:impact` and `npm run bench:sbfl`. Results are mixed and documented honestly: selection without a budget
-runs every test in this repository, Ochiai did not localize seeded defects on file-level spectra, and NSGA-II did not beat
-random sampling on its synthetic model. Details: [ALGORITHM_IMPLEMENTATION_REPORT.md](ALGORITHM_IMPLEMENTATION_REPORT.md),
-[ALGORITHM_BENCHMARK_REPORT.md](ALGORITHM_BENCHMARK_REPORT.md), [ALGORITHM_VALIDATION.md](ALGORITHM_VALIDATION.md).
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, data model, proof layer and algorithm layer |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Production checklist, backup and restore, rollback |
+| [docs/ONCALL.md](docs/ONCALL.md) | Voice on-call engineer: setup, safety model, limits |
+| [ALGORITHM_INTELLIGENCE_PLAN.md](ALGORITHM_INTELLIGENCE_PLAN.md) | Design of each algorithm: inputs, outputs, evaluation plan |
+| [ALGORITHM_IMPLEMENTATION_REPORT.md](ALGORITHM_IMPLEMENTATION_REPORT.md) | What is implemented, where, which tests, and what is not built |
+| [ALGORITHM_BENCHMARK_REPORT.md](ALGORITHM_BENCHMARK_REPORT.md) | Every measured number, with the dataset behind each one |
+| [ALGORITHM_VALIDATION.md](ALGORITHM_VALIDATION.md) | Method, held-out rules, test results and limits |

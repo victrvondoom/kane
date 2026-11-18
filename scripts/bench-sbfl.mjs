@@ -80,7 +80,8 @@ export function pessimisticRank(ranking, component) {
 
 export function expectedRandomRank(n) { return (n + 1) / 2; }
 
-export function runSbfl({ seed = 7, fastMs = 30000, maxModules = 14, sitesPerModule = 2, maxTestsPerMutant = 6 } = {}) {
+// Defaults are the settings of the reported run (see benchmarks/algorithm-intelligence/sbfl.json, "settings").
+export function runSbfl({ seed = 7, fastMs = 60000, maxModules = 16, sitesPerModule = 2, maxTestsPerMutant = 25 } = {}) {
   const truth = JSON.parse(fs.readFileSync(path.join(outDir, 'truth.json'), 'utf8'));
   const testFiles = Object.keys(truth.files);
   const components = [...new Set(testFiles.flatMap((t) => truth.files[t].loaded))].sort();
