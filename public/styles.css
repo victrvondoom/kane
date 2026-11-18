@@ -218,7 +218,7 @@ label.inline{display:flex;align-items:center;justify-content:space-between;gap:1
 .ref{font:500 11px var(--mono);color:var(--info);background:none;border:1px solid var(--line2);border-radius:4px;padding:1px 5px;cursor:pointer;white-space:nowrap}.ref:hover{border-color:var(--info)}
 .refs{display:inline-flex;gap:4px;flex-wrap:wrap;vertical-align:middle}
 .feed{list-style:none;margin:0;padding:0;max-height:360px;overflow:auto;font-size:13px}.feed.tall{max-height:520px}
-.feed li{display:flex;gap:10px;align-items:baseline;padding:8px 20px;border-bottom:1px solid var(--line)}.feed li:last-child{border-bottom:0}
+.feed li{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;padding:8px 20px;border-bottom:1px solid var(--line)}.feed li:last-child{border-bottom:0}
 .feed time{font:12px var(--mono);color:var(--dim);flex:none}.feed li.err{color:var(--bad)}.feed li.note{color:var(--mute)}.feed li.note.err{color:var(--bad)}.feed li.said{color:var(--ink)}
 .tier{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:2px 5px;border-radius:3px;border:1px solid var(--line2);color:var(--mute);flex:none}
 .tier.t-eng{color:var(--warn);border-color:currentColor}.tier.t-prod{color:var(--bad);border-color:currentColor}
@@ -230,3 +230,68 @@ pre.out{margin:0;font:12.5px/1.55 var(--mono);white-space:pre-wrap;overflow-wrap
 pre.report{max-height:none}
 dialog.dlg.wide{width:min(860px,calc(100vw - 32px))}
 @media (max-width:900px){.gitbox{grid-template-columns:1fr 1fr}.oc{grid-template-columns:1fr}.oc>.panel:first-child{position:static;max-height:none}.rail li{font-size:9px;letter-spacing:0}.kv{grid-template-columns:1fr;gap:2px}.feed li{padding:8px 12px;flex-wrap:wrap}.tscript{max-height:260px}}
+
+/* ---------- continuous watch ---------- */
+.cat-event{color:var(--info);border-color:currentColor}
+.bad-text{color:var(--bad)}
+.filters{flex-wrap:wrap;gap:8px}
+.filters select{font-size:13px}
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start}
+.lane{display:grid;gap:10px;align-content:start;min-width:0}
+.lane>h3{display:flex;gap:8px;align-items:center}
+.lane .count{font:600 11px var(--mono);background:var(--panel2);border-radius:99px;padding:2px 7px;color:var(--ink)}
+.lane-empty{padding:12px;border:1px dashed var(--line2);border-radius:10px}
+.finding{min-width:0;overflow-wrap:anywhere}
+.finding .key{overflow-wrap:anywhere}
+.finding[data-group=resolved]{opacity:.7}
+.finding[data-group=reopened]{box-shadow:inset 3px 0 0 var(--warn)}
+.finding[data-group=new]{box-shadow:inset 3px 0 0 var(--info)}
+.wf-steps{padding-left:24px}
+.wf-steps li::before{left:-29px}
+.wf-card{padding:14px 16px}
+.wf-card h3{font-size:11px}
+.spark{display:flex;align-items:flex-end;gap:3px;height:90px;min-width:0}
+.spark i{flex:1 1 0;min-width:4px;max-width:18px;background:var(--ok);border-radius:2px 2px 0 0;display:block}
+.spark i.bad{background:var(--bad)}
+.spark.health{height:44px;align-items:stretch}
+.spark.health i{height:100%;border-radius:2px}
+.spark.health i.warn{background:var(--warn)}
+.spark.health i.bad{background:var(--bad)}
+.bars{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:13px}
+.bars li{display:grid;grid-template-columns:minmax(0,1fr) minmax(90px,140px) 36px;gap:10px;align-items:center}
+.bars .bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;display:block}
+.bars .bar i{display:block;height:100%;background:var(--info);min-width:0}
+.watch .stats{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+.watch .stat b{font-size:28px}
+@media (max-width:1100px){.board{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){
+  .board{grid-template-columns:minmax(0,1fr)}
+  .bars li{grid-template-columns:1fr 1fr;row-gap:4px}
+  .bars li .bar{grid-column:1 / -1;order:3}
+  .filters select,.filters input{width:100%}
+  .wf-steps{padding-left:20px}
+  .wf-steps li::before{left:-25px}
+}
+/* project header: the title block wraps below the verdict stamp instead of being squeezed on phones */
+.hdr>.grow{flex:1 1 280px}
+.finding .num{white-space:normal;overflow-wrap:anywhere}
+
+/* ---------- 3D depth ----------
+   CSS 3D transforms only (no libraries). Motion is restrained, disabled for reduced-motion users, and the pointer
+   tilt is only enabled for fine pointers (mouse, trackpad), never for touch. */
+[data-tilt]{transform:perspective(1100px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transform-style:preserve-3d;
+  transition:transform .45s cubic-bezier(.2,.7,.2,1),box-shadow .45s ease;will-change:transform}
+[data-tilt]:hover{box-shadow:0 36px 70px -34px rgba(0,0,0,.85),0 0 0 1px rgba(185,228,92,.14)}
+.stamp{animation:stamp-in .9s cubic-bezier(.2,.8,.2,1) both;transform-origin:50% 50%}
+@keyframes stamp-in{0%{opacity:0;transform:perspective(500px) rotateX(70deg) rotate(-8deg) translateZ(-60px)}
+  60%{opacity:1}100%{opacity:1;transform:perspective(500px) rotateX(0) rotate(-2deg) translateZ(0)}}
+.ledger{transform:perspective(1200px) rotateY(-9deg) rotateX(3deg);box-shadow:34px 44px 70px -36px rgba(0,0,0,.9),0 0 0 1px rgba(185,228,92,.08);
+  transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+.hero:hover .ledger{transform:perspective(1200px) rotateY(-4deg) rotateX(1deg)}
+.brand i{transition:transform .8s cubic-bezier(.2,.7,.2,1);transform-style:preserve-3d}
+.brand:hover i{transform:rotate(45deg) rotateY(180deg)}
+.stat,.statbtn{transition:transform .35s ease,background .2s}
+.stats .stat:hover{transform:translateZ(18px)}
+@media (hover:none),(pointer:coarse){[data-tilt]{transform:none!important}.ledger{transform:none}}
+@media (max-width:820px){.ledger{transform:none;box-shadow:none}}
+@media (prefers-reduced-motion:reduce){[data-tilt],.stamp,.ledger,.brand i,.stat{transition:none!important;animation:none!important}}

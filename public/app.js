@@ -3,8 +3,7 @@ import { ProofTab, BuildsTab, IntelligenceTab, CITab, DossierTab } from './proof
 import { AutonomousLoopTab, StepsWriterTab, GatekeeperTab, OqedTab, PlaytestStudioTab, SaeInterpretabilityLabTab } from './autonomous.js';
 import { AlgorithmIntelligenceTab } from './algorithms-ui.js';
 import { OnCallPage, OnCallIncidentPage } from './oncall.js';
-import { ensureAgent, resetAgent, openAgent, toggleAgent, setAgentProject } from './agent-workspace.js';
-import { openPalette, installPaletteShortcut } from './command-palette.js';
+
 const $app = document.getElementById('app');
 let me = null, system = null, cleanup = [], crumb = null; // crumb: the project (and tab) the current page belongs to
 
@@ -420,6 +419,7 @@ async function Project(id, tab = 'requirements', sub) {
     ['proof', 'Proof explorer'],
     ['builds', 'Builds & impact'],
     ['intelligence', 'Release intelligence', g.reasons.length, true],
+
     ['ci', 'CI'],
     ['dossier', 'Dossier'],
     ['report', 'Release report'],
@@ -441,13 +441,15 @@ async function Project(id, tab = 'requirements', sub) {
     proof: () => ProofTab(d, sub),
     builds: () => BuildsTab(d, sub),
     intelligence: () => IntelligenceTab(d),
+    watch: () => WatchTab(d, sub),
+    investigations: () => InvestigationsTab(d),
     ci: () => CITab(d),
     dossier: () => DossierTab(d, sub)
   }[tab] || (() => AutonomousLoopTab(d, sub));
   crumb = { id: p.id, name: p.name, tab: (tabs.find((t) => t[0] === tab) || [])[1] || '' };
   setAgentProject({ id: p.id, name: p.name });
   return shell(h('div', { class: 'page stack-l' },
-    h('div', { class: 'row spread', style: { 'align-items': 'flex-start' } },
+    h('div', { class: 'row spread hdr', style: { 'align-items': 'flex-start' } },
       h('div', { class: 'stack-s grow' }, h('h3', {}, h('a', { href: '#/app', style: { 'text-decoration': 'none' } }, '← Projects')), h('h1', {}, p.name),
         h('div', { class: 'row small' }, h('a', { class: 'mono mute', href: p.appUrl, target: '_blank', rel: 'noopener' }, p.appUrl),
           g.build ? h('a', { class: 'cat', href: `#/p/${id}/builds/${g.build.id}`, title: 'Current build' }, `build ${g.build.shortSha} · ${g.build.environment}`) : h('a', { class: 'cat', href: `#/p/${id}/builds` }, 'no build registered'),
@@ -747,6 +749,8 @@ async function RunPage(runId, selectedId) {
           r.testUrl ? [h('dt', {}, 'Test Manager'), h('dd', {}, h('a', { href: r.testUrl, target: '_blank', rel: 'noopener' }, r.testUrl))] : null)),
       steps.length ? h('div', { class: 'panel flush' }, h('div', { class: 'panel-h' }, h('h3', {}, `Browser steps (${steps.length})`)), h('div', { class: 'scroll' }, h('table', {}, h('tbody', {}, steps.map((e) => h('tr', {}, h('td', { class: 'num mute' }, e.payload.step),
         h('td', {}, tag(/fail/i.test(e.payload.status) ? 'failed' : /done|pass/i.test(e.payload.status) ? 'passed' : 'running')), h('td', { class: 'small' }, e.payload.remark || ''))))))) : null,
+      done ? TelemetryPanel(runId, r.id) : null,
+      done && ['failed', 'error', 'timeout'].includes(r.status) ? investigateButton(runId, r.id) : null,
       h('div', { class: 'panel stack' }, h('h3', {}, `Evidence (${r.evidence.length})`),
         !r.evidence.length ? h('p', { class: 'small mute' }, done ? 'Kane CLI produced no evidence files for this execution.' : 'Evidence is collected when the check finishes.') : null,
         shots.length ? h('div', { class: 'shots' }, shots.map((e) => h('a', { href: `/api/evidence/${e.id}/file`, target: '_blank', rel: 'noopener', title: e.name }, h('img', { src: `/api/evidence/${e.id}/file`, alt: `Screenshot ${e.name}`, loading: 'lazy' })))) : null,
@@ -808,6 +812,42 @@ async function PublicReport(token) {
   } catch (e) { return shell(h('div', { class: 'page' }, h('div', { class: 'panel empty stack' }, h('h2', {}, 'Report unavailable'), h('p', {}, e.message)))); }
 }
 
+// Network and console diagnostics read from Kane's evidence. Labelled as diagnostics: they never change the status.
+function TelemetryPanel(runId, resultId) {
+  const box = h('div', { class: 'panel stack' }, h('h3', {}, 'Network & console diagnostics'), h('p', { class: 'small mute' }, 'Loading…'));
+  api('GET', `/runs/${runId}/results/${resultId}/telemetry`).then(({ telemetry: t }) => {
+    const none = !t.files.length;
+    box.replaceChildren(h('h3', {}, 'Network & console diagnostics'),
+      h('p', { class: 'small mute' }, 'Read from the HAR and console files Kane CLI wrote for this execution. Diagnostics only: they do not change the status or the release gate.'),
+      none ? h('p', { class: 'small mute' }, 'Kane CLI wrote no network (HAR) or console files for this execution.') : null,
+      t.diagnostics.length ? h('ul', { class: 'reasons' }, t.diagnostics.map((d) => h('li', {}, d))) : (none ? null : h('p', { class: 'small s-verified' }, 'No failed requests, server errors or console errors were recorded.')),
+      t.network ? h('div', { class: 'small' }, `${t.network.total} requests · ${t.network.byStatus['2xx']} ok · ${t.network.byStatus['4xx']} client errors · ${t.network.byStatus['5xx']} server errors · ${t.network.byStatus.failed} failed · ${t.network.slow} slower than 2 s`) : null,
+      t.network?.failures?.length ? h('table', {}, h('tbody', {}, t.network.failures.slice(0, 8).map((f) => h('tr', {}, h('td', { class: 'mono small' }, f.method), h('td', { class: 'small' }, f.url), h('td', { class: 'num' }, f.status || 'failed'), h('td', { class: 'small mute' }, f.error || ''))))) : null,
+      t.console?.samples?.filter((x) => x.level === 'error').length ? h('ul', { class: 'reasons' }, t.console.samples.filter((x) => x.level === 'error').slice(0, 6).map((x) => h('li', { class: 'mono small' }, x.text))) : null);
+  }).catch((e) => box.replaceChildren(h('h3', {}, 'Network & console diagnostics'), h('p', { class: 'small mute' }, `Could not load diagnostics: ${e.message}`)));
+  return box;
+}
+
+// Pointer-driven depth for [data-tilt] surfaces: verdict stamps, the landing ledger, panels, screenshots and steps.
+// Fine pointers only; reduced-motion users and touch devices get the static layout.
+const TILT_TARGETS = '.stamp, .ledger, .grid2 > .panel, .shots a, .steps > div';
+function markTilt() { $app.querySelectorAll(TILT_TARGETS).forEach((el) => el.setAttribute('data-tilt', '')); }
+if (matchMedia('(hover: hover) and (pointer: fine)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  document.addEventListener('pointermove', (e) => {
+    const el = e.target.closest?.('[data-tilt]'); if (!el) return;
+    const r = el.getBoundingClientRect(); if (!r.width) return;
+    const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+    const tilt = el.classList.contains('steps') ? 4 : 8; // small surfaces tilt more, wide ones less
+    el.style.setProperty('--ry', `${(x * tilt).toFixed(2)}deg`); el.style.setProperty('--rx', `${(-y * tilt).toFixed(2)}deg`);
+    el.style.setProperty('--gx', `${((e.clientX - r.left) / r.width * 100).toFixed(1)}%`);
+    el.style.setProperty('--gy', `${((e.clientY - r.top) / r.height * 100).toFixed(1)}%`);
+  });
+  document.addEventListener('pointerout', (e) => {
+    const el = e.target.closest?.('[data-tilt]'); if (!el || el.contains(e.relatedTarget)) return;
+    el.style.removeProperty('--rx'); el.style.removeProperty('--ry');
+  });
+}
+
 // ---------- router ----------
 async function render() {
   cleanup.forEach((f) => f()); cleanup = [];
@@ -827,13 +867,14 @@ async function render() {
     else if (parts[0] === 'new') view = await NewProject();
     else if (parts[0] === 'p' && parts[1]) view = await Project(Number(parts[1]), parts[2], parts[3]);
     else if (parts[0] === 'run' && parts[1]) view = await RunPage(Number(parts[1]), parts[2]);
+    else if (parts[0] === 'i' && parts[1]) view = shell(await InvestigationPage(parts[1]));
     else if (parts[0] === 'oncall') view = shell(parts[1] === 'i' && parts[2] ? await OnCallIncidentPage(parts[2]) : await OnCallPage());
     else view = shell(h('div', { class: 'page' }, h('div', { class: 'panel empty stack' }, h('h2', {}, 'Page not found'), h('div', {}, h('a', { class: 'btn', href: '#/app' }, 'Back to projects')))));
   } catch (e) {
     view = shell(h('div', { class: 'page' }, h('div', { class: 'panel empty stack' }, h('h2', {}, 'Something went wrong'), h('p', {}, e.message), h('div', { class: 'row', style: { 'justify-content': 'center' } }, h('button', { class: 'btn primary', onclick: render }, 'Retry'), h('a', { class: 'btn', href: '#/app' }, 'Back to projects')))));
   }
   clearTimeout(slow);
-  if (view) { const y = window.scrollY, same = $app.dataset.route === location.hash; $app.replaceChildren(view); $app.dataset.route = location.hash; window.scrollTo(0, same ? y : 0); }
+  if (view) { const y = window.scrollY, same = $app.dataset.route === location.hash; $app.replaceChildren(view); $app.dataset.route = location.hash; window.scrollTo(0, same ? y : 0); markTilt(); }
 }
 window.SP = { h, api, act, toast, copy, dialog, tag, stamp, fmtTime, fmtDur, ago, KIND, LABEL, render: () => render(), onCleanup: (f) => cleanup.push(f) };
 window.addEventListener('hashchange', render);

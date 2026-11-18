@@ -117,48 +117,4 @@ Limits: change impact is only as good as the declared path mappings; the webhook
 
 `server/oncall/` adds a voice-driven engineering agent (voice provider adapter → session manager → engineer loop → permission-checked tool registry → git / checks / GitHub / SHIPPROOF data). It reads SHIPPROOF state through the same functions the API uses and writes no results, evidence or decisions. See [ONCALL.md](ONCALL.md).
 
----
-
-## Multi-Engine Architecture & SAE Interpretability Lab
-
-```text
-Node.js Express API & Autonomous Orchestrator (server/orchestrator.js)
-  │
-  ├──► Gatekeeper Worker (server/gatekeeper-worker.py)
-  │      Lockfile analysis, npm/pnpm/yarn audit, OSV queries, 5-tool forensic investigator
-  │
-  ├──► Playtest Agent Worker (server/playtest-worker.py)
-  │      Filmstrip frame recording, DOM state diffing, independent YES/NO replay judge, defect dossiers
-  │
-  ├──► OQED Worker (server/oqed-worker.py)
-  │      Native x86-64 target discovery, compiler checks, SMT formal equivalence proofs (Z3/angr)
-  │
-  ├──► SAE Interpretability Engine (server/sae/sae_engine.py)
-  │      TopK/JumpReLU sparse autoencoders across 9 discrete layers, activation extraction,
-  │      calibrated thresholding, cross-layer DAG, causal steering experiments, 9-layer quality metrics
-  │
-  ├──► Algorithmic Intelligence Engines (server/algorithms/)
-  │      ├── Test Impact Intelligence (test-impact-graph.js): Multi-layer graph BFS & Knapsack budget selection
-  │      ├── NSGA-II Multi-Objective Exploration (nsga2-exploration.js): Pareto optimization across 4 objectives
-  │      ├── Probabilistic Delta Debugging (delta-debugging.js): Causal prior noise elimination & 1-minimality
-  │      ├── Ochiai SBFL (ochiai-localization.js): Spectrum fault ranking linking to coding agent repair
-  │      ├── Static Taint Analysis (taint-analysis.js): Interprocedural sensitive source-to-sink flow propagation
-  │      ├── MinHash & LSH (minhash-lsh.js): AST normalized shingling & sub-linear typosquatting cluster search
-  │      └── Merkle Transparency Log (merkle-transparency.js): RFC 9162 domain-separated cryptographic audit log
-  │
-  └──► Tenant Workspace Isolation Manager (server/workspace.js)
-         Enforces bounded workspaces per project (`data/workspaces/project-<pid>`) with symlink defense
-```
-
-### Algorithmic Intelligence Data Model (Migration 009)
-Extends SQLite with:
-- `test_impact_analyses`: Graph selection history, changed file sets, criteria priority rankings.
-- `fault_localization_runs`: Spectrum matrix localization scores ($n_{ef}, n_{ep}, \text{Ochiai}$), correlated criteria.
-- `algorithm_sequence_records`: Pareto frontier exploration traces and 1-minimal delta debugging sequences.
-- `taint_analysis_findings`: Source-to-sink data flow paths with exact AST locations and severity.
-- `campaign_clusters`: Typosquatting campaign families, 128-hash MinHash signatures, Jaccard similarities.
-- `merkle_tree_checkpoints`: Signed Tree Heads (STH) and append-only evidence checkpoints.
-
-### Critical Release Gate Invariant
-A criterion is verified **only** when a real Kane CLI execution returns exit code 0, a passing `run_end` event, and collected evidence. No AI model, autonomous agent, or external engine is permitted to override this invariant.
 
