@@ -25,7 +25,11 @@ export function resolveEngineBin(bin) {
     const candidates = [process.env.APPDATA && path.join(process.env.APPDATA, 'npm', 'node_modules')];
     for (const dir of candidates.filter(Boolean)) { const e = entryIn(dir); if (e) { resolved = e; break; } }
     if (resolved === bin) {
-      const npmRoot = execFileSync('npm', ['root', '-g'], { encoding: 'utf8', shell: true, timeout: 20000 }).trim();
+      // Fixed command and arguments. On Windows, npm is a .cmd shim, so it is run through cmd.exe directly
+      // (no `shell: true`, which Node deprecates for argument passing).
+      const npmRoot = process.platform === 'win32'
+        ? execFileSync(process.env.ComSpec || 'cmd.exe', ['/d', '/s', '/c', 'npm root -g'], { encoding: 'utf8', timeout: 20000, windowsHide: true }).trim()
+        : execFileSync('npm', ['root', '-g'], { encoding: 'utf8', timeout: 20000 }).trim();
       const e = entryIn(npmRoot);
       if (e) resolved = e;
     }
