@@ -307,7 +307,10 @@ def test_failed_start_cleans_up(cfg):
 
 
 def test_validate_example():
-    cfg = json.loads(Path('games/sts2-example.json').read_text())
+    p = Path('games/sts2-example.json')
+    if not p.exists():
+        p = Path(__file__).resolve().parents[1] / 'games/sts2-example.json'
+    cfg = json.loads(p.read_text())
     assert validate(cfg) == []
     del cfg['exe']
     assert 'exe is missing' in validate(cfg)

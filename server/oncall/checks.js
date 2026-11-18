@@ -25,9 +25,10 @@ export function runCheck({ argv, cwd, timeoutMs, signal, maxOutput = 200000 }) {
     const started = Date.now(); let out = '', done = false, timedOut = false;
     const finish = (r) => { if (done) return; done = true; clearTimeout(timer); signal?.removeEventListener('abort', onAbort); resolve({ command: argv.map((a) => (a === process.execPath ? 'node' : a)).join(' '), durationMs: Date.now() - started, output: out, ...r }); };
     let child;
-    try { child = spawn(argv[0], argv.slice(1), { cwd, env: scrubbedEnv(process.env, { CI: '1', FORCE_COLOR: '0', NODE_ENV: 'test' }), stdio: ['ignore', 'pipe', 'pipe'], detached: true }); }
+    const useShell = process.platform === 'win32' && argv[0] !== process.execPath && !argv[0].endsWith('.exe');
+    try { child = spawn(argv[0], argv.slice(1), { cwd, env: scrubbedEnv(process.env, { CI: '1', FORCE_COLOR: '0', NODE_ENV: 'test' }), stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32', shell: useShell }); }
     catch (e) { return finish({ status: 'error', exitCode: null, output: `Could not start: ${e.message}` }); }
-    const kill = () => { try { process.kill(-child.pid, 'SIGKILL'); } catch { try { child.kill('SIGKILL'); } catch {} } };
+    const kill = () => { try { if (process.platform !== 'win32') process.kill(-child.pid, 'SIGKILL'); else child.kill('SIGKILL'); } catch { try { child.kill('SIGKILL'); } catch {} } };
     const onAbort = () => { kill(); finish({ status: 'cancelled', exitCode: null }); };
     const timer = setTimeout(() => { timedOut = true; kill(); }, timeoutMs);
     signal?.addEventListener('abort', onAbort, { once: true });

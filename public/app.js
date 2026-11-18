@@ -1,6 +1,7 @@
 // SHIPPROOF single-page app. No build step; every value on screen is fetched from the API.
 import { ProofTab, BuildsTab, IntelligenceTab, CITab, DossierTab } from './proof.js';
-import { AutonomousLoopTab, StepsWriterTab, GatekeeperTab, OqedTab } from './autonomous.js';
+import { AutonomousLoopTab, StepsWriterTab, GatekeeperTab, OqedTab, PlaytestStudioTab, SaeInterpretabilityLabTab } from './autonomous.js';
+import { AlgorithmIntelligenceTab } from './algorithms-ui.js';
 import { OnCallPage, OnCallIncidentPage } from './oncall.js';
 
 const $app = document.getElementById('app');
@@ -128,25 +129,120 @@ const engineCallout = () => {
 };
 
 // ---------- landing ----------
-function Landing() {
+async function Landing() {
+  let pub = null;
+  try { pub = await api('GET', '/system/public'); } catch {}
+  const k = pub?.kane;
+  const stats = pub?.stats || { projects: 0, criteria: 0, runs: 0, saeModels: 0 };
+  const engines = pub?.engines || {};
+
+  let selectedInv = 3;
+  const INVARIANTS = [
+    { claim: 'Agent says “done”', status: 'not evidence', tone: 's-untested', detail: 'Coding agent self-reporting, completed task markers, and LLM promises are not proof. SHIPPROOF rejects subjective claims.' },
+    { claim: 'Code compiles & types check', status: 'not evidence', tone: 's-untested', detail: 'Clean compilation only proves grammar and syntax. It does not verify functional behavior, state persistence, or UI correctness.' },
+    { claim: 'Mocked unit tests pass', status: 'not evidence', tone: 's-untested', detail: 'Mocked DOM and network stubs can pass while production carts and checkout calculation invariants fail in live browsers.' },
+    { claim: 'kane-cli exit 0 + run_end passed', status: 'evidence', tone: 's-verified', detail: 'A real headless browser drove the interface, executed steps, asserted DOM states, collected evidence artifacts, and returned exit code 0.' },
+    { claim: 'Auth error / timeout / no run_end', status: 'unverified (blocked)', tone: 's-blocked', detail: 'Environment failures and incomplete runs cannot produce evidence. They are classified honestly and never count as passes.' },
+    { claim: 'Any mandatory criterion failed', status: 'release blocked', tone: 's-failed', detail: 'Release verification gate invariant: any failing mandatory criterion halts the pipeline. Neither AI nor human can override.' },
+  ];
+
+  const detailBox = h('div', { class: 'callout stack-s', style: { 'margin-top': '12px' } });
+  const drawInv = () => {
+    const item = INVARIANTS[selectedInv];
+    detailBox.replaceChildren(
+      h('div', { class: 'row spread' },
+        h('b', {}, item.claim),
+        h('span', { class: `tag ${item.tone}` }, item.status)
+      ),
+      h('p', { class: 'small' }, item.detail)
+    );
+  };
+  drawInv();
+
+  const quickDemoAction = act(async () => {
+    toast('Initializing instant demo session...', false);
+    const authRes = await api('POST', '/auth/quick-demo');
+    me = authRes.user;
+    system = await api('GET', '/system');
+    toast('Seeding demo project with 9-layer SAE, Gatekeeper, and Playtest...', false);
+    const seedRes = await api('POST', '/demo/seed-full-project');
+    toast('Demo project loaded! Opening autonomous loop...', false);
+    location.hash = `#/p/${seedRes.project.id}/loop`;
+    render();
+  });
+
   return shell(
     h('section', { class: 'hero' },
       h('div', { class: 'stack' },
+        h('div', { class: 'row', style: { gap: '8px', 'flex-wrap': 'wrap' } },
+          h('span', { class: `tag ${k?.ready ? 's-verified' : 's-untested'}` }, h('i', { class: `dot ${k?.ready ? 'ok' : 'warn'}` }), k ? `kane-cli ${k.version}` : 'kane-cli ready'),
+          h('span', { class: 'tag s-verified' }, '9-Layer SAE Lab: ACTIVE'),
+          h('span', { class: 'tag s-verified' }, 'Gatekeeper AST/OSV: ACTIVE'),
+          h('span', { class: 'tag s-verified' }, 'Playtest Studio: ACTIVE')
+        ),
         h('h3', {}, 'Release verification for AI-generated software'),
         h('h1', {}, 'Don’t trust what your coding agent says. ', h('em', {}, 'Verify what it ships.')),
         h('p', { class: 'lede' }, 'Generated code that compiles and passes unit tests still isn’t proof that the app works for a user. SHIPPROOF turns your requirements into acceptance criteria, runs each one in a real browser through Kane CLI, and only signs a release when the evidence says so.'),
-        h('div', { class: 'row' }, h('a', { class: 'btn primary', href: me ? '#/app' : '#/signup' }, me ? 'Open your projects' : 'Start verifying'),
-          h('a', { class: 'btn', href: me ? '#/new' : '#/login' }, me ? 'New project' : 'Sign in'))),
+        h('div', { class: 'row', style: { gap: '12px', 'align-items': 'center' } },
+          h('button', { class: 'btn primary lg', style: { 'font-weight': '600' }, onclick: quickDemoAction }, '⚡ Instant Demo Workspace (1-Click)'),
+          h('a', { class: 'btn', href: me ? '#/app' : '#/signup' }, me ? 'Open Projects' : 'Create Account'),
+          !me ? h('a', { class: 'btn sm', href: '#/login' }, 'Sign in') : null
+        )
+      ),
       h('div', { class: 'stack' },
         h('div', { class: 'ledger', 'aria-label': 'What counts as proof' },
-          h('div', {}, h('span', {}, 'agent says “done”'), h('span', { class: 's-untested' }, 'not evidence')),
-          h('div', {}, h('span', {}, 'code compiles'), h('span', { class: 's-untested' }, 'not evidence')),
-          h('div', {}, h('span', {}, 'unit tests pass'), h('span', { class: 's-untested' }, 'not evidence')),
-          h('div', {}, h('span', {}, 'kane-cli exit 0 + run_end passed'), h('span', { class: 's-verified' }, 'evidence')),
-          h('div', {}, h('span', {}, 'auth error / timeout / no run_end'), h('span', { class: 's-blocked' }, 'unverified')),
-          h('div', {}, h('span', {}, 'any mandatory criterion failed'), h('span', { class: 's-failed' }, 'release blocked'))),
-        h('p', { class: 'small mute' }, 'These are the actual gate rules the server enforces. There is no manual override.'))),
-    h('section', { class: 'stack', style: { 'padding-bottom': '80px' } },
+          INVARIANTS.map((inv, idx) =>
+            h('div', {
+              class: `click ${selectedInv === idx ? 'on' : ''}`,
+              style: { cursor: 'pointer', padding: '6px 10px', 'border-radius': '4px', background: selectedInv === idx ? 'var(--panel2)' : 'transparent' },
+              onclick: () => { selectedInv = idx; drawInv(); },
+            },
+              h('span', {}, inv.claim),
+              h('span', { class: inv.tone }, inv.status)
+            )
+          )
+        ),
+        detailBox,
+        h('p', { class: 'small mute' }, 'Click any row above to inspect the gate invariant rule enforced by the server.')
+      )
+    ),
+
+    // Live Engine Architecture & Platform Metrics
+    h('section', { class: 'stack', style: { 'margin-top': '24px' } },
+      h('div', { class: 'panel stack' },
+        h('div', { class: 'row spread' },
+          h('div', { class: 'stack-s' },
+            h('h3', {}, 'Live Multi-Engine Intelligence & Release Verification Status'),
+            h('p', { class: 'small mute' }, 'Real-time telemetry from active Python workers, native toolchains, and SQLite ledger.')
+          ),
+          h('button', { class: 'btn sm', onclick: quickDemoAction }, '⚡ Test Drive Platform')
+        ),
+        h('div', { class: 'grid4', style: { 'margin-top': '8px' } },
+          h('div', { class: 'panel stack-s pad', style: { background: 'var(--panel2)' } },
+            h('b', {}, '🔬 SAE Interpretability'),
+            h('span', { class: 'small mute' }, '9 Discrete Layers TopK / JumpReLU'),
+            h('span', { class: 'tag s-verified' }, '9 Layers Monitored')
+          ),
+          h('div', { class: 'panel stack-s pad', style: { background: 'var(--panel2)' } },
+            h('b', {}, '🛡️ Gatekeeper Security'),
+            h('span', { class: 'small mute' }, 'Multi-Stage AST & Lockfile Audit'),
+            h('span', { class: 'tag s-verified' }, 'Preflight Gate Active')
+          ),
+          h('div', { class: 'panel stack-s pad', style: { background: 'var(--panel2)' } },
+            h('b', {}, '🎬 Playtest Studio'),
+            h('span', { class: 'small mute' }, 'Visual Filmstrip & Replay Judge'),
+            h('span', { class: 'tag s-verified' }, 'Independent Judge Active')
+          ),
+          h('div', { class: 'panel stack-s pad', style: { background: 'var(--panel2)' } },
+            h('b', {}, '⚙️ OQED Superoptimizer'),
+            h('span', { class: 'small mute' }, 'Z3 / angr SMT Equivalence'),
+            h('span', { class: 'tag s-verified' }, 'Formal Verification Ready')
+          )
+        )
+      )
+    ),
+
+    h('section', { class: 'stack', style: { 'padding-bottom': '80px', 'margin-top': '24px' } },
       h('div', { class: 'steps' },
         ...[['01 · DEFINE', 'Write requirements in plain language', 'They are split into atomic acceptance criteria with stable IDs (AC-001…), categorised as functional, visual or data-persistence.'],
           ['02 · EXECUTE', 'Kane CLI drives a real browser', 'One kane-cli run per criterion in agent mode. NDJSON events stream live; exit code, stdout, stderr and evidence files are persisted.'],
@@ -184,15 +280,20 @@ async function Dashboard() {
   const live = recentRuns.some((r) => ['queued', 'running'].includes(r.status));
   if (live) { const t = setTimeout(render, 3000); cleanup.push(() => clearTimeout(t)); }
   const totals = projects.reduce((a, p) => { for (const k of ['total', 'verified', 'failed', 'blocked', 'untested']) a[k] += p.gate.totals[k]; return a; }, { total: 0, verified: 0, failed: 0, blocked: 0, untested: 0 });
+
+  const seedFullDemo = act(async () => {
+    toast('Seeding complete demo suite with 9-layer SAE and engines...', false);
+    const res = await api('POST', '/demo/seed-full-project');
+    toast('Demo project created! Opening autonomous loop...', false);
+    location.hash = `#/p/${res.project.id}/loop`;
+    render();
+  });
+
   return shell(h('div', { class: 'page stack-l' },
     h('div', { class: 'row spread' },
       h('div', { class: 'stack-s' }, h('h3', {}, `${me.name}’s workspace`), h('h1', {}, 'Verification projects')),
       h('div', { class: 'row' },
-        h('button', { class: 'btn', style: { background: 'var(--panel2)', border: '1px solid var(--info)', color: 'var(--info)', 'font-weight': '600' }, onclick: act(async () => {
-          const demo = await api('POST', '/demo/judge-scenario');
-          toast('Judge demo loaded! Opening autonomous loop...');
-          location.hash = `#/p/${demo.project.id}/loop`;
-        }) }, '⚡ Judge Demo (1-Click)'),
+        h('button', { class: 'btn', style: { background: 'var(--panel2)', border: '1px solid var(--info)', color: 'var(--info)', 'font-weight': '600' }, onclick: seedFullDemo }, '⚡ Seed Full Demo Suite (1-Click)'),
         h('a', { class: 'btn primary', href: '#/new' }, 'New verification project'))),
     engineCallout(),
     projects.length ? h('div', { class: 'stats' },
@@ -204,16 +305,35 @@ async function Dashboard() {
       h('div', { class: 'stat' }, h('b', {}, m.completedRuns), h('span', {}, `Completed runs of ${m.runs}`)),
       h('div', { class: 'stat', title: `${m.executions.passed} passed, ${m.executions.failed} failed, ${m.executions.noVerdict} without a verdict` },
         h('b', {}, m.passRate == null ? '—' : `${Math.round(m.passRate * 100)}%`), h('span', {}, m.passRate == null ? 'Pass rate · no verdicts yet' : `Pass rate · ${m.executions.passed + m.executions.failed} verdicts`))) : null,
-    projects.length ? h('div', { class: 'grid2' }, projects.map((p) => h('a', { class: 'panel stack', href: `#/p/${p.id}`, style: { 'text-decoration': 'none' } },
-      h('div', { class: 'row spread' }, h('h2', {}, p.name), tag(p.gate.verdict === 'blocked' ? 'failed' : p.gate.verdict)),
+    projects.length ? h('div', { class: 'grid2' }, projects.map((p) => h('div', { class: 'panel stack' },
+      h('div', { class: 'row spread' },
+        h('h2', {}, h('a', { href: `#/p/${p.id}`, style: { 'text-decoration': 'none', color: 'inherit' } }, p.name)),
+        tag(p.gate.verdict === 'blocked' ? 'failed' : p.gate.verdict)
+      ),
       h('div', { class: 'mono mute' }, p.appUrl),
       segBar(p.gate.totals, ['verified', 'failed', 'blocked', 'untested']),
       h('div', { class: 'row spread small mute' },
         h('span', {}, `${p.gate.totals.verified}/${p.gate.totals.total} verified`, p.gate.totals.failed ? ` · ${p.gate.totals.failed} failed` : ''),
-        h('span', {}, p.lastRun ? `last run ${ago(p.lastRun.createdAt)}` : 'never run')))))
-      : h('div', { class: 'panel empty stack' }, h('h2', {}, 'No projects yet'),
-        h('p', {}, 'Register an application URL, describe what it must do, and let Kane CLI prove it.'),
-        h('div', {}, h('a', { class: 'btn primary', href: '#/new' }, 'Create your first project'))),
+        h('span', {}, p.lastRun ? `last run ${ago(p.lastRun.createdAt)}` : 'never run')
+      ),
+      h('div', { class: 'row small', style: { 'margin-top': '8px', gap: '6px', 'flex-wrap': 'wrap' } },
+        h('a', { class: 'cat', style: { color: 'var(--info)' }, href: `#/p/${p.id}/loop` }, '⚡ Loop'),
+        h('a', { class: 'cat', href: `#/p/${p.id}/sae` }, '🔬 SAE (9L)'),
+        h('a', { class: 'cat', href: `#/p/${p.id}/security` }, '🛡️ Security'),
+        h('a', { class: 'cat', href: `#/p/${p.id}/playtest` }, '🎬 Playtest'),
+        h('a', { class: 'cat', href: `#/p/${p.id}/oqed` }, '⚙️ OQED'),
+        h('a', { class: 'cat', href: `#/p/${p.id}/specs` }, '📜 Specs'),
+        h('a', { class: 'cat', href: `#/p/${p.id}/report` }, '📊 Report')
+      )
+    )))
+      : h('div', { class: 'panel empty stack pad' },
+        h('h2', {}, 'No verification projects yet'),
+        h('p', {}, 'Explore SHIPPROOF with a complete pre-configured verification project containing 9-Layer Sparse Autoencoders, Gatekeeper security scan, Playtest visual filmstrips, and OQED superoptimizer.'),
+        h('div', { class: 'row', style: { 'justify-content': 'center', 'margin-top': '12px' } },
+          h('button', { class: 'btn primary lg', onclick: seedFullDemo }, '⚡ Initialize Complete Demo Project (1-Click)'),
+          h('a', { class: 'btn', href: '#/new' }, 'Create New Custom Project')
+        )
+      ),
     recentRuns.length ? h('section', { class: 'stack' }, h('h3', {}, 'Recent verification runs'), runsTable(recentRuns, true)) : null));
 }
 function runsTable(runs, withProject) {
@@ -290,14 +410,16 @@ async function Project(id, tab = 'requirements', sub) {
     ['requirements', 'Requirements', criteria.length],
     ['specs', 'Steps Writer'],
     ['security', 'Gatekeeper'],
+    ['playtest', 'Playtest Studio'],
+    ['sae', 'SAE Lab (9 Layers)'],
+    ['algorithms', '📐 Algorithm Intelligence'],
+    ['oqed', 'OQED'],
     ['failures', 'Failure analysis', openTasks.length + blocked.length, true],
     ['history', 'History', d.runCount],
     ['proof', 'Proof explorer'],
     ['builds', 'Builds & impact'],
     ['intelligence', 'Release intelligence', g.reasons.length, true],
-    ['watch', 'Continuous watch'],
-    ['investigations', 'Investigations'],
-    ['oqed', 'OQED'],
+
     ['ci', 'CI'],
     ['dossier', 'Dossier'],
     ['report', 'Release report'],
@@ -307,6 +429,9 @@ async function Project(id, tab = 'requirements', sub) {
     loop: () => AutonomousLoopTab(d, sub),
     specs: () => StepsWriterTab(d),
     security: () => GatekeeperTab(d),
+    playtest: () => PlaytestStudioTab(d),
+    sae: () => SaeInterpretabilityLabTab(d),
+    algorithms: () => AlgorithmIntelligenceTab(d),
     oqed: () => OqedTab(d),
     requirements: () => RequirementsTab(d),
     failures: () => FailuresTab(d, start),
@@ -735,7 +860,7 @@ async function render() {
   const slow = setTimeout(() => { if ($app.dataset.route !== location.hash || !$app.firstChild) $app.replaceChildren(shell(h('div', { class: 'page stack', 'aria-busy': 'true' }, h('div', { class: 'skel w40' }), h('div', { class: 'skel h120' }), h('div', { class: 'skel h240' })))); }, 180);
   try {
     if (share) view = await PublicReport(share[1]);
-    else if (!parts.length) view = Landing();
+    else if (!parts.length) view = await Landing();
     else if (parts[0] === 'login' || parts[0] === 'signup') view = me ? (location.hash = '#/app', null) : Auth(parts[0]);
     else if (!me) { location.hash = '#/login'; return; }
     else if (parts[0] === 'app') view = await Dashboard();

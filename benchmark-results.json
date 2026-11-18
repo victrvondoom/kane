@@ -1,0 +1,64 @@
+{
+  "impact": {
+    "graphBuildTimeMs": 142.23,
+    "totalNodes": 857,
+    "totalEdges": 2307,
+    "impactAnalysisTimeMs": 134.67,
+    "totalCriteria": 7,
+    "selectedCount": 4,
+    "testReductionPct": 42.9,
+    "confidenceScore": 0.435
+  },
+  "nsga2": {
+    "runtimeMs": 9.39,
+    "populationSize": 30,
+    "generations": 15,
+    "paretoFrontierSize": 30,
+    "avgStateCoverage": 5.5,
+    "avgDiversity": 1.74,
+    "avgDefectPotential": 7.05,
+    "avgActionLength": 12.6
+  },
+  "deltaDebugging": {
+    "originalSteps": 16,
+    "ddminReducedSteps": 2,
+    "probDDReducedSteps": 2,
+    "reductionRatio": 0.875,
+    "ddminEvaluations": 49,
+    "probDDEvaluations": 29,
+    "evaluationsSavedPct": 40.8,
+    "ddminTimeMs": 0.54,
+    "probDDTimeMs": 0.35
+  },
+  "sbfl": {
+    "localizationTimeMs": 0.41,
+    "totalTests": 50,
+    "totalComponents": 15,
+    "top1Candidate": "server/discount.js",
+    "top1OchiaiScore": 0.9393,
+    "isTop1Accurate": true,
+    "isTop3Accurate": true
+  },
+  "taint": {
+    "scanTimeMs": 20.93,
+    "scannedFilesCount": 60,
+    "totalFlowsFound": 0,
+    "throughputFilesPerSec": 2866.7
+  },
+  "minhash": {
+    "signatureComputationTimeMs": 0.71,
+    "exactJaccard": 0.6491,
+    "estimatedJaccard": 0.6328,
+    "estimationAbsoluteError": 0.0163,
+    "numHashFunctions": 128
+  },
+  "merkle": {
+    "totalLeavesInserted": 500,
+    "totalAppendTimeMs": 259.42,
+    "throughputLeavesPerSec": 1927,
+    "proofGenerationTimeUs": 3792.6,
+    "proofVerificationTimeUs": 89.2,
+    "isProofValid": true,
+    "treeHeight": 9
+  }
+}

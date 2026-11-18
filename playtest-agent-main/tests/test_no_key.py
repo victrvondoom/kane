@@ -66,8 +66,11 @@ def test_paid_commands_stop_before_side_effects_without_key(monkeypatch, args):
     monkeypatch.setattr("requests.Session.request", lambda *a, **k: calls.append("session"))
     monkeypatch.setattr("metaclient.client.MetaClient._call", lambda *a, **k: calls.append("meta"))
     monkeypatch.setattr("metaclient.ledger.Ledger.reserve", lambda *a, **k: calls.append("reserve"))
-    import playwright.sync_api
-    monkeypatch.setattr(playwright.sync_api, "sync_playwright", lambda *a, **k: calls.append("browser"))
+    try:
+        import playwright.sync_api
+        monkeypatch.setattr(playwright.sync_api, "sync_playwright", lambda *a, **k: calls.append("browser"))
+    except ImportError:
+        pass
 
     err = io.StringIO()
     with contextlib.redirect_stderr(err):

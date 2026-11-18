@@ -27,14 +27,14 @@ const INSPECT = new Set(['pack', 'cache', 'diff', 'view', 'publish'])
 const fs = require('fs')
 
 // commands that never install the project's dependency tree; every other command gets the lockfile check
-const READ_ONLY = new Set(['run-script', 'test', 'start', 'stop', 'restart', 'view', 'outdated', 'search', 'ls', 'config',
+const READ_ONLY = new Set(['run-script', 'run', 'test', 'start', 'stop', 'restart', 'view', 'outdated', 'search', 'ls', 'config',
   'help', 'help-search', 'version', 'whoami', 'ping', 'root', 'prefix', 'docs', 'bugs', 'repo', 'explain', 'query',
   'fund', 'doctor', 'sbom', 'pkg', 'completion', 'login', 'logout', 'adduser', 'token', 'profile', 'owner', 'access',
   'team', 'org', 'star', 'unstar', 'stars', 'hook', 'dist-tag', 'deprecate', 'undeprecate', 'unpublish', 'cache',
   'diff', 'pack', 'publish', 'edit', 'explore', 'get', 'set', 'find-dupes'])
 const PUBLIC = ['https://registry.npmjs.org/', 'https://registry.yarnpkg.com/']
 // commands that never contact a registry
-const LOCAL_ONLY = new Set(['run-script', 'test', 'start', 'stop', 'restart', 'ls', 'config', 'help', 'help-search',
+const LOCAL_ONLY = new Set(['run-script', 'run', 'test', 'start', 'stop', 'restart', 'ls', 'config', 'help', 'help-search',
   'version', 'root', 'prefix', 'explain', 'query', 'pkg', 'completion', 'edit', 'explore', 'sbom', 'get', 'set'])
 const slash = (u) => String(u).replace(/\/?$/, '/')
 
@@ -190,7 +190,8 @@ async function main () {
   const remain = [...config.parsedArgv.remain]
   projectPrefix = config.localPrefix || process.cwd()
   const raw = remain.shift()
-  const command = raw === undefined ? null : (deref(raw) || null)
+  let command = raw === undefined ? null : (deref(raw) || null)
+  if (command === 'run') command = 'run-script'
   let specs = []
   const inspect = []
   if (command && INSTALL.has(command)) {
