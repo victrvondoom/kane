@@ -166,11 +166,14 @@ def test_regress_cli_and_report(tmp_path):
 
 
 def test_floor_flag_is_isolated_and_shared_by_art():
-    source = Path("game/index.html").read_text(encoding="utf-8")
+    root = Path(__file__).resolve().parents[1]
+    game_path = Path("game/index.html") if Path("game/index.html").exists() else root / "game/index.html"
+    source = game_path.read_text(encoding="utf-8")
     assert "6: false" in source and "window.__bugHit[6] = true" in source
     assert "if (BUGS.has(6))" in source
     assert "{x: 0, y: GROUND, w: 300, h: 110}" in source
-    assert json.loads(Path("games/cave-courier-art.json").read_text())["url"] == "game/index.html"
+    art_path = Path("games/cave-courier-art.json") if Path("games/cave-courier-art.json").exists() else root / "games/cave-courier-art.json"
+    assert json.loads(art_path.read_text())["url"] == "game/index.html"
 
 
 def test_goal_without_breakage(tmp_path):

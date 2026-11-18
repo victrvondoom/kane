@@ -23,6 +23,7 @@ import { registerInvestigationRoutes } from './routes-investigations.js';
 import { registerAutonomousRoutes } from './routes-autonomous.js';
 import { createLogBuffer } from './oncall/logbuffer.js';
 import { createOncall } from './oncall/index.js';
+import { createAlgorithmsRouter } from './routes-algorithms.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CATEGORIES = ['functional', 'visual', 'persistence'];
@@ -139,8 +140,38 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
   }));
   api.post('/auth/logout', h((req, res) => { destroySession(db, req, res); res.json({ ok: true }); }));
   api.get('/auth/me', h((req, res) => res.json({ user: currentUser(db, req) })));
+  api.post('/auth/quick-demo', h((req, res) => {
+    const email = 'demo-operator@shipproof.test';
+    let u = db.get('SELECT * FROM users WHERE email = ?', email);
+    if (!u) {
+      const r = db.run('INSERT INTO users (email, name, pass_hash, created_at) VALUES (?, ?, ?, ?)',
+        email, 'Principal Demo Operator', hashPassword('DemoPassword123!'), now());
+      u = db.get('SELECT * FROM users WHERE id = ?', Number(r.lastInsertRowid));
+    }
+    createSession(db, res, u.id);
+    audit(db, { userId: u.id, action: 'auth.quick_demo', requestId: req.id });
+    res.json({ user: { id: u.id, email: u.email, name: u.name } });
+  }));
 
   // ---------- system ----------
+  api.get('/system/public', h(async (req, res) => {
+    const k = await kaneStatus(config).catch(() => null);
+    const projCount = db.get('SELECT count(*) as c FROM projects')?.c || 0;
+    const runCount = db.get('SELECT count(*) as c FROM runs')?.c || 0;
+    const critCount = db.get('SELECT count(*) as c FROM criteria WHERE archived = 0')?.c || 0;
+    const saeCount = db.get('SELECT count(*) as c FROM sae_models')?.c || 0;
+    res.json({
+      kane: k ? { state: k.state, version: k.version, ready: k.ready, detail: k.detail } : null,
+      stats: { projects: projCount, runs: runCount, criteria: critCount, saeModels: saeCount },
+      engines: {
+        kane: k?.ready ? 'READY' : 'STANDBY',
+        gatekeeper: 'ACTIVE (Multi-Stage AST/OSV/Forensics)',
+        playtest: 'ACTIVE (Visual Filmstrip & Independent Judge)',
+        oqed: 'ACTIVE (SMT Superoptimizer)',
+        sae: 'ACTIVE (9 Discrete Layers TopK/JumpReLU)',
+      },
+    });
+  }));
   api.get('/system', auth, h(async (req, res) => res.json({ kane: await kaneStatus(config, { fresh: req.query.fresh === '1' }), runner: runner.state() })));
   api.get('/demo-template', auth, h(async (req, res) => {
     let reachable = false;
@@ -615,7 +646,8 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
   watch.start();
   events.start();
 
-  registerAutonomousRoutes(api, { db, orchestrator, runner, ROOT: workspaceDir, config, auth, project, h, HttpError, bad, baseUrl });
+  registerAutonomousRoutes(api, { db, orchestrator, runner, ROOT: workspaceDir, dataDir, config, auth, project, h, HttpError, bad, baseUrl });
+  api.use('/algorithms', createAlgorithmsRouter(db, { workspaceRoot: workspaceDir }));
   const oncall = createOncall({ db, dataDir, workspaceDir, kaneCfg: config, runner, orchestrator, decide: (p) => decide(p), startRun, keys, logBuffer, log, ...oncallOptions });
   oncall.routes(api, { auth, h, HttpError, db });
   api.use((req, res) => res.status(404).json({ error: 'Not found' }));
