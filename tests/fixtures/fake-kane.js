@@ -4,6 +4,7 @@
 // It is never used by the running product (KANE_CLI_BIN defaults to the real `kane-cli`).
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 const args = process.argv.slice(2);
 if (args[0] === '--version') { console.log('0.0.0-fixture'); process.exit(0); }
 if (args[0] === 'whoami') process.exit(0);
@@ -37,6 +38,12 @@ if (state.mode === 'pass_no_evidence') {
 if (state.mode === 'hang') { out({ type: 'stream_start' }); setTimeout(() => {}, 600000); }
 else {
   let fails = (state.failWhen || []).some((s) => objective.includes(s));
+  let observed = '80.00';
+  if (state.mode === 'eval') { // checks the application's real code: the observed total must equal expectTotal
+    const mod = await import(pathToFileURL(path.join(process.env.FAKE_APP_DIR || '', 'src', 'pricing.js')).href + '?t=' + Date.now());
+    observed = Number(mod.total).toFixed(2);
+    fails = Number(mod.total) !== state.expectTotal;
+  }
   if (state.failTimes !== undefined) {
     if (state.failTimes > 0) {
       fails = true;
@@ -55,7 +62,7 @@ else {
   out({ step: 1, status: 'done', remark: 'Opened start URL' });
   if (args.includes('--access-key')) out({ type: 'raw_echo', leaked: args[args.indexOf('--access-key') + 1] });
   if (fails) {
-    out({ step: 2, status: 'failed', remark: 'Order total shows $80.00, expected $72.00' });
+    out({ step: 2, status: 'failed', remark: `Order total shows $${observed}, expected $${(state.expectTotal ?? 72).toFixed(2)}` });
     out({ type: 'run_end', status: 'failed', summary: 'Assertion failed: total was $80.00', reason: 'Expected outcome not observed', session_dir: sessionDir, credits_consumed: 3 });
     process.exit(1);
   }

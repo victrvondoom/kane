@@ -7,7 +7,13 @@
   "engines": {
     "node": ">=22.5"
   },
+  "bin": {
+    "shipproof": "cli/shipproof.js"
+  },
   "scripts": {
+    "shipproof": "node cli/shipproof.js",
+    "shipproof:tenant": "node cli/shipproof.js tenant",
+    "demo:tenant": "node demo/tenant-boundary/run-demo.js",
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
     "demo:app": "node --watch demo-app/server.js",

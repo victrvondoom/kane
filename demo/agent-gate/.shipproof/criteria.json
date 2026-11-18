@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "app": {
+    "url": "http://127.0.0.1:4100/",
+    "context": "Add an item to the cart, enter the coupon code SAVE10 at checkout, and read the order total."
+  },
+  "protected": [],
+  "criteria": [
+    {
+      "id": "AC-001",
+      "text": "After the coupon SAVE10 is applied at checkout, the order total is $72.00 (10% off the $80.00 item).",
+      "paths": ["src/**"]
+    }
+  ]
+}

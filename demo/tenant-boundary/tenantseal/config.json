@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "target": { "url": "http://127.0.0.1:4300/" },
+  "personas": {
+    "owner": { "identity": "alice", "passwordEnv": "TB_ALICE_PASSWORD" },
+    "second": { "identity": "bob", "passwordEnv": "TB_BOB_PASSWORD" },
+    "anonymous": { "identity": "anonymous" }
+  },
+  "workflows": {
+    "login": "/login",
+    "homePath": "/docs",
+    "createRecordPath": "/docs/new",
+    "readPathTemplate": "/docs/:id",
+    "editPathTemplate": "/docs/:id/edit"
+  },
+  "records": { "bodyField": "body" },
+  "policy": {
+    "denialStatuses": [401, 403, 404],
+    "permittedPaths": ["/docs/:id", "/docs/:id/edit", "/api/docs/:id", "/api/docs/:id/activity"]
+  },
+  "limits": { "timeoutSeconds": 120, "maxRuns": 40, "retries": 1 },
+  "app": { "sourceDir": "." }
+}
