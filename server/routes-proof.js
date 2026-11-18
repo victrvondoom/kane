@@ -5,6 +5,7 @@ import { now, audit } from './db.js';
 import { rateLimit } from './auth.js';
 import { registerBuild, buildView, impactPlan, traceCriterion, getPolicy, setPolicy, DEFAULT_POLICY, INVARIANTS, persistDecision, buildDossier } from './proof.js';
 import { verifyDossier } from './keys.js';
+import { buildImportGraph, selectTests } from './impact-graph.js';
 
 export function registerProofRoutes(api, x) {
   const { db, runner, keys, evidenceRoot, h, auth, agent, project, bad, HttpError, record, decide, startRun, runView, baseUrl, validUrl, events } = x;
@@ -45,6 +46,35 @@ export function registerProofRoutes(api, x) {
   api.get('/projects/:pid/builds/:bid/impact', auth, h((req, res) => {
     const p = project(req);
     res.json(impactPlan(db, p, ownedBuild(p, req.params.bid), { acceptFixture: x.config.acceptFixtureEngine, engineVersion: x.getEngineVersion() }));
+  }));
+  // Algorithm 1: hybrid graph selection. The caller supplies the repository's JavaScript sources at this commit; the
+  // graph is built from them and nothing is executed. Limits keep the request bounded.
+  const SELECTION_MAX_FILES = 3000, SELECTION_MAX_BYTES = 5_000_000;
+  api.post('/projects/:pid/builds/:bid/selection', auth, h((req, res) => {
+    const p = project(req);
+    const b = ownedBuild(p, req.params.bid);
+    const sources = req.body?.sources;
+    if (!sources || typeof sources !== 'object' || Array.isArray(sources)) throw bad('sources must map repository-relative paths to file contents');
+    const entries = Object.entries(sources);
+    if (entries.length > SELECTION_MAX_FILES) throw bad(`at most ${SELECTION_MAX_FILES} files`);
+    let bytes = 0;
+    for (const [path, text] of entries) {
+      if (typeof text !== 'string' || path.length > 300) throw bad('each source must be text under a path of at most 300 characters');
+      bytes += text.length;
+    }
+    if (bytes > SELECTION_MAX_BYTES) throw bad('sources exceed 5 MB');
+    const budget = req.body?.budget ?? null;
+    if (budget !== null && !(typeof budget === 'object' && ((Number.isInteger(budget.maxTests) && budget.maxTests >= 0) || (Number.isInteger(budget.maxMs) && budget.maxMs >= 0))))
+      throw bad('budget must be { maxTests } or { maxMs } with a whole number of zero or more');
+    const graph = buildImportGraph(Object.fromEntries(entries));
+    const criteria = db.all('SELECT id, key, paths, mandatory, criticality, category FROM criteria WHERE project_id = ? AND archived = 0 ORDER BY id', p.id).map((c) => {
+      const stat = db.get(`SELECT COUNT(*) attempts, SUM(status = 'failed') failures FROM results WHERE criterion_id = ? AND status IN ('passed','failed','error','timeout')`, c.id);
+      const last = db.get(`SELECT duration_ms FROM results WHERE criterion_id = ? AND status IN ('passed','failed') ORDER BY id DESC LIMIT 1`, c.id);
+      return { id: c.id, key: c.key, paths: JSON.parse(c.paths || '[]'), mandatory: !!c.mandatory, criticality: c.criticality, category: c.category,
+        durationMs: last?.duration_ms ?? null, history: { attempts: stat.attempts, failures: stat.failures || 0 } };
+    });
+    const changed = b.paths_known ? JSON.parse(b.changed_paths || '[]') : null;
+    res.json({ build: buildView(b), plan: selectTests({ changed, criteria, graph, budget }) });
   }));
 
   // ---------- release intelligence & policy ----------

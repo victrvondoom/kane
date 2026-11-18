@@ -1,0 +1,696 @@
+{
+ "schema": "shipproof.bench.sbfl/v1",
+ "generatedAt": "2026-11-17T20:58:42.469Z",
+ "node": "v22.23.5",
+ "seed": 7,
+ "dataset": "repository-derived: seeded operator mutants in server/ modules; spectrum from measured coverage of tests/",
+ "settings": {
+  "fastMs": 60000,
+  "maxModules": 16,
+  "sitesPerModule": 2,
+  "maxTestsPerMutant": 25
+ },
+ "spectrumGranularity": "one execution per test file",
+ "components": 51,
+ "detectedMutants": 12,
+ "undetectedMutants": 17,
+ "metrics": {
+  "ochiai": {
+   "top1": 0,
+   "top3": 0,
+   "mrr": 0.025536793829476757,
+   "meanRank": 39.166666666666664
+  },
+  "dependencyDistance": {
+   "top1": 0,
+   "top3": 0.16666666666666666,
+   "mrr": 0.1835395269218799,
+   "meanRank": 9.416666666666666
+  },
+  "randomExpected": {
+   "meanRank": 26
+  }
+ },
+ "mutants": [
+  {
+   "module": "server/gate.js",
+   "operator": "=== -> !==",
+   "at": 2694,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/fault-localization.test.js",
+    "tests/hardening.test.js",
+    "tests/impact-graph.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/playtest.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/unit.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": [
+    "tests/autonomous-loop.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/unit.test.js"
+   ],
+   "ochiaiRank": 41,
+   "ochiaiScore": 0.7071067811865476,
+   "ochiaiNef": 7,
+   "ochiaiNep": 7,
+   "dependencyRank": 6,
+   "randomExpectedRank": 26,
+   "candidates": 51,
+   "failingExecutions": 7
+  },
+  {
+   "module": "server/netpolicy.js",
+   "operator": "=== -> !==",
+   "at": 2193,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": [
+    "tests/hardening.test.js"
+   ],
+   "ochiaiRank": 39,
+   "ochiaiScore": 0.31622776601683794,
+   "ochiaiNef": 1,
+   "ochiaiNep": 9,
+   "dependencyRank": 4,
+   "randomExpectedRank": 26,
+   "candidates": 51,
+   "failingExecutions": 1
+  },
+  {
+   "module": "server/oncall/checks.js",
+   "operator": "false -> true",
+   "at": 2069,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": [
+    "tests/oncall.test.js"
+   ],
+   "ochiaiRank": 39,
+   "ochiaiScore": 0.31622776601683794,
+   "ochiaiNef": 1,
+   "ochiaiNep": 9,
+   "dependencyRank": 3,
+   "randomExpectedRank": 26,
+   "candidates": 51,
+   "failingExecutions": 1
+  },
+  {
+   "module": "server/oncall/config.js",
+   "operator": "|| -> &&",
+   "at": 1470,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": [
+    "tests/oncall.test.js"
+   ],
+   "ochiaiRank": 39,
+   "ochiaiScore": 0.31622776601683794,
+   "ochiaiNef": 1,
+   "ochiaiNep": 9,
+   "dependencyRank": 4,
+   "randomExpectedRank": 26,
+   "candidates": 51,
+   "failingExecutions": 1
+  },
+  {
+   "module": "server/oncall/logbuffer.js",
+   "operator": "|| -> &&",
+   "at": 699,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": [
+    "tests/oncall.test.js"
+   ],
+   "ochiaiRank": 39,
+   "ochiaiScore": 0.31622776601683794,
+   "ochiaiNef": 1,
+   "ochiaiNep": 9,
+   "dependencyRank": 17,
+   "randomExpectedRank": 26,
+   "candidates": 51,
+   "failingExecutions": 1
+  },
+  {
+   "module": "server/oncall/sessions.js",
+   "operator": "|| -> &&",
+   "at": 8271,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": [
+    "tests/oncall.test.js"
+   ],
+   "ochiaiRank": 39,
+   "ochiaiScore": 0.31622776601683794,
+   "ochiaiNef": 1,
+   "ochiaiNep": 9,
+   "dependencyRank": 35,
+   "randomExpectedRank": 26,
+   "candidates": 51,
+   "failingExecutions": 1
+  },
+  {
+   "module": "server/orchestrator.js",
+   "operator": "&& -> ||",
+   "at": 21264,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": [
+    "tests/loop-truth.test.js"
+   ],
+   "ochiaiRank": 39,
+   "ochiaiScore": 0.31622776601683794,
+   "ochiaiNef": 1,
+   "ochiaiNep": 9,
+   "dependencyRank": 6,
+   "randomExpectedRank": 26,
+   "candidates": 51,
+   "failingExecutions": 1
+  },
+  {
+   "module": "server/orchestrator.js",
+   "operator": "=== -> !==",
+   "at": 19416,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": [
+    "tests/autonomous-loop.test.js",
+    "tests/loop-truth.test.js"
+   ],
+   "ochiaiRank": 39,
+   "ochiaiScore": 0.4472135954999579,
+   "ochiaiNef": 2,
+   "ochiaiNep": 8,
+   "dependencyRank": 6,
+   "randomExpectedRank": 26,
+   "candidates": 51,
+   "failingExecutions": 2
+  },
+  {
+   "module": "server/regression.js",
+   "operator": "&& -> ||",
+   "at": 4811,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": [
+    "tests/autonomous-loop.test.js",
+    "tests/loop-truth.test.js"
+   ],
+   "ochiaiRank": 39,
+   "ochiaiScore": 0.4472135954999579,
+   "ochiaiNef": 2,
+   "ochiaiNep": 8,
+   "dependencyRank": 7,
+   "randomExpectedRank": 26,
+   "candidates": 51,
+   "failingExecutions": 2
+  },
+  {
+   "module": "server/routes-proof.js",
+   "operator": "=== -> !==",
+   "at": 13669,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": [
+    "tests/events.test.js",
+    "tests/proof.test.js"
+   ],
+   "ochiaiRank": 39,
+   "ochiaiScore": 0.4472135954999579,
+   "ochiaiNef": 2,
+   "ochiaiNep": 8,
+   "dependencyRank": 18,
+   "randomExpectedRank": 26,
+   "candidates": 51,
+   "failingExecutions": 2
+  },
+  {
+   "module": "server/telemetry.js",
+   "operator": "=== -> !==",
+   "at": 4628,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": [
+    "tests/telemetry.test.js"
+   ],
+   "ochiaiRank": 39,
+   "ochiaiScore": 0.31622776601683794,
+   "ochiaiNef": 1,
+   "ochiaiNep": 9,
+   "dependencyRank": 3,
+   "randomExpectedRank": 26,
+   "candidates": 51,
+   "failingExecutions": 1
+  },
+  {
+   "module": "server/watch.js",
+   "operator": "=== -> !==",
+   "at": 15870,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": [
+    "tests/events.test.js",
+    "tests/watch.test.js"
+   ],
+   "ochiaiRank": 39,
+   "ochiaiScore": 0.4472135954999579,
+   "ochiaiNef": 2,
+   "ochiaiNep": 8,
+   "dependencyRank": 4,
+   "randomExpectedRank": 26,
+   "candidates": 51,
+   "failingExecutions": 2
+  }
+ ],
+ "undetected": [
+  {
+   "module": "server/coding-agent.js",
+   "operator": "|| -> &&",
+   "at": 1364,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": []
+  },
+  {
+   "module": "server/coding-agent.js",
+   "operator": "|| -> &&",
+   "at": 1444,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": []
+  },
+  {
+   "module": "server/netpolicy.js",
+   "operator": "&& -> ||",
+   "at": 530,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": []
+  },
+  {
+   "module": "server/oncall/checks.js",
+   "operator": "|| -> &&",
+   "at": 4157,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": []
+  },
+  {
+   "module": "server/oncall/config.js",
+   "operator": "&& -> ||",
+   "at": 331,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": []
+  },
+  {
+   "module": "server/oncall/logbuffer.js",
+   "operator": "&& -> ||",
+   "at": 732,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": []
+  },
+  {
+   "module": "server/oncall/redact.js",
+   "operator": "&& -> ||",
+   "at": 1681,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": []
+  },
+  {
+   "module": "server/oncall/redact.js",
+   "operator": "&& -> ||",
+   "at": 2007,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": []
+  },
+  {
+   "module": "server/oncall/sessions.js",
+   "operator": "=== -> !==",
+   "at": 12958,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": []
+  },
+  {
+   "module": "server/oncall/tools/incident.js",
+   "operator": "true -> false",
+   "at": 1492,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": []
+  },
+  {
+   "module": "server/oncall/tools/incident.js",
+   "operator": "|| -> &&",
+   "at": 8748,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": []
+  },
+  {
+   "module": "server/oqed.js",
+   "operator": "=== -> !==",
+   "at": 2279,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/oqed.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": []
+  },
+  {
+   "module": "server/oqed.js",
+   "operator": "false -> true",
+   "at": 3264,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/oqed.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": []
+  },
+  {
+   "module": "server/regression.js",
+   "operator": "|| -> &&",
+   "at": 5969,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": []
+  },
+  {
+   "module": "server/routes-proof.js",
+   "operator": "|| -> &&",
+   "at": 21647,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": []
+  },
+  {
+   "module": "server/telemetry.js",
+   "operator": "=== -> !==",
+   "at": 1646,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": []
+  },
+  {
+   "module": "server/watch.js",
+   "operator": "|| -> &&",
+   "at": 9577,
+   "loaders": [
+    "tests/autonomous-loop.test.js",
+    "tests/events.test.js",
+    "tests/hardening.test.js",
+    "tests/integration.test.js",
+    "tests/investigations.test.js",
+    "tests/loop-truth.test.js",
+    "tests/oncall.test.js",
+    "tests/proof.test.js",
+    "tests/telemetry.test.js",
+    "tests/watch.test.js"
+   ],
+   "failing": []
+  }
+ ]
+}

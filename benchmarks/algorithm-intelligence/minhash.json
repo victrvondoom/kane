@@ -1,0 +1,137 @@
+{
+ "schema": "shipproof.bench.minhash/v1",
+ "seed": 20260617,
+ "dataset": "repository-derived base sources (server/*.js) with seeded synthetic variants; see module docstring",
+ "base_files": 29,
+ "entries": 145,
+ "positive_pairs": 290,
+ "total_pairs": 10440,
+ "lsh_config": {
+  "num_perm": 128,
+  "bands": 32,
+  "rows": 4,
+  "approx_candidate_threshold": 0.4204
+ },
+ "per_variant": {
+  "rename": {
+   "pairs": 29,
+   "lsh_candidate_recall": 1.0,
+   "exact_jaccard_min": 1.0,
+   "exact_jaccard_median": 1.0
+  },
+  "edit": {
+   "pairs": 29,
+   "lsh_candidate_recall": 1.0,
+   "exact_jaccard_min": 0.7143,
+   "exact_jaccard_median": 0.9646
+  },
+  "heavy": {
+   "pairs": 29,
+   "lsh_candidate_recall": 1.0,
+   "exact_jaccard_min": 0.6957,
+   "exact_jaccard_median": 0.8846
+  },
+  "partial": {
+   "pairs": 29,
+   "lsh_candidate_recall": 0.8966,
+   "exact_jaccard_min": 0.1926,
+   "exact_jaccard_median": 0.5847
+  }
+ },
+ "threshold_sweep": [
+  {
+   "threshold": 0.3,
+   "brute_force": {
+    "predicted": 285,
+    "precision": 1.0,
+    "recall": 0.9828
+   },
+   "lsh": {
+    "predicted": 274,
+    "precision": 1.0,
+    "recall": 0.9448
+   }
+  },
+  {
+   "threshold": 0.4,
+   "brute_force": {
+    "predicted": 280,
+    "precision": 1.0,
+    "recall": 0.9655
+   },
+   "lsh": {
+    "predicted": 274,
+    "precision": 1.0,
+    "recall": 0.9448
+   }
+  },
+  {
+   "threshold": 0.5,
+   "brute_force": {
+    "predicted": 269,
+    "precision": 1.0,
+    "recall": 0.9276
+   },
+   "lsh": {
+    "predicted": 268,
+    "precision": 1.0,
+    "recall": 0.9241
+   }
+  },
+  {
+   "threshold": 0.6,
+   "brute_force": {
+    "predicted": 219,
+    "precision": 1.0,
+    "recall": 0.7552
+   },
+   "lsh": {
+    "predicted": 219,
+    "precision": 1.0,
+    "recall": 0.7552
+   }
+  },
+  {
+   "threshold": 0.7,
+   "brute_force": {
+    "predicted": 194,
+    "precision": 1.0,
+    "recall": 0.669
+   },
+   "lsh": {
+    "predicted": 194,
+    "precision": 1.0,
+    "recall": 0.669
+   }
+  }
+ ],
+ "production": {
+  "verify_threshold": 0.5,
+  "relationships": 268,
+  "false_positive_pairs": 0,
+  "precision": 1.0,
+  "recall": 0.9241,
+  "stats": {
+   "fingerprints": 145,
+   "candidate_pairs": 317,
+   "bucket_pairs_enumerated": 4694,
+   "verified": 288,
+   "relationships": 268,
+   "lsh_threshold": 0.4204
+  }
+ },
+ "cost": {
+  "fingerprint_ms": 5257.7,
+  "lsh_candidate_ms": 1.52,
+  "bucket_pairs_enumerated": 4694,
+  "candidate_pairs": 317,
+  "brute_force_all_pairs_ms": 1168.7,
+  "brute_force_pairs_compared": 10440,
+  "relationship_ms": 46.2
+ },
+ "limitations": [
+  "Variants are synthetic: real campaigns reuse code with unrelated edits and different structure.",
+  "The corpus is one repository's sources; the negatives are unrelated programs from that repository, not malicious packages.",
+  "Similarity is not a maliciousness label; a campaign conclusion needs additional evidence."
+ ]
+}
