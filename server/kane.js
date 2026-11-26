@@ -10,6 +10,14 @@ import crypto from 'node:crypto';
 // On Windows, `npm install -g` creates kane-cli.cmd, which Node cannot spawn directly (ENOENT). For a bare
 // command name, run the package's own JavaScript entry point with Node instead. Resolved once per process.
 const engineEntryCache = new Map();
+
+// Node's fetch ignores HTTPS_PROXY unless NODE_USE_ENV_PROXY is set, so behind an egress proxy kane-cli cannot
+// reach TestMu and reports valid credentials as "not valid". Opt kane-cli in whenever a proxy is configured.
+export function kaneEnv(env = process.env) {
+  const proxied = env.HTTPS_PROXY || env.https_proxy || env.HTTP_PROXY || env.http_proxy;
+  return proxied && env.NODE_USE_ENV_PROXY == null ? { ...env, NODE_USE_ENV_PROXY: '1' } : { ...env };
+}
+
 export function resolveEngineBin(bin) {
   if (process.platform !== 'win32' || path.isAbsolute(bin) || /[\\/]/.test(bin) || /\.(c|m)?js$|\.exe$/i.test(bin)) return bin;
   if (engineEntryCache.has(bin)) return engineEntryCache.get(bin);
@@ -160,7 +168,7 @@ export function runKane({ objective, url, workDir, variables = [], config = kane
       const spawnArgs = isJs ? [config.bin, ...args] : args;
       // Own process group so the browser Kane launches is cleaned up with it.
       child = spawn(spawnBin, spawnArgs, { cwd: workDir, stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32',
-        env: { ...process.env, KANE_CLI_USER_AGENT: 'shipproof', NO_COLOR: '1', FORCE_COLOR: '0' } });
+        env: { ...kaneEnv(), KANE_CLI_USER_AGENT: 'shipproof', NO_COLOR: '1', FORCE_COLOR: '0' } });
     } catch (e) { return finish({ spawnError: e }); }
     onSpawn({ pid: child.pid, cancel() { cancelled = true; kill('SIGTERM'); setTimeout(() => kill('SIGKILL'), 3000).unref(); } });
     const handleLine = (line) => {
@@ -246,7 +254,7 @@ const ex = (bin, args) => new Promise((res) => {
   const isJs = /\.[cm]?js$/i.test(bin) && fs.existsSync(bin);
   const execBin = isJs ? process.execPath : bin;
   const execArgs = isJs ? [bin, ...args] : args;
-  execFile(execBin, execArgs, { timeout: 15000, env: { ...process.env, NO_COLOR: '1' } },
+  execFile(execBin, execArgs, { timeout: 15000, env: { ...kaneEnv(), NO_COLOR: '1' } },
     (err, stdout, stderr) => res({ code: err ? (typeof err.code === 'number' ? err.code : 1) : 0, out: String(stdout) + String(stderr), missing: !!(err && err.code === 'ENOENT') }));
 });
 
