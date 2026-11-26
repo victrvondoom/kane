@@ -3,3 +3,4 @@ data/
 .env
 .testmuai/
 *.log
+__pycache__/
