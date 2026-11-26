@@ -474,9 +474,10 @@ test('Algorithm REST API: exposes all 7 algorithmic engines through HTTP endpoin
         generations: 3,
       }),
     });
-    assert.equal(nsgaRes.status, 200);
+    // The endpoint must not report exploration results: no browser runs, so it refuses (see routes-algorithms.js).
+    assert.equal(nsgaRes.status, 501);
     const nsgaJson = await nsgaRes.json();
-    assert.ok(nsgaJson.frontier.length > 0);
+    assert.equal(nsgaJson.status, 'not_connected');
 
     // 3. POST /ddmin/reduce
     const ddRes = await fetch(`${base}/ddmin/reduce`, {
