@@ -1,4 +1,5 @@
 import express from 'express';
+import { engineHealth } from './engine-health.js';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -163,16 +164,11 @@ export function createApp({ dataDir = path.resolve(process.env.DATA_DIR || './da
     res.json({
       kane: k ? { state: k.state, version: k.version, ready: k.ready, detail: k.detail } : null,
       stats: { projects: projCount, runs: runCount, criteria: critCount, saeModels: saeCount },
-      engines: {
-        kane: k?.ready ? 'READY' : 'STANDBY',
-        gatekeeper: 'ACTIVE (Multi-Stage AST/OSV/Forensics)',
-        playtest: 'ACTIVE (Visual Filmstrip & Independent Judge)',
-        oqed: 'ACTIVE (SMT Superoptimizer)',
-        sae: 'ACTIVE (9 Discrete Layers TopK/JumpReLU)',
-      },
+      verdicts: Object.fromEntries(db.all('SELECT status, COUNT(*) n FROM results GROUP BY status').map((r) => [r.status, r.n])),
+      engines: (await engineHealth({ fresh: req.query.fresh === '1' })).engines,
     });
   }));
-  api.get('/system', auth, h(async (req, res) => res.json({ kane: await kaneStatus(config, { fresh: req.query.fresh === '1' }), runner: runner.state() })));
+  api.get('/system', auth, h(async (req, res) => res.json({ kane: await kaneStatus(config, { fresh: req.query.fresh === '1' }), runner: runner.state(), engines: (await engineHealth({ fresh: req.query.fresh === '1' })).engines })));
   api.get('/demo-template', auth, h(async (req, res) => {
     let reachable = false;
     try { const r = await fetch(DEMO_TEMPLATE.appUrl, { signal: AbortSignal.timeout(1500) }); reachable = r.ok; } catch {}

@@ -295,3 +295,4 @@ dialog.dlg.wide{width:min(860px,calc(100vw - 32px))}
 @media (hover:none),(pointer:coarse){[data-tilt]{transform:none!important}.ledger{transform:none}}
 @media (max-width:820px){.ledger{transform:none;box-shadow:none}}
 @media (prefers-reduced-motion:reduce){[data-tilt],.stamp,.ledger,.brand i,.stat{transition:none!important;animation:none!important}}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
