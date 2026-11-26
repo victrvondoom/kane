@@ -11,7 +11,14 @@ for (const dir of engines) {
   if (!fs.existsSync(path.join(root, dir, 'pyproject.toml'))) continue;
   const r = spawnSync('uv', ['sync', '--frozen'], { cwd: path.join(root, dir), stdio: 'inherit', shell: false });
   if (r.error) { console.error(`uv not found (${r.error.message}). Install uv: https://docs.astral.sh/uv/`); process.exit(2); }
-  console.log(`${dir}: ${r.status === 0 ? 'ready' : 'FAILED'}`);
+  let ok = r.status === 0;
+  // Some engines (playtest-agent-main) list their packages in requirements.txt rather than pyproject.toml.
+  if (ok && fs.existsSync(path.join(root, dir, 'requirements.txt'))) {
+    const q = spawnSync('uv', ['pip', 'install', '-r', 'requirements.txt'], { cwd: path.join(root, dir), stdio: 'inherit', shell: false });
+    ok = q.status === 0;
+  }
+  r.status = ok ? 0 : 1;
+  console.log(`${dir}: ${ok ? 'ready' : 'FAILED'}`);
   if (r.status !== 0) failed++;
 }
 process.exit(failed ? 1 : 0);
