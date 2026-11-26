@@ -139,6 +139,7 @@ async function Landing() {
   const k = pub?.kane;
   const stats = pub?.stats || { projects: 0, criteria: 0, runs: 0, saeModels: 0 };
   const engines = pub?.engines || {};
+  const verdicts = pub?.verdicts || {};
 
   let selectedInv = 3;
   const INVARIANTS = [
@@ -179,10 +180,8 @@ async function Landing() {
     h('section', { class: 'hero' },
       h('div', { class: 'stack' },
         h('div', { class: 'row', style: { gap: '8px', 'flex-wrap': 'wrap' } },
-          h('span', { class: `tag ${k?.ready ? 's-verified' : 's-untested'}` }, h('i', { class: `dot ${k?.ready ? 'ok' : 'warn'}` }), k ? `kane-cli ${k.version}` : 'kane-cli ready'),
-          h('span', { class: 'tag s-verified' }, '9-Layer SAE Lab: ACTIVE'),
-          h('span', { class: 'tag s-verified' }, 'Gatekeeper AST/OSV: ACTIVE'),
-          h('span', { class: 'tag s-verified' }, 'Playtest Studio: ACTIVE')
+          h('span', { class: `tag ${k?.ready ? 's-verified' : 's-untested'}` }, h('i', { class: `dot ${k?.ready ? 'ok' : 'warn'}` }), k?.version ? `kane-cli ${k.version}` : 'kane-cli not installed'),
+          Object.values(engines).map((e) => h('span', { class: `tag ${e.state === 'ready' ? 's-verified' : 's-untested'}` }, `${e.label}: ${e.state}`))
         ),
         h('h3', {}, 'Release verification for AI-generated software'),
         h('h1', {}, 'Don’t trust what your coding agent says. ', h('em', {}, 'Verify what it ships.')),
@@ -212,40 +211,24 @@ async function Landing() {
     ),
 
     // Live Engine Architecture & Platform Metrics
+    // Live platform state: every number and badge below is measured by the server (/api/system/public).
     h('section', { class: 'stack', style: { 'margin-top': '24px' } },
       h('div', { class: 'panel stack' },
         h('div', { class: 'row spread' },
           h('div', { class: 'stack-s' },
-            h('h3', {}, 'Live Multi-Engine Intelligence & Release Verification Status'),
-            h('p', { class: 'small mute' }, 'Real-time telemetry from active Python workers, native toolchains, and SQLite ledger.')
-          ),
-          h('button', { class: 'btn sm', onclick: quickDemoAction }, '⚡ Test Drive Platform')
-        ),
+            h('h3', {}, 'Live platform state'),
+            h('p', { class: 'small mute' }, pub ? `Measured ${fmtTime(pub.checkedAt || new Date().toISOString())} on this server. Engines are probed by importing what their workers import.` : 'This server did not answer; nothing below is claimed.')),
+          h('button', { class: 'btn sm', onclick: act(async () => { toast('Re-probing engines…'); await api('GET', '/system/public?fresh=1'); render(); }) }, 'Re-check now')),
         h('div', { class: 'grid4', style: { 'margin-top': '8px' } },
-          h('div', { class: 'panel stack-s pad', style: { background: 'var(--panel2)' } },
-            h('b', {}, '🔬 SAE Interpretability'),
-            h('span', { class: 'small mute' }, '9 Discrete Layers TopK / JumpReLU'),
-            h('span', { class: 'tag s-verified' }, '9 Layers Monitored')
-          ),
-          h('div', { class: 'panel stack-s pad', style: { background: 'var(--panel2)' } },
-            h('b', {}, '🛡️ Gatekeeper Security'),
-            h('span', { class: 'small mute' }, 'Multi-Stage AST & Lockfile Audit'),
-            h('span', { class: 'tag s-verified' }, 'Preflight Gate Active')
-          ),
-          h('div', { class: 'panel stack-s pad', style: { background: 'var(--panel2)' } },
-            h('b', {}, '🎬 Playtest Studio'),
-            h('span', { class: 'small mute' }, 'Visual Filmstrip & Replay Judge'),
-            h('span', { class: 'tag s-verified' }, 'Independent Judge Active')
-          ),
-          h('div', { class: 'panel stack-s pad', style: { background: 'var(--panel2)' } },
-            h('b', {}, '⚙️ OQED Superoptimizer'),
-            h('span', { class: 'small mute' }, 'Z3 / angr SMT Equivalence'),
-            h('span', { class: 'tag s-verified' }, 'Formal Verification Ready')
-          )
-        )
-      )
-    ),
-
+          [{ engine: 'kane', label: 'Kane CLI', what: 'browser verification', state: k?.ready ? 'ready' : k ? 'unavailable' : 'unknown', detail: k ? (k.version ? `v${k.version} · ${k.detail}` : k.detail) : 'status unknown' },
+            ...Object.values(engines)].map((e) => h('div', { class: 'panel stack-s pad', style: { background: 'var(--panel2)' } },
+            h('div', { class: 'row spread' }, h('b', {}, e.label), h('span', { class: `tag ${e.state === 'ready' ? 's-verified' : e.state === 'unsupported' ? 's-untested' : 's-blocked'}` }, h('i', { class: `dot ${e.state === 'ready' ? 'ok' : 'warn'}` }), e.state)),
+            h('span', { class: 'small mute' }, e.what),
+            h('span', { class: 'small mono', title: e.detail }, e.detail, e.ms ? ` · ${e.ms} ms` : '')))),
+        h('div', { class: 'stats', style: { 'margin-top': '8px' } },
+          [[stats.projects, 'Projects'], [stats.criteria, 'Acceptance criteria'], [stats.runs, 'Verification runs'],
+            [verdicts.passed || 0, 'Passed executions'], [verdicts.failed || 0, 'Failed executions']]
+            .map(([n, l]) => h('div', { class: 'stat' }, h('b', {}, n), h('span', {}, l)))))),
     h('section', { class: 'stack', style: { 'padding-bottom': '80px', 'margin-top': '24px' } },
       h('div', { class: 'steps' },
         ...[['01 · DEFINE', 'Write requirements in plain language', 'They are split into atomic acceptance criteria with stable IDs (AC-001…), categorised as functional, visual or data-persistence.'],
