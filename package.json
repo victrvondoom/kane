@@ -25,10 +25,18 @@
     "bench:truth": "node scripts/bench-collect-truth.mjs",
     "bench:impact": "node scripts/bench-impact.mjs",
     "bench:sbfl": "node scripts/bench-sbfl.mjs",
-    "test":"node --test --test-concurrency=1 tests/*.test.js"
+    "test": "node --test --test-concurrency=1 tests/*.test.js",
+    "lint": "eslint .",
+    "setup:engines": "node scripts/setup-engines.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
     "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.15.0",
+    "espree": "^11.2.0",
+    "globals": "^17.14.0"
   }
 }
