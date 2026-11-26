@@ -3,6 +3,10 @@ import { ProofTab, BuildsTab, IntelligenceTab, CITab, DossierTab } from './proof
 import { AutonomousLoopTab, StepsWriterTab, GatekeeperTab, OqedTab, PlaytestStudioTab, SaeInterpretabilityLabTab } from './autonomous.js';
 import { AlgorithmIntelligenceTab } from './algorithms-ui.js';
 import { OnCallPage, OnCallIncidentPage } from './oncall.js';
+import { ensureAgent, resetAgent, openAgent, toggleAgent, setAgentProject } from './agent-workspace.js';
+import { openPalette, installPaletteShortcut } from './command-palette.js';
+import { WatchTab } from './watch.js';
+import { InvestigationPage, InvestigationsTab, investigateButton } from './investigation.js';
 
 const $app = document.getElementById('app');
 let me = null, system = null, cleanup = [], crumb = null; // crumb: the project (and tab) the current page belongs to
@@ -305,33 +309,19 @@ async function Dashboard() {
       h('div', { class: 'stat' }, h('b', {}, m.completedRuns), h('span', {}, `Completed runs of ${m.runs}`)),
       h('div', { class: 'stat', title: `${m.executions.passed} passed, ${m.executions.failed} failed, ${m.executions.noVerdict} without a verdict` },
         h('b', {}, m.passRate == null ? '—' : `${Math.round(m.passRate * 100)}%`), h('span', {}, m.passRate == null ? 'Pass rate · no verdicts yet' : `Pass rate · ${m.executions.passed + m.executions.failed} verdicts`))) : null,
-    projects.length ? h('div', { class: 'grid2' }, projects.map((p) => h('div', { class: 'panel stack' },
-      h('div', { class: 'row spread' },
-        h('h2', {}, h('a', { href: `#/p/${p.id}`, style: { 'text-decoration': 'none', color: 'inherit' } }, p.name)),
-        tag(p.gate.verdict === 'blocked' ? 'failed' : p.gate.verdict)
-      ),
+    projects.length ? h('div', { class: 'grid2' }, projects.map((p) => h('a', { class: 'panel stack', href: `#/p/${p.id}`, style: { 'text-decoration': 'none' } },
+      h('div', { class: 'row spread' }, h('h2', {}, p.name), tag(p.gate.verdict === 'blocked' ? 'failed' : p.gate.verdict)),
       h('div', { class: 'mono mute' }, p.appUrl),
       segBar(p.gate.totals, ['verified', 'failed', 'blocked', 'untested']),
       h('div', { class: 'row spread small mute' },
         h('span', {}, `${p.gate.totals.verified}/${p.gate.totals.total} verified`, p.gate.totals.failed ? ` · ${p.gate.totals.failed} failed` : ''),
-        h('span', {}, p.lastRun ? `last run ${ago(p.lastRun.createdAt)}` : 'never run')
-      ),
-      h('div', { class: 'row small', style: { 'margin-top': '8px', gap: '6px', 'flex-wrap': 'wrap' } },
-        h('a', { class: 'cat', style: { color: 'var(--info)' }, href: `#/p/${p.id}/loop` }, '⚡ Loop'),
-        h('a', { class: 'cat', href: `#/p/${p.id}/sae` }, '🔬 SAE (9L)'),
-        h('a', { class: 'cat', href: `#/p/${p.id}/security` }, '🛡️ Security'),
-        h('a', { class: 'cat', href: `#/p/${p.id}/playtest` }, '🎬 Playtest'),
-        h('a', { class: 'cat', href: `#/p/${p.id}/oqed` }, '⚙️ OQED'),
-        h('a', { class: 'cat', href: `#/p/${p.id}/specs` }, '📜 Specs'),
-        h('a', { class: 'cat', href: `#/p/${p.id}/report` }, '📊 Report')
-      )
-    )))
+        h('span', {}, p.lastRun ? `last run ${ago(p.lastRun.createdAt)}` : 'never run')))))
       : h('div', { class: 'panel empty stack pad' },
-        h('h2', {}, 'No verification projects yet'),
-        h('p', {}, 'Explore SHIPPROOF with a complete pre-configured verification project containing 9-Layer Sparse Autoencoders, Gatekeeper security scan, Playtest visual filmstrips, and OQED superoptimizer.'),
+        h('h2', {}, 'No projects yet'),
+        h('p', {}, 'Register an application URL, describe what it must do, and let Kane CLI prove it.'),
         h('div', { class: 'row', style: { 'justify-content': 'center', 'margin-top': '12px' } },
-          h('button', { class: 'btn primary lg', onclick: seedFullDemo }, '⚡ Initialize Complete Demo Project (1-Click)'),
-          h('a', { class: 'btn', href: '#/new' }, 'Create New Custom Project')
+          h('a', { class: 'btn primary', href: '#/new' }, 'Create your first project'),
+          h('button', { class: 'btn', onclick: seedFullDemo }, 'Load the demo project')
         )
       ),
     recentRuns.length ? h('section', { class: 'stack' }, h('h3', {}, 'Recent verification runs'), runsTable(recentRuns, true)) : null));
@@ -419,7 +409,8 @@ async function Project(id, tab = 'requirements', sub) {
     ['proof', 'Proof explorer'],
     ['builds', 'Builds & impact'],
     ['intelligence', 'Release intelligence', g.reasons.length, true],
-
+    ['watch', 'Continuous watch'],
+    ['investigations', 'Investigations'],
     ['ci', 'CI'],
     ['dossier', 'Dossier'],
     ['report', 'Release report'],

@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 // Multi-Engine Isolated Worker Bridge
 // Executes isolated Python engine workers (Gatekeeper, Playtest, OQED, SAE)
 // using structured JSON protocol over stdin/stdout with timeout and cancellation.
@@ -5,6 +6,22 @@ import { spawn } from 'node:child_process';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+// Interpreter for an engine worker: SHIPPROOF_PYTHON_<ENGINE> or SHIPPROOF_PYTHON, then the engine's own
+// uv virtualenv (created by `npm run setup:engines`), then the system Python.
+const ENGINE_DIRS = { gatekeeper: 'gatekeeper-main', playtest: 'playtest-agent-main', oqed: 'oqed-main' };
+export function resolvePython(engine) {
+  const override = process.env[`SHIPPROOF_PYTHON_${String(engine).toUpperCase()}`] || process.env.SHIPPROOF_PYTHON;
+  if (override) return override;
+  const dir = ENGINE_DIRS[engine];
+  if (dir) {
+    const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', dir, '.venv');
+    const exe = process.platform === 'win32' ? path.join(root, 'Scripts', 'python.exe') : path.join(root, 'bin', 'python');
+    if (fs.existsSync(exe)) return exe;
+  }
+  return process.platform === 'win32' ? 'python' : 'python3';
+}
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,7 +80,7 @@ export async function invokeEngineWorker({
     let settled = false;
 
     // Use Python from uv if available, or system python
-    const pythonExe = process.platform === 'win32' ? 'python' : 'python3';
+    const pythonExe = resolvePython(engine);
     const args = [scriptPath];
 
     const childEnv = {
