@@ -12,10 +12,11 @@ import crypto from 'node:crypto';
 const engineEntryCache = new Map();
 
 // Node's fetch ignores HTTPS_PROXY unless NODE_USE_ENV_PROXY is set, so behind an egress proxy kane-cli cannot
-// reach TestMu and reports valid credentials as "not valid". Opt kane-cli in whenever a proxy is configured.
+// reach TestMu and reports valid credentials as "not valid". Opt kane-cli in whenever a proxy is configured, and
+// silence Node's "EnvHttpProxyAgent is experimental" warning: its word "proxy" would be classified as a network error.
 export function kaneEnv(env = process.env) {
   const proxied = env.HTTPS_PROXY || env.https_proxy || env.HTTP_PROXY || env.http_proxy;
-  return proxied && env.NODE_USE_ENV_PROXY == null ? { ...env, NODE_USE_ENV_PROXY: '1' } : { ...env };
+  return proxied && env.NODE_USE_ENV_PROXY == null ? { ...env, NODE_USE_ENV_PROXY: '1', NODE_NO_WARNINGS: '1' } : { ...env };
 }
 
 export function resolveEngineBin(bin) {
